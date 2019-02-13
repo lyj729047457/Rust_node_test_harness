@@ -8,12 +8,17 @@ import org.junit.Test;
 import java.util.Arrays;
 
 public class AddressTest {
-    private String randomAddress = "a0ee00c327f522f0c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
+    private String testingAddress = "a0ee00c327f522f0c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testInstantiatingAddressWithInvalidPrivateKey() throws DecoderException {
+        Address.createAddressWithPrivateKey(Hex.decodeHex(testingAddress), new byte[0]);
+    }
 
     @Test
     public void testAddressEquality() throws DecoderException {
-        Address address = Address.createAddress(Hex.decodeHex(randomAddress));
-        Address address2 = Address.createAddress(Hex.decodeHex(randomAddress));
+        Address address = Address.createAddress(Hex.decodeHex(testingAddress));
+        Address address2 = Address.createAddress(Hex.decodeHex(testingAddress));
 
         Assert.assertTrue(address.equals(address2));
         Assert.assertEquals(address.hashCode(), address2.hashCode());
@@ -29,7 +34,7 @@ public class AddressTest {
 
         // check that that address bytes in the object has not changed
         Assert.assertFalse(Arrays.equals(randomAddressCopy, address.getAddressBytes()));
-        Assert.assertArrayEquals(Hex.decodeHex(randomAddress), address.getAddressBytes());
+        Assert.assertArrayEquals(Hex.decodeHex(testingAddress), address.getAddressBytes());
     }
 
     @Test
@@ -44,6 +49,6 @@ public class AddressTest {
         // check that the original address was not changed
         Assert.assertFalse(Arrays.equals(retrievedAddress, randomAddressCopy));
         Assert.assertFalse(Arrays.equals(retrievedAddress, address.getAddressBytes()));
-        Assert.assertArrayEquals(Hex.decodeHex(randomAddress), address.getAddressBytes());
+        Assert.assertArrayEquals(Hex.decodeHex(testingAddress), address.getAddressBytes());
     }
 }

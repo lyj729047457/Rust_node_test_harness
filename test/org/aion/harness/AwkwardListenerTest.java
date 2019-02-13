@@ -32,10 +32,12 @@ public class AwkwardListenerTest {
         Node node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 
         String recipient = "a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30";
+        Address preminedAddress = Address.createAddressWithPrivateKey(Hex.decodeHex(Assumptions.PREMINED_ADDRESS), Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        Address destination = Address.createAddress(Hex.decodeHex(recipient));
 
         TransactionResult transactionResult = constructTransaction(
-                Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-                Hex.decodeHex(recipient),
+                preminedAddress,
+                destination,
                 BigInteger.ONE,
                 BigInteger.ZERO);
 
@@ -62,8 +64,8 @@ public class AwkwardListenerTest {
         // ------------------------------------------------------------------------------
 
         transactionResult = constructTransaction(
-                Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-                Hex.decodeHex(recipient),
+                preminedAddress,
+                destination,
                 BigInteger.ONE,
                 BigInteger.ONE);
 
@@ -85,8 +87,8 @@ public class AwkwardListenerTest {
         node.stop();
     }
 
-    private TransactionResult constructTransaction(byte[] privateKey, byte[] destination, BigInteger value, BigInteger nonce) throws Exception {
-        return Transaction.buildAndSignTransaction(privateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+    private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
+        return Transaction.buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
 }

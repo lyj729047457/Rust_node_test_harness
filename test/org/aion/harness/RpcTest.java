@@ -4,6 +4,7 @@ import org.aion.harness.misc.Assumptions;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.TransactionResult;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
@@ -19,13 +20,16 @@ public class RpcTest {
     private static boolean doFullInitialization = false;
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
-    private static String recipient = "a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30";
+    private static Address destination;
+    private static Address preminedAddress;
 
     private RPC rpc;
     private Node node;
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws IOException, DecoderException {
+        preminedAddress = Address.createAddressWithPrivateKey(Hex.decodeHex(Assumptions.PREMINED_ADDRESS), Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        destination = Address.createAddress(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.rpc = new RPC(this.node);
@@ -46,8 +50,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
@@ -65,8 +69,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.valueOf(100));
 
@@ -84,8 +88,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
 
@@ -103,8 +107,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
@@ -122,8 +126,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
@@ -133,8 +137,8 @@ public class RpcTest {
         assertTrue(result.success);
 
         transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.ONE);
 
@@ -149,8 +153,8 @@ public class RpcTest {
     public void testSendTransactionWhenNoNodeIsAlive() throws Exception {
         assertFalse(this.node.isAlive());
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            Hex.decodeHex(recipient),
+            preminedAddress,
+            destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
@@ -165,8 +169,8 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY),
-            new byte[0],
+            preminedAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
@@ -181,13 +185,14 @@ public class RpcTest {
     @Test
     public void testSendValueWithInsufficientBalance() throws Exception {
         byte[] badKey = Hex.decodeHex("223f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5");
+        Address badKeyAddress = Address.createAddressWithPrivateKey(Hex.decodeHex("a03f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5"), badKey);
 
         initializeNodeWithChecks();
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            badKey,
-            Hex.decodeHex(recipient),
+            badKeyAddress,
+            destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
@@ -199,24 +204,8 @@ public class RpcTest {
         this.node.stop();
     }
 
-    @Test
-    public void testConstructTransactionWithInvalidPrivateKey() throws Exception {
-        initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
-
-        TransactionResult result = constructTransaction(
-            new byte[0],
-            Hex.decodeHex(recipient),
-            BigInteger.ONE,
-            BigInteger.ZERO);
-
-        assertFalse(result.getResultOnly().success);
-
-        this.node.stop();
-    }
-
-    private TransactionResult constructTransaction(byte[] privateKey, byte[] destination, BigInteger value, BigInteger nonce) throws Exception {
-        return Transaction.buildAndSignTransaction(privateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+    private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
+        return Transaction.buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private Result initializeNode() throws IOException, InterruptedException {
