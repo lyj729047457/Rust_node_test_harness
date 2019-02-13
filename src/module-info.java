@@ -1,4 +1,4 @@
-module TestingHarness {
+module aion.node.harness {
     requires org.apache.commons.io;
     requires org.apache.commons.codec;
     requires offline.signer;
