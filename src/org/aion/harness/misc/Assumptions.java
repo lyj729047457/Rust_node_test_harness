@@ -12,7 +12,7 @@ public final class Assumptions {
     // Config has the TX log set to DEBUG
     // AionBlockchainImpl broadcasts all transactions, by hash, when successfully sealed into block
     // aion project is in same directory as this project
-    // aion project is using master-pre-merge branch
+    // aion project must be using node_test_harness branch
 
     public static final Pattern KERNEL_TAR_PATTERN = Pattern.compile("^aion-v(.|\\s)+\\.tar\\.bz2$");
 
