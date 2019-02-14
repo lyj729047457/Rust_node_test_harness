@@ -44,7 +44,11 @@ public final class EventRequest {
 
     @Override
     public String toString() {
-        return "EventRequest { event requested = " + this.requestedEvent + ", event result = " + this.eventResult + " }";
+        if (this.eventResult == null) {
+            return "EventRequest { event requested = " + this.requestedEvent + ", event result = pending }";
+        } else {
+            return "EventRequest { event requested = " + this.requestedEvent + ", event result = " + this.eventResult + " }";
+        }
     }
 
     @Override
