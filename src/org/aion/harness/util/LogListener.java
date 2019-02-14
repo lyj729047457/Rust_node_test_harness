@@ -36,6 +36,7 @@ public final class LogListener implements TailerListener {
 
             // Add the request to the pool, if we time out then return.
             if (!addRequest(eventRequest, endTimeInMillis)) {
+                eventRequest.cancel(); // shouldn't be necessary, here for sanity.
                 return EventRequestResult.createRejectedEvent("Timed out waiting for availability in the request pool.");
             }
 
@@ -51,11 +52,15 @@ public final class LogListener implements TailerListener {
             }
 
             System.err.println("Got response or timed out!");
-            return (eventRequest.hasResult())
-                ? eventRequest.getResult()
-                : EventRequestResult.createRejectedEvent("Timed out waiting for event to occur.");
+            if (eventRequest.hasResult()) {
+                return eventRequest.getResult();
+            } else {
+                eventRequest.cancel();
+                return EventRequestResult.createRejectedEvent("Timed out waiting for event to occur.");
+            }
 
         } catch (InterruptedException e) {
+            eventRequest.cancel();
             return EventRequestResult.createRejectedEvent("Interrupted while waiting for event.");
         }
 
