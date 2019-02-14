@@ -20,7 +20,7 @@ public class AwkwardListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        Result result = listener.listenForMiningStarted();
+        Result result = listener.waitForMinersToStart();
 
         System.out.println(result);
 
@@ -54,7 +54,7 @@ public class AwkwardListenerTest {
         RPC rpc = new RPC(node);
         rpc.sendTransaction(transactionResult.getTransaction());
 
-        Result result = listener.listenForTransaction(transactionResult.getTransaction().getTransactionHash());
+        Result result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash());
         System.out.println(result);
 
         node.stop();
@@ -81,7 +81,7 @@ public class AwkwardListenerTest {
         rpc = new RPC(node);
         rpc.sendTransaction(transactionResult.getTransaction());
 
-        result = listener.listenForTransaction(transactionResult.getTransaction().getTransactionHash());
+        result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash());
         System.out.println(result);
 
         node.stop();

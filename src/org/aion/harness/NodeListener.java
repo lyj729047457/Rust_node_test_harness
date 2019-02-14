@@ -17,7 +17,7 @@ public final class NodeListener {
         this.logListener = LogReader.singleton().getLogListener();
     }
 
-    public Result listenForMiningStarted() throws InterruptedException {
+    public Result waitForMinersToStart() throws InterruptedException {
         EventRequest request = new EventRequest(NodeEvent.getStartedMiningEvent());
 
         Result result = this.logListener.submit(request);
@@ -28,7 +28,7 @@ public final class NodeListener {
         return waitForEvent(request);
     }
 
-    public Result listenForTransaction(byte[] transactionHash) throws InterruptedException {
+    public Result waitForTransactionToBeSealed(byte[] transactionHash) throws InterruptedException {
         EventRequest request = new EventRequest(NodeEvent.getTransactionSealedEvent(transactionHash));
 
         Result result = this.logListener.submit(request);
