@@ -42,8 +42,6 @@ public final class LogListener implements TailerListener {
 
     @Override
     public void handle(String nextLine) {
-//        System.out.println(nextLine);
-
         if (this.requests.isEmpty()) {
             return;
         }
@@ -53,16 +51,6 @@ public final class LogListener implements TailerListener {
         if (event != null) {
             answerRequests(event);
         }
-
-
-//        System.out.println(nextLine);
-//        if (this.currentEvent != null) {
-//            if (nextLine.contains(this.currentEvent.asString())) {
-//                this.eventResult = Result.successful();
-//                this.currentEvent = null;
-//                System.err.println("FOUND FROM: " + nextLine);
-//            }
-//        }
     }
 
     @Override
@@ -121,43 +109,5 @@ public final class LogListener implements TailerListener {
         }
         return null;
     }
-
-//    /**
-//     * Listens for event, unless this class is already listening for an event, then this is unsuccessful.
-//     */
-//    public Result listenFor() {
-//        if (this.currentEvent == null) {
-//            this.currentEvent = NodeEvent.getStartedMiningEvent();
-//            return Result.successful();
-//        }
-//        return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Already listening to an event.");
-//    }
-//
-//    /**
-//     * Listens for event, unless this class is already listening for an event, then this is unsuccessful.
-//     */
-//    public Result listenForTransaction(byte[] transactionHash) {
-//        if (this.currentEvent == null) {
-//            this.currentEvent = NodeEvent.getTransactionSealedEvent(transactionHash);
-//            return Result.successful();
-//        }
-//        return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Already listening to an event.");
-//    }
-//
-//    /**
-//     * If the event has not occurred then this returns null.
-//     *
-//     * Otherwise, returns the result.
-//     */
-//    public Result getEventResult() {
-//        Result result = null;
-//
-//        if (this.eventResult != null) {
-//            result = this.eventResult;
-//            this.eventResult = null;
-//        }
-//
-//        return result;
-//    }
 
 }

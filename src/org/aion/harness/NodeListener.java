@@ -51,25 +51,6 @@ public final class NodeListener {
         }
 
         return eventRequest.getResult();
-
-
-//        Result result = null;
-//
-//        long startTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-//        while (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) <= startTime + Assumptions.LISTENER_TIMEOUT_SECS) {
-//            System.out.println("loopin");
-//            result = this.logListener.getEventResult();
-//
-//            if (result != null) {
-//                break;
-//            }
-//
-//            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-//        }
-//
-//        return (result == null)
-//                ? Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "timed out listening to event")
-//                : Result.successful();
     }
 
 }
