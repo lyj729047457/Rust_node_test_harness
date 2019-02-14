@@ -17,7 +17,7 @@ public final class LogListener implements TailerListener {
      * If the listener is already listening to the maximum number of events then the caller will
      * wait until space becomes available.
      *
-     * This method is blocking and will return only once the event request has been satisfied or
+     * This method is blocking and will return only once the event request has been observed or
      * if the timeout has occurred or if the thread is interrupted, in which case it will return
      * immediately.
      *
@@ -92,20 +92,25 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Run through the entire request pool and satisfy every request that is waiting on the specified
-     * event.
+     * Runs through the entire request pool and marks every request that is waiting for the
+     * specified event as "observed" and removes it from the request pool.
      *
-     * Once these requests have been satisfied, remove them from the pool.
+     * In addition to marking the events as observed, any cancelled events are removed from the
+     * request pool.
      *
-     * Wakes up any threads waiting for either space to free up in the request pool or simply
-     * waiting for a request to be satisfied.
+     * If an event is both cancelled and observed then the cancellation trumps the latter and the
+     * event is dropped.
      *
-     * To 'satisfy' a request means simply that the event was observed.
+     * If {@code event == null} then no events will be marked as "observed".
      *
-     * @param event The event to satisfy.
+     * After walking through the entire pool, all threads waiting on this object's monitor are
+     * awoken.
+     *
+     * @param event The event that has been observed.
+     * @param timeOfObservation The time at which event was observed, in nanoseconds.
      */
     private synchronized void satisfyEventRequest(NodeEvent event, long timeOfObservation) {
-        System.err.println("Satisfying an event. Current pool size = " + this.requestPool.size());
+        System.err.println("Iterating over pool. Current pool size = " + this.requestPool.size());
         Iterator<EventRequest> requestIterator = this.requestPool.iterator();
 
         while (requestIterator.hasNext()) {
@@ -117,7 +122,7 @@ public final class LogListener implements TailerListener {
             }
         }
 
-        System.err.println("Satisfied events. Current pool size is now = " + this.requestPool.size());
+        System.err.println("Finished iterating. Current pool size is now = " + this.requestPool.size());
 
         notifyAll();
     }
@@ -128,7 +133,7 @@ public final class LogListener implements TailerListener {
      * If no event in the pool corresponds to the provided event string then no event has been
      * observed and null is returned.
      *
-     * @param eventString Some string that may or may not satisfy an event.
+     * @param eventString Some string that may or may not contain an event being listened for.
      * @return An observed event or null if no event is observed.
      */
     private synchronized NodeEvent getObservedEvent(String eventString) {
@@ -172,7 +177,7 @@ public final class LogListener implements TailerListener {
             return;
         }
 
-        // Satisfy all applicable events, clear the pool of them and notify the waiting threads.
+        // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
         satisfyEventRequest(observedEvent, timeOfObservation);
     }
 
