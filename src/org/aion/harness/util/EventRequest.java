@@ -7,10 +7,12 @@ import org.aion.harness.result.EventRequestResult;
  *
  * If an event is cancelled it cannot be uncancelled and any possible listener has no obligation to
  * listen for a cancelled event.
+ *
+ * This class is thread-safe.
  */
 public final class EventRequest {
     private final NodeEvent requestedEvent;
-    private volatile EventRequestResult eventResult;
+    private EventRequestResult eventResult;
 
     /**
      * Constructs a new event request for the specified event.
@@ -31,7 +33,7 @@ public final class EventRequest {
      *
      * @param result The result to set.
      */
-    public void addResult(EventRequestResult result) {
+    public synchronized void addResult(EventRequestResult result) {
         if (this.eventResult == null) {
             this.eventResult = result;
         }
@@ -51,7 +53,7 @@ public final class EventRequest {
      *
      * @return The result or {@code null} if no result has been set.
      */
-    public EventRequestResult getResult() {
+    public synchronized EventRequestResult getResult() {
         return this.eventResult;
     }
 
@@ -60,12 +62,12 @@ public final class EventRequest {
      *
      * @return Whether or not a result has been set.
      */
-    public boolean hasResult() {
+    public synchronized boolean hasResult() {
         return this.eventResult != null;
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         if (this.eventResult == null) {
             return "EventRequest { event requested = " + this.requestedEvent + ", event result = pending }";
         } else {
