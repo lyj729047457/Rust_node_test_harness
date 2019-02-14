@@ -109,14 +109,16 @@ public final class LogListener implements TailerListener {
      * @param event The event that has been observed.
      * @param timeOfObservation The time at which event was observed, in nanoseconds.
      */
-    private synchronized void satisfyEventRequest(NodeEvent event, long timeOfObservation) {
+    private synchronized void markRequestAsObservedAndCleanPool(NodeEvent event, long timeOfObservation) {
         System.err.println("Iterating over pool. Current pool size = " + this.requestPool.size());
         Iterator<EventRequest> requestIterator = this.requestPool.iterator();
 
         while (requestIterator.hasNext()) {
             EventRequest request = requestIterator.next();
 
-            if (request.getRequest().equals(event)) {
+            if (request.isCancelled()) {
+                requestIterator.remove();
+            } else if (request.getRequest().equals(event)) {
                 request.addResult(EventRequestResult.createObservedEvent(timeOfObservation));
                 requestIterator.remove();
             }
@@ -172,13 +174,8 @@ public final class LogListener implements TailerListener {
         NodeEvent observedEvent = getObservedEvent(nextLine);
         long timeOfObservation = System.nanoTime();
 
-        // If no events were observed then we are done.
-        if (observedEvent == null) {
-            return;
-        }
-
         // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
-        satisfyEventRequest(observedEvent, timeOfObservation);
+        markRequestAsObservedAndCleanPool(observedEvent, timeOfObservation);
     }
 
     @Override
