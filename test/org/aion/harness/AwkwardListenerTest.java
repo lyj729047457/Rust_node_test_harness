@@ -1,6 +1,8 @@
 package org.aion.harness;
 
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.TransactionResult;
 import org.apache.commons.codec.binary.Hex;
@@ -20,7 +22,7 @@ public class AwkwardListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        Result result = listener.waitForMinersToStart();
+        EventRequestResult result = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
 
         System.out.println(result);
 
@@ -54,7 +56,7 @@ public class AwkwardListenerTest {
         RPC rpc = new RPC(node);
         rpc.sendTransaction(transactionResult.getTransaction());
 
-        Result result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash());
+        EventRequestResult result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
         System.out.println(result);
 
         node.stop();
@@ -81,7 +83,7 @@ public class AwkwardListenerTest {
         rpc = new RPC(node);
         rpc.sendTransaction(transactionResult.getTransaction());
 
-        result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash());
+        result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
         System.out.println(result);
 
         node.stop();

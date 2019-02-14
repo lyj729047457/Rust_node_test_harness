@@ -1,7 +1,6 @@
 package org.aion.harness;
 
-import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.Result;
+import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.LogListener;
 import org.aion.harness.util.LogReader;
@@ -17,40 +16,19 @@ public final class NodeListener {
         this.logListener = LogReader.singleton().getLogListener();
     }
 
-    public Result waitForMinersToStart() throws InterruptedException {
+    public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
         EventRequest request = new EventRequest(NodeEvent.getStartedMiningEvent());
-
-        Result result = this.logListener.submit(request);
-        if (!result.success) {
-            return result;
-        }
-
-        return waitForEvent(request);
+        return this.logListener.submitEventRequest(request, timeoutInMillis);
     }
 
-    public Result waitForTransactionToBeSealed(byte[] transactionHash) throws InterruptedException {
+    public EventRequestResult waitForTransactionToBeSealed(byte[] transactionHash, long timeoutInMillis) {
         EventRequest request = new EventRequest(NodeEvent.getTransactionSealedEvent(transactionHash));
-
-        Result result = this.logListener.submit(request);
-        if (!result.success) {
-            return result;
-        }
-
-        return waitForEvent(request);
+        return this.logListener.submitEventRequest(request, timeoutInMillis);
     }
 
-    private Result waitForEvent(EventRequest eventRequest) throws InterruptedException {
-        long startTimeInMillis = System.currentTimeMillis();
-
-        while (!eventRequest.hasResult()) {
-            if (startTimeInMillis > System.currentTimeMillis() + Assumptions.REQUEST_MANAGER_TIMEOUT_MILLIS) {
-                return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "timed out waiting for request");
-            }
-
-            this.logListener.waitForRequest();
-        }
-
-        return eventRequest.getResult();
+    public EventRequestResult waitForHeartbeat(long timeoutInMillis) {
+        EventRequest request = new EventRequest(NodeEvent.getHeartbeatEvent());
+        return this.logListener.submitEventRequest(request, timeoutInMillis);
     }
 
 }

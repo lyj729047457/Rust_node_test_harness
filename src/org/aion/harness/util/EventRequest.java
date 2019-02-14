@@ -1,6 +1,6 @@
 package org.aion.harness.util;
 
-import org.aion.harness.result.Result;
+import org.aion.harness.result.EventRequestResult;
 
 /**
  * A basic request that can be given a result.
@@ -11,8 +11,7 @@ import org.aion.harness.result.Result;
  */
 public final class EventRequest {
     private final NodeEvent requestedEvent;
-
-    private volatile Result eventResult;
+    private volatile EventRequestResult eventResult;
 
     public EventRequest(NodeEvent eventToRequest) {
         this.requestedEvent = eventToRequest;
@@ -24,7 +23,7 @@ public final class EventRequest {
      *
      * @param result The result to add.
      */
-    public void addResult(Result result) {
+    public void addResult(EventRequestResult result) {
         if (this.eventResult == null) {
             this.eventResult = result;
         }
@@ -34,7 +33,7 @@ public final class EventRequest {
         return this.requestedEvent;
     }
 
-    public Result getResult() {
+    public EventRequestResult getResult() {
         return this.eventResult;
     }
 
