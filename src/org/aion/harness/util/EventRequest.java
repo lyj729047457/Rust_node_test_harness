@@ -3,25 +3,33 @@ package org.aion.harness.util;
 import org.aion.harness.result.EventRequestResult;
 
 /**
- * A basic request that can be given a result.
+ * A request for some listener to listen for an event.
  *
- * The ID and request itself are both immutable.
- *
- * The result can only be set once.
+ * If an event is cancelled it cannot be uncancelled and any possible listener has no obligation to
+ * listen for a cancelled event.
  */
 public final class EventRequest {
     private final NodeEvent requestedEvent;
     private volatile EventRequestResult eventResult;
 
+    /**
+     * Constructs a new event request for the specified event.
+     *
+     * @param eventToRequest The event to request to be listened for.
+     */
     public EventRequest(NodeEvent eventToRequest) {
         this.requestedEvent = eventToRequest;
         this.eventResult = null;
     }
 
     /**
-     * Adds the result only if no result already exists.
+     * Sets the result of this event request to the specified result.
      *
-     * @param result The result to add.
+     * A non-null result can only be set once. The first time this method is called and supplied
+     * with a non-null result, no other results can be set. After this point this method does
+     * effectively nothing.
+     *
+     * @param result The result to set.
      */
     public void addResult(EventRequestResult result) {
         if (this.eventResult == null) {
@@ -29,14 +37,29 @@ public final class EventRequest {
         }
     }
 
+    /**
+     * Returns the event that has been requested to be listened for.
+     *
+     * @return The requested event.
+     */
     public NodeEvent getRequest() {
         return this.requestedEvent;
     }
 
+    /**
+     * Returns the result of the requested event or {@code null} if no result has been set yet.
+     *
+     * @return The result or {@code null} if no result has been set.
+     */
     public EventRequestResult getResult() {
         return this.eventResult;
     }
 
+    /**
+     * Returns {@code true} if, and only if, a non-null result has been set for this request.
+     *
+     * @return Whether or not a result has been set.
+     */
     public boolean hasResult() {
         return this.eventResult != null;
     }
