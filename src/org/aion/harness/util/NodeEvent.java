@@ -36,6 +36,10 @@ public final class NodeEvent {
             return false;
         }
 
+        if (this == other) {
+            return true;
+        }
+
         NodeEvent event = (NodeEvent) other;
         return event.eventString.equals(this.eventString);
     }

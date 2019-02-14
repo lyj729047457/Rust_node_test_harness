@@ -53,6 +53,10 @@ public final class EventRequest {
             return false;
         }
 
+        if (this == other) {
+            return true;
+        }
+
         EventRequest otherEventRequest = (EventRequest) other;
         return this.requestedEvent.equals(otherEventRequest.requestedEvent);
     }
