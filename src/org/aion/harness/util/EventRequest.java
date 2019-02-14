@@ -1,5 +1,6 @@
 package org.aion.harness.util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.harness.result.EventRequestResult;
 
 /**
@@ -12,6 +13,7 @@ import org.aion.harness.result.EventRequestResult;
  */
 public final class EventRequest {
     private final NodeEvent requestedEvent;
+    private AtomicBoolean cancelled = new AtomicBoolean(false);
     private EventRequestResult eventResult;
 
     /**
@@ -64,6 +66,26 @@ public final class EventRequest {
      */
     public synchronized boolean hasResult() {
         return this.eventResult != null;
+    }
+
+    /**
+     * Cancels this event request. Once this method has been called, the event request cannot be
+     * uncancelled.
+     *
+     * Any listeners listening for this event have no obligations to listen for the event once this
+     * method has been called.
+     */
+    public void cancel() {
+        this.cancelled.set(true);
+    }
+
+    /**
+     * Returns {@code true} if, and only if, this event request has been cancelled.
+     *
+     * @return Whether or not this request has been cancelled.
+     */
+    public boolean isCancelled() {
+        return this.cancelled.get();
     }
 
     @Override
