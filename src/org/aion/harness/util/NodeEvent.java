@@ -21,6 +21,11 @@ public final class NodeEvent {
         return new NodeEvent("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
     }
 
+    public static NodeEvent getHeartbeatEvent() {
+        // An event we can consider as consistent, and so a good heartbeat.
+        return new NodeEvent("p2p-status");
+    }
+
     public String getEventString() {
         return this.eventString;
     }
