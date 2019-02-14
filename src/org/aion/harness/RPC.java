@@ -1,7 +1,7 @@
 package org.aion.harness;
 
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.Result;
+import org.aion.harness.result.RPCResult;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.BufferedReader;
@@ -23,15 +23,39 @@ public final class RPC {
         this.node = node;
     }
 
-    public Result sendTransaction(Transaction transaction) {
+    public RPCResult sendTransaction(Transaction transaction) {
         return sendTransactionInternal(transaction, false);
     }
 
-    public Result sendTransactionVerbose(Transaction transaction) {
+    public RPCResult sendTransactionVerbose(Transaction transaction) {
         return sendTransactionInternal(transaction, true);
     }
 
-    private Result sendTransactionInternal(Transaction transaction, boolean verbose) {
+    public RPCResult getBalance(byte[] address) throws IOException, InterruptedException {
+        if (!this.node.isAlive()) {
+            throw new IllegalStateException("no node is currently running");
+        }
+
+        if (address == null) {
+            throw new IllegalArgumentException("address cannot be null.");
+        }
+
+        return getBalanceOverRPC(address, false);
+    }
+
+    public RPCResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
+        if (!this.node.isAlive()) {
+            throw new IllegalStateException("no node is currently running");
+        }
+
+        if (address == null) {
+            throw new IllegalArgumentException("address cannot be null.");
+        }
+
+        return getBalanceOverRPC(address, true);
+    }
+
+    private RPCResult sendTransactionInternal(Transaction transaction, boolean verbose) {
         if (!this.node.isAlive()) {
             throw new IllegalStateException("no node is currently running");
         }
@@ -44,11 +68,11 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
             return sendTransactionOverRPC(transaction.getBytes(), verbose);
         } catch (Exception e) {
-            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
+            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }
     }
 
-    private Result sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
+    private RPCResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_sendRawTransaction\",\"params\":[\"0x" + Hex.encodeHexString(signedTransaction) + "\"],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -58,7 +82,23 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        Process process = processBuilder.start();
+        return callRPC(processBuilder.start());
+    }
+
+    private RPCResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
+        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+
+        ProcessBuilder processBuilder = new ProcessBuilder()
+                .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
+
+        if (verbose) {
+            processBuilder.inheritIO();
+        }
+
+        return callRPC(processBuilder.start());
+    }
+
+    private RPCResult callRPC(Process process) throws IOException, InterruptedException {
         int status = process.waitFor();
 
         String line;
@@ -72,9 +112,9 @@ public final class RPC {
         String response = stringBuilder.toString();
 
         if (response.contains("error")) {
-            return Result.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
+            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
         } else {
-            return Result.successful();
+            return RPCResult.successful(response);
         }
     }
 }

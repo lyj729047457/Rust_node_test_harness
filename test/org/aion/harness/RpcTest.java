@@ -1,6 +1,7 @@
 package org.aion.harness;
 
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.RPCResult;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.TransactionResult;
@@ -12,6 +13,7 @@ import org.junit.*;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -57,8 +59,19 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
+
+        this.node.stop();
+    }
+
+    @Test
+    public void testGetBalanceViaRPC() throws Exception {
+        initializeNodeWithChecks();
+        assertTrue(this.node.start().success);
+
+        RPCResult result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -76,8 +89,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -95,8 +108,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -114,8 +127,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -133,8 +146,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
 
         transactionResult = constructTransaction(
             preminedAddress,
@@ -144,7 +157,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
         result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -176,8 +189,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertTrue(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(result.getResultOnly().success);
 
         this.node.stop();
     }
@@ -198,10 +211,88 @@ public class RpcTest {
 
         assertTrue(transactionResult.getResultOnly().success);
 
-        Result result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        assertFalse(result.success);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertFalse(result.getResultOnly().success);
 
         this.node.stop();
+    }
+
+    @Test
+    public void testBalanceTransferAndCheck() throws Exception {
+        initializeNodeWithChecks();
+        assertTrue(this.node.start().success);
+        BigInteger transferValue = BigInteger.valueOf(50);
+
+        // check balance before
+        RPCResult result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        Assert.assertEquals(BigInteger.ZERO, new BigInteger(result.getOutputResult(), 16));
+
+        // transfer and wait
+        doBalanceTransfer(transferValue);
+
+        // check balance after
+        result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        BigInteger balanceAfter = new BigInteger(result.getOutputResult(), 16);
+        Assert.assertEquals(transferValue, balanceAfter);
+    }
+
+    @Test
+    public void testBalanceTransferZeroBalanceAndCheck() throws Exception {
+        initializeNodeWithChecks();
+        assertTrue(this.node.start().success);
+        BigInteger transferValue = BigInteger.ZERO;
+
+        // check balance before
+        RPCResult result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        Assert.assertEquals(BigInteger.ZERO, new BigInteger(result.getOutputResult(), 16));
+
+        // transfer and wait
+        doBalanceTransfer(transferValue);
+
+        // check balance after
+        result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        BigInteger balanceAfter = new BigInteger(result.getOutputResult(), 16);
+        Assert.assertEquals(BigInteger.ZERO, balanceAfter);
+    }
+
+    @Test
+    public void testBalanceTransferNegativeBalanceAndCheck() throws Exception {
+        // When someone tries to transfer a negative value(BigInteger), the positive representation of
+        // that BigInteger will be the transfer value. This should be something handled by the server.
+        initializeNodeWithChecks();
+        assertTrue(this.node.start().success);
+        BigInteger negativeTransferValue = BigInteger.valueOf(-10);
+        BigInteger positiveRepresentation = new BigInteger(1, negativeTransferValue.toByteArray());
+
+        // check balance before
+        RPCResult result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        Assert.assertEquals(BigInteger.ZERO, new BigInteger(result.getOutputResult(), 16));
+
+        // transfer and wait
+        doBalanceTransfer(negativeTransferValue);
+
+        // check balance after - for positive representation
+        result = this.rpc.getBalance(destination.getAddressBytes());
+        assertTrue(result.getResultOnly().success);
+        BigInteger balanceAfter = new BigInteger(result.getOutputResult(), 16);
+        Assert.assertEquals(positiveRepresentation, balanceAfter);
+    }
+
+    private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
+        TransactionResult transactionResult = constructTransaction(
+                preminedAddress,
+                destination,
+                transferValue,
+                BigInteger.ZERO);
+        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+        // TODO: we sleep 20s right now to wait for the transaction to be mined, should probably use some other mechanism
+        Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+        assertTrue(result.getResultOnly().success);
     }
 
     private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
