@@ -59,7 +59,7 @@ public class AwkwardListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        RPC rpc = new RPC(node);
+        RPC rpc = new RPC();
         rpc.sendTransaction(transactionResult.getTransaction());
 
         EventRequestResult result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
@@ -86,7 +86,7 @@ public class AwkwardListenerTest {
 
         listener = new NodeListener();
 
-        rpc = new RPC(node);
+        rpc = new RPC();
         rpc.sendTransaction(transactionResult.getTransaction());
 
         result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));

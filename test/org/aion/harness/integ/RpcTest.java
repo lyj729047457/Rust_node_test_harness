@@ -40,7 +40,7 @@ public class RpcTest {
         destination = Address.createAddress(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.rpc = new RPC(this.node);
+        this.rpc = new RPC();
     }
 
     @After
@@ -168,8 +168,8 @@ public class RpcTest {
         this.node.stop();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testSendTransactionWhenNoNodeIsAlive() throws Exception {
+    @Test
+    public void testSendTransactionWhenNoNodeIsAlive() {
         assertFalse(this.node.isAlive());
         TransactionResult transactionResult = constructTransaction(
             preminedAddress,

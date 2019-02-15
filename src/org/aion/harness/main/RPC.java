@@ -15,14 +15,6 @@ import java.io.InputStreamReader;
  * This class is not thread-safe.
  */
 public final class RPC {
-    private Node node;
-
-    public RPC(Node node) {
-        if (node == null) {
-            throw new NullPointerException("Cannot construct RPC with null node.");
-        }
-        this.node = node;
-    }
 
     public RPCResult sendTransaction(Transaction transaction) {
         return sendTransactionInternal(transaction, false);
@@ -33,10 +25,6 @@ public final class RPC {
     }
 
     public RPCResult getBalance(byte[] address) throws IOException, InterruptedException {
-        if (!this.node.isAlive()) {
-            throw new IllegalStateException("no node is currently running");
-        }
-
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -45,10 +33,6 @@ public final class RPC {
     }
 
     public RPCResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
-        if (!this.node.isAlive()) {
-            throw new IllegalStateException("no node is currently running");
-        }
-
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -57,10 +41,6 @@ public final class RPC {
     }
 
     public RPCResult getNonce(byte[] address) throws IOException, InterruptedException {
-        if (!this.node.isAlive()) {
-            throw new IllegalStateException("no node is currently running");
-        }
-
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -69,10 +49,6 @@ public final class RPC {
     }
 
     public RPCResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
-        if (!this.node.isAlive()) {
-            throw new IllegalStateException("no node is currently running");
-        }
-
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -81,10 +57,6 @@ public final class RPC {
     }
 
     private RPCResult sendTransactionInternal(Transaction transaction, boolean verbose) {
-        if (!this.node.isAlive()) {
-            throw new IllegalStateException("no node is currently running");
-        }
-
         if (transaction == null) {
             throw new IllegalArgumentException("transaction cannot be null.");
         }
@@ -149,7 +121,9 @@ public final class RPC {
 
         String response = stringBuilder.toString();
 
-        if (response.contains("error")) {
+        if (status != 0) {
+            return RPCResult.unsuccessful(status, "RPC call failed!");
+        } else if (response.contains("error")) {
             return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
         } else {
             return RPCResult.successful(response);
