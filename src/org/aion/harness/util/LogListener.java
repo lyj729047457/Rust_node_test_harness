@@ -1,6 +1,9 @@
 package org.aion.harness.util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 
@@ -8,6 +11,8 @@ import java.util.*;
 
 public final class LogListener implements TailerListener {
     private static final int CAPACITY = 10;
+
+    private AtomicBoolean isListening = new AtomicBoolean(false);
 
     private List<EventRequest> requestPool = new ArrayList<>(CAPACITY);
 
@@ -28,6 +33,10 @@ public final class LogListener implements TailerListener {
     public EventRequestResult submitEventRequest(EventRequest eventRequest, long timeoutInMillis) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
+        }
+
+        if (!this.isListening.get()) {
+            return EventRequestResult.createRejectedEvent("Listener is not currently listening to a log file.");
         }
 
         long endTimeInMillis = System.currentTimeMillis() + timeoutInMillis;
@@ -64,6 +73,39 @@ public final class LogListener implements TailerListener {
             return EventRequestResult.createRejectedEvent("Interrupted while waiting for event.");
         }
 
+    }
+
+    /**
+     * Attempts to turn the listener on so that it listens to the output log.
+     *
+     * If the listening is already on then this method does nothing.
+     *
+     * Returns a successful result only if the listener was off at the time of this class and was
+     * turned on, otherwise an unsuccessful result is returned instead.
+     *
+     * <b>This method should only be called by the {@link LogReader} class. And in particular,
+     * only by the instance of {@link LogReader} that created this listener object.</b>
+     *
+     * @return Whether or not the listener went from off to on.
+     */
+    Result startListening() {
+        boolean success = !this.isListening.compareAndExchange(false, true);
+
+        return (success)
+            ? Result.successful()
+            : Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is already listening.");
+    }
+
+    /**
+     * Turns the listener off so that it no longer listens to the output log.
+     *
+     * After calling this method the listening will be turned off.
+     *
+     * <b>This method should only be called by the {@link LogReader} class. And in particular,
+     * only by the instance of {@link LogReader} that created this listener object.</b>
+     */
+    void stopListening() {
+        this.isListening.set(false);
     }
 
     /**
@@ -174,6 +216,10 @@ public final class LogListener implements TailerListener {
 
     @Override
     public void handle(String nextLine) {
+        // If we are not listening to the log then ignore this line.
+        if (!this.isListening.get()) {
+            return;
+        }
 
         // Check the pool and determine if an event has been observed and if so, grab that event.
         NodeEvent observedEvent = getObservedEvent(nextLine);
