@@ -1,6 +1,7 @@
 package org.aion.harness.main.impl;
 
 import org.aion.harness.main.Node;
+import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.util.*;
 import org.aion.harness.result.Result;
@@ -17,7 +18,6 @@ import java.util.concurrent.TimeUnit;
  * A JavaNode is thread-safe.
  */
 public final class JavaNode implements Node {
-    private LogManager logManager = new LogManager();
 
     // The running instance of the kernel.
     private Process runningKernel = null;
@@ -57,8 +57,11 @@ public final class JavaNode implements Node {
         ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.NETWORK)
                 .directory(NodeFileManager.getKernelDirectory());
 
-        builder.redirectOutput(this.logManager.getCurrentOutputLogFile());
-        builder.redirectError(this.logManager.getCurrentErrorLogFile());
+        LogManager logManager = SingletonFactory.singleton().logManager();
+        File outputLog = logManager.getCurrentOutputLogFile();
+
+        builder.redirectOutput(outputLog);
+        builder.redirectError(logManager.getCurrentErrorLogFile());
 
         this.runningKernel = builder.start();
 
@@ -67,7 +70,7 @@ public final class JavaNode implements Node {
         Result result = isAlive() ? Result.successful() : Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "node has not started");
 
         if (result.success) {
-            result = LogReader.singleton().startReading(this.logManager.getCurrentOutputLogFile());
+            result = LogReader.singleton().startReading(outputLog);
         }
 
         return result;
@@ -136,7 +139,7 @@ public final class JavaNode implements Node {
             return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Fetching kernel build failed.");
         }
 
-        return this.logManager.setupLogFiles();
+        return SingletonFactory.singleton().logManager().setupLogFiles();
     }
 
     /**
@@ -193,7 +196,7 @@ public final class JavaNode implements Node {
         int untarStatus = builder.start().waitFor();
         tarDestination.delete();
 
-        if (!this.logManager.setupLogFiles().success) {
+        if (!SingletonFactory.singleton().logManager().setupLogFiles().success) {
             return false;
         }
 
