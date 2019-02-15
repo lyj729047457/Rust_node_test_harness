@@ -4,9 +4,11 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.RPCResult;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.Result;
@@ -310,16 +312,20 @@ public class RpcTest {
         Assert.assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
     }
 
-    private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
+    private void doBalanceTransfer(BigInteger transferValue) {
         TransactionResult transactionResult = constructTransaction(
                 preminedAddress,
                 destination,
                 transferValue,
                 BigInteger.ZERO);
         RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
-        // TODO: we sleep 20s right now to wait for the transaction to be mined, should probably use some other mechanism
-        Thread.sleep(TimeUnit.SECONDS.toMillis(20));
         assertTrue(result.getResultOnly().success);
+
+        byte[] transactionHash = transactionResult.getTransaction().getTransactionHash();
+        long timeout = TimeUnit.MINUTES.toMillis(1);
+
+        EventRequestResult eventResult = new NodeListener().waitForTransactionToBeSealed(transactionHash, timeout);
+        assertTrue(eventResult.eventHasBeenObserved());
     }
 
     private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
