@@ -1,6 +1,7 @@
-package org.aion.harness;
+package org.aion.harness.main;
 
 import java.util.NoSuchElementException;
+import org.aion.harness.main.impl.JavaNode;
 
 /**
  * A factory for producing {@link Node} implementations.

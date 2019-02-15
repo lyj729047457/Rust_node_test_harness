@@ -1,9 +1,15 @@
-package org.aion.harness;
+package org.aion.harness.integ;
 
 import java.util.concurrent.TimeUnit;
+import org.aion.harness.kernel.Address;
+import org.aion.harness.kernel.Transaction;
+import org.aion.harness.main.Node;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.RPC;
+import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
-import org.aion.harness.result.Result;
 import org.aion.harness.result.TransactionResult;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
@@ -90,7 +96,8 @@ public class AwkwardListenerTest {
     }
 
     private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction.buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+        return Transaction
+            .buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
 }

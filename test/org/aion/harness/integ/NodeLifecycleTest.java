@@ -1,5 +1,8 @@
-package org.aion.harness;
+package org.aion.harness.integ;
 
+import org.aion.harness.main.Node;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.Result;

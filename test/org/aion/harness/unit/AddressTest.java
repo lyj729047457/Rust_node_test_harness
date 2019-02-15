@@ -1,5 +1,6 @@
-package org.aion.harness;
+package org.aion.harness.unit;
 
+import org.aion.harness.kernel.Address;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;

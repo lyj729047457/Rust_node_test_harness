@@ -1,4 +1,4 @@
-package org.aion.harness;
+package org.aion.harness.integ;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.harness.misc.Assumptions;
+import org.aion.harness.main.Node;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;

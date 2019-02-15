@@ -1,4 +1,4 @@
-package org.aion.harness;
+package org.aion.harness.kernel;
 
 import main.SignedTransactionBuilder;
 import org.aion.harness.misc.Assumptions;

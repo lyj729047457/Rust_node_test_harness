@@ -1,6 +1,6 @@
 package org.aion.harness.result;
 
-import org.aion.harness.Transaction;
+import org.aion.harness.kernel.Transaction;
 
 /**
  * Holds a simple result and a transaction.

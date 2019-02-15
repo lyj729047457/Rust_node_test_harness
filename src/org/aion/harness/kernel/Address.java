@@ -1,4 +1,4 @@
-package org.aion.harness;
+package org.aion.harness.kernel;
 
 import org.apache.commons.codec.binary.Hex;
 import java.util.Arrays;

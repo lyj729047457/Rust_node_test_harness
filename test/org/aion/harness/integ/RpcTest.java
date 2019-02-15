@@ -1,5 +1,11 @@
-package org.aion.harness;
+package org.aion.harness.integ;
 
+import org.aion.harness.kernel.Address;
+import org.aion.harness.kernel.Transaction;
+import org.aion.harness.main.Node;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.RPC;
+import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RPCResult;
 import org.aion.harness.util.NodeFileManager;
@@ -317,7 +323,8 @@ public class RpcTest {
     }
 
     private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction.buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+        return Transaction
+            .buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private Result initializeNode() throws IOException, InterruptedException {

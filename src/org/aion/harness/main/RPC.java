@@ -1,5 +1,6 @@
-package org.aion.harness;
+package org.aion.harness.main;
 
+import org.aion.harness.kernel.Transaction;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RPCResult;
 import org.apache.commons.codec.binary.Hex;

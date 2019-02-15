@@ -1,5 +1,6 @@
-package org.aion.harness;
+package org.aion.harness.main.impl;
 
+import org.aion.harness.main.Node;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.util.*;
 import org.aion.harness.result.Result;
