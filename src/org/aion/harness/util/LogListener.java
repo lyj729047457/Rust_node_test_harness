@@ -29,6 +29,17 @@ public final class LogListener implements TailerListener {
     }
 
     /**
+     * Returns the number of events that are currently being listened for. These events may have
+     * been requested by separate {@link org.aion.harness.main.NodeListener} objects.
+     * But these are the total number currently being processed.
+     *
+     * @return total number of events being listened for.
+     */
+    public synchronized int numberOfPendingEventRequests() {
+        return this.requestPool.size();
+    }
+
+    /**
      * Adds the specified event to the list of events that this listener is currently listening for.
      *
      * If the listener is already listening to the maximum number of events then the caller will
