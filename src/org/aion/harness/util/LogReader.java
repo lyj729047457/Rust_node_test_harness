@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public final class LogReader {
     private ExecutorService threadExecutor;
     private Tailer logTailer;
-    private final LogListener listener;
+    private LogListener listener;
 
     public LogReader() {
         this.listener = new LogListener();
@@ -40,12 +40,19 @@ public final class LogReader {
     }
 
     public void stopReading() throws InterruptedException {
-        this.listener.stopListening();
-        this.logTailer.stop();
-        this.threadExecutor.shutdownNow();
+        if (this.listener.isAlive()) {
 
-        if (!this.threadExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Failed to shut down the log reader thread - timed out!");
+            this.listener.stopListening();
+            this.logTailer.stop();
+            this.threadExecutor.shutdownNow();
+
+            if (!this.threadExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                System.out.println(Assumptions.LOGGER_BANNER
+                    + "Failed to shut down the log reader thread - timed out!");
+            }
+        } else {
+            // If the listener is dead it cannot be recovered. We need to scrap it entirely.
+            this.listener = new LogListener();
         }
 
         this.threadExecutor = null;
