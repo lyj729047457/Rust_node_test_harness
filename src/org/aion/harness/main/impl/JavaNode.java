@@ -70,7 +70,7 @@ public final class JavaNode implements Node {
         Result result = isAlive() ? Result.successful() : Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "node has not started");
 
         if (result.success) {
-            result = LogReader.singleton().startReading(outputLog);
+            result = SingletonFactory.singleton().logReader().startReading(outputLog);
         }
 
         return result;
@@ -86,7 +86,7 @@ public final class JavaNode implements Node {
             this.runningKernel.destroy();
             this.runningKernel = null;
 
-            LogReader.singleton().stopReading();
+            SingletonFactory.singleton().logReader().stopReading();
 
             //TODO: wait until the shutdown message is read or a timeout?
         }

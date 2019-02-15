@@ -1,20 +1,16 @@
 package org.aion.harness.main;
 
+import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.LogListener;
-import org.aion.harness.util.LogReader;
 import org.aion.harness.util.NodeEvent;
 
 /**
  * A class that listens to a node and waits for events to occur.
  */
 public final class NodeListener {
-    private LogListener logListener;
-
-    public NodeListener() {
-        this.logListener = LogReader.singleton().getLogListener();
-    }
+    private final LogListener logListener = SingletonFactory.singleton().logReader().getLogListener();
 
     public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
         EventRequest request = new EventRequest(NodeEvent.getStartedMiningEvent());

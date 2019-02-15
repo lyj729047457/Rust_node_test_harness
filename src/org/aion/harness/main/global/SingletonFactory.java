@@ -1,6 +1,7 @@
 package org.aion.harness.main.global;
 
 import org.aion.harness.util.LogManager;
+import org.aion.harness.util.LogReader;
 
 /**
  * A class that provides always the same instance of the requested class, so that the class becomes
@@ -18,9 +19,11 @@ public final class SingletonFactory {
     private static final SingletonFactory SELF = new SingletonFactory();
 
     private final LogManager logManager;
+    private final LogReader logReader;
 
     private SingletonFactory() {
         this.logManager = new LogManager();
+        this.logReader = new LogReader();
     }
 
     /**
@@ -43,6 +46,19 @@ public final class SingletonFactory {
      */
     public LogManager logManager() {
         return this.logManager;
+    }
+
+    /**
+     * Returns an instance of {@link LogReader}.
+     *
+     * If two {@link LogReader} instances are obtained by subsequent calls to this method, then
+     * the two instances will in fact be the same instance and therefore will be equal as per the
+     * {@code ==} operator.
+     *
+     * @return a log manager singleton.
+     */
+    public LogReader logReader() {
+        return this.logReader;
     }
 
 }

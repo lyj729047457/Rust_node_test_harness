@@ -13,18 +13,12 @@ import java.util.concurrent.TimeUnit;
  * A class responsible for reading a log file and setting up a {@link LogListener} that eavesdrops on the log file.
  */
 public final class LogReader {
-    private static final LogReader SINGLETON = new LogReader();
-
     private ExecutorService threadExecutor;
     private Tailer logTailer;
     private LogListener listener;
     private boolean isCurrentlyReading = false;
 
-    private LogReader() {}
-
-    public static LogReader singleton() {
-        return SINGLETON;
-    }
+    public LogReader() {}
 
     public Result startReading(File log) {
         if (this.isCurrentlyReading) {
