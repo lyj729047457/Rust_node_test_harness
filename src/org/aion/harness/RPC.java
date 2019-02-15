@@ -55,6 +55,30 @@ public final class RPC {
         return getBalanceOverRPC(address, true);
     }
 
+    public RPCResult getNonce(byte[] address) throws IOException, InterruptedException {
+        if (!this.node.isAlive()) {
+            throw new IllegalStateException("no node is currently running");
+        }
+
+        if (address == null) {
+            throw new IllegalArgumentException("address cannot be null.");
+        }
+
+        return getNonceOverRPC(address, false);
+    }
+
+    public RPCResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
+        if (!this.node.isAlive()) {
+            throw new IllegalStateException("no node is currently running");
+        }
+
+        if (address == null) {
+            throw new IllegalArgumentException("address cannot be null.");
+        }
+
+        return getNonceOverRPC(address, true);
+    }
+
     private RPCResult sendTransactionInternal(Transaction transaction, boolean verbose) {
         if (!this.node.isAlive()) {
             throw new IllegalStateException("no node is currently running");
@@ -87,6 +111,19 @@ public final class RPC {
 
     private RPCResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+
+        ProcessBuilder processBuilder = new ProcessBuilder()
+                .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
+
+        if (verbose) {
+            processBuilder.inheritIO();
+        }
+
+        return callRPC(processBuilder.start());
+    }
+
+    private RPCResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
+        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
                 .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);

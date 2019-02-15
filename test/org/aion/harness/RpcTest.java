@@ -283,6 +283,27 @@ public class RpcTest {
         Assert.assertEquals(positiveRepresentation, balanceAfter);
     }
 
+    @Test
+    public void testGetNonce() throws Exception {
+        initializeNodeWithChecks();
+        assertTrue(this.node.start().success);
+
+        // check nonce before
+        RPCResult result = this.rpc.getNonce(preminedAddress.getAddressBytes());
+        BigInteger nonceBefore = new BigInteger(result.getOutputResult(), 16);
+        System.out.println("nonce is: " + nonceBefore);
+
+        // do a transfer and wait
+        doBalanceTransfer(BigInteger.ONE);
+
+        // check nonce after
+        result = this.rpc.getNonce(preminedAddress.getAddressBytes());
+        BigInteger nonceAfter = new BigInteger(result.getOutputResult(), 16);
+        System.out.println("nonce is: " + nonceAfter);
+
+        Assert.assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
+    }
+
     private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
                 preminedAddress,
