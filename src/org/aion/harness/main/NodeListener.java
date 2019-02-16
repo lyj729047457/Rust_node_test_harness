@@ -27,6 +27,11 @@ public final class NodeListener {
         return this.logListener.submitEventRequest(request, timeoutInMillis);
     }
 
+    public EventRequestResult waitForLine(String line, long timeoutInMillis) {
+        EventRequest request = new EventRequest(NodeEvent.getCustomStringEvent(line));
+        return this.logListener.submitEventRequest(request, timeoutInMillis);
+    }
+
     /**
      * Returns the number of events that are currently being listened for. These events may have
      * been requested by separate {@link NodeListener} objects. But these are the total number

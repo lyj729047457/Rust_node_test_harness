@@ -6,6 +6,9 @@ public final class NodeEvent {
     private final String eventString;
 
     private NodeEvent(String eventString) {
+        if (eventString == null) {
+            throw new NullPointerException("Cannot construct node event with null event string.");
+        }
         this.eventString = eventString;
     }
 
@@ -24,6 +27,10 @@ public final class NodeEvent {
     public static NodeEvent getHeartbeatEvent() {
         // An event we can consider as consistent, and so a good heartbeat.
         return new NodeEvent("p2p-status");
+    }
+
+    public static NodeEvent getCustomStringEvent(String string) {
+        return new NodeEvent(string);
     }
 
     public String getEventString() {
