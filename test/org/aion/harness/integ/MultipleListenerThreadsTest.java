@@ -9,12 +9,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.harness.integ.resources.Eavesdropper;
+import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.impl.JavaNode;
-import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +60,7 @@ public class MultipleListenerThreadsTest {
 
         List<Eavesdropper> eavesdroppers = new ArrayList<>();
         for (int i = 0; i < NUM_THREADS; i++) {
-            eavesdroppers.add(new Eavesdropper(new NodeListener(), i));
+            eavesdroppers.add(Eavesdropper.createEavesdropperThatListensFor(Gossip.HEARTBEAT, i));
         }
 
         // Start running all of our eavesdropping threads.
@@ -99,39 +98,6 @@ public class MultipleListenerThreadsTest {
         if ((this.node != null) && (this.node.isAlive())) {
             this.node.stop();
         }
-    }
-
-    private static class Eavesdropper implements Runnable {
-        private NodeListener listener;
-        private int ID;
-        private AtomicBoolean dead = new AtomicBoolean(false);
-
-        private Eavesdropper(NodeListener listener, int ID) {
-            this.listener = listener;
-            this.ID = ID;
-        }
-
-        @Override
-        public void run() {
-            while (!this.dead.get()) {
-                long startTime = System.nanoTime();
-                EventRequestResult result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
-
-                if (result.eventHasBeenObserved()) {
-                    long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservationInNanoseconds() - startTime);
-                    System.out.println("Thread #" + this.ID + ": heartbeat observed | time: " + time + " second(s)");
-                } else if (result.eventHasBeenRejected()) {
-                    System.out.println("Thread #" + this.ID + ": heartbeat request rejected due to: " + result.causeOfRejection());
-                } else {
-                    System.out.println("Thread #" + this.ID + ": heartbeat unobserved.");
-                }
-            }
-        }
-
-        private void kill() {
-            this.dead.set(true);
-        }
-
     }
 
 }
