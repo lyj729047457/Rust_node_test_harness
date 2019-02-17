@@ -62,26 +62,7 @@ public final class NodeEvent implements IEvent {
 
     @Override
     public String toString() {
-        return "NodeEvent { " + this.eventString + " }";
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof NodeEvent)) {
-            return false;
-        }
-
-        if (this == other) {
-            return true;
-        }
-
-        NodeEvent event = (NodeEvent) other;
-        return event.eventString.equals(this.eventString);
-    }
-
-    @Override
-    public int hashCode() {
-        return this.eventString.hashCode();
+        return "NodeEvent { " + this.eventStatement() + " }";
     }
 
 }
