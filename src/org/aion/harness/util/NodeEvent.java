@@ -1,8 +1,10 @@
 package org.aion.harness.util;
 
+import java.util.List;
+import org.aion.harness.main.IEvent;
 import org.apache.commons.codec.binary.Hex;
 
-public final class NodeEvent {
+public final class NodeEvent implements IEvent {
     private final String eventString;
 
     private NodeEvent(String eventString) {
@@ -35,6 +37,46 @@ public final class NodeEvent {
 
     public String getEventString() {
         return this.eventString;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String eventStatement() {
+        return "(" + this.eventString + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IEvent and(IEvent event) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IEvent or(IEvent event) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSatisfiedBy(String line) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getAllObservedEvents() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

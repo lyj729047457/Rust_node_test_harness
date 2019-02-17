@@ -1,6 +1,7 @@
 package org.aion.harness.util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.harness.main.IEvent;
 import org.aion.harness.result.EventRequestResult;
 
 /**
@@ -12,7 +13,7 @@ import org.aion.harness.result.EventRequestResult;
  * This class is thread-safe.
  */
 public final class EventRequest {
-    private final NodeEvent requestedEvent;
+    private final IEvent requestedEvent;
     private AtomicBoolean cancelled = new AtomicBoolean(false);
     private EventRequestResult eventResult;
 
@@ -21,7 +22,7 @@ public final class EventRequest {
      *
      * @param eventToRequest The event to request to be listened for.
      */
-    public EventRequest(NodeEvent eventToRequest) {
+    public EventRequest(IEvent eventToRequest) {
         this.requestedEvent = eventToRequest;
         this.eventResult = null;
     }
@@ -47,7 +48,7 @@ public final class EventRequest {
      * @return The requested event.
      */
     public NodeEvent getRequest() {
-        return this.requestedEvent;
+        return (NodeEvent) this.requestedEvent;
     }
 
     /**
@@ -113,7 +114,7 @@ public final class EventRequest {
 
     @Override
     public int hashCode() {
-        return this.requestedEvent.getEventString().hashCode();
+        return this.requestedEvent.eventStatement().hashCode();
     }
 
 }
