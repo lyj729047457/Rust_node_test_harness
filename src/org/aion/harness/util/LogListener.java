@@ -14,10 +14,10 @@ public final class LogListener implements TailerListener {
     // The tailer is responsible for reading each line and updating us. We are its "observer".
     private Tailer tailer;
 
-    private boolean isListening = false;
+    private enum ListenerState { ALIVE_AND_LISTENING, ALIVE_AND_NOT_LISTENING, DEAD }
 
-    // A dead listener is in a fatal situation. The node must be restarted.
-    private boolean isDead = false;
+    // We begin as alive but not listening to any log file.
+    private ListenerState currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
 
     private List<EventRequest> requestPool = new ArrayList<>(CAPACITY);
 
@@ -25,7 +25,7 @@ public final class LogListener implements TailerListener {
      * Returns true only if the listener is not dead.
      */
     public synchronized boolean isAlive() {
-        return !this.isDead;
+        return this.currentState != ListenerState.DEAD;
     }
 
     /**
@@ -53,12 +53,12 @@ public final class LogListener implements TailerListener {
      * @param timeoutInMillis The amount of milliseconds to timeout after.
      * @return the result of this request.
      */
-    public EventRequestResult submitEventRequest(EventRequest eventRequest, long timeoutInMillis) {
+    public synchronized EventRequestResult submitEventRequest(EventRequest eventRequest, long timeoutInMillis) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
 
-        if (!isAliveAndListening()) {
+        if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
             return EventRequestResult.createRejectedEvent("Listener is not currently listening to a log file.");
         }
 
@@ -99,32 +99,32 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Attempts to turn the listener on so that it listens to the output log.
+     * Returns success only if the listener is currently not dead and not listening and has now
+     * started listening.
      *
-     * If the listening is already on then this method does nothing.
-     *
-     * Returns a successful result only if the listener was off at the time of this class and was
-     * turned on, otherwise an unsuccessful result is returned instead.
-     *
-     * <b>This method should only be called by the {@link LogReader} class. And in particular,
-     * only by the instance of {@link LogReader} that created this listener object.</b>
-     *
-     * @return Whether or not the listener went from off to on.
+     * If the listener is currently dead or is already listening then an appropriate unsuccessful
+     * result is returned.
      */
     Result startListening() {
-        return setIsListening();
+        if (this.currentState == ListenerState.DEAD) {
+            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
+        } else if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+            // awkward for this to be "unsuccessful"
+            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is already listening!");
+        } else {
+            this.currentState = ListenerState.ALIVE_AND_LISTENING;
+            return Result.successful();
+        }
     }
 
     /**
-     * Turns the listener off so that it no longer listens to the output log.
-     *
-     * After calling this method the listening will be turned off.
-     *
-     * <b>This method should only be called by the {@link LogReader} class. And in particular,
-     * only by the instance of {@link LogReader} that created this listener object.</b>
+     * Sets the current state of the listener to be not listening only if the listener is currently
+     * listening.
      */
     void stopListening() {
-        setNotListening();
+        if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+            this.currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
+        }
     }
 
     /**
@@ -225,11 +225,7 @@ public final class LogListener implements TailerListener {
      * @param causeOfPanic The reason for why the request pool is being killed.
      */
     private synchronized void killRequestPool(String causeOfPanic) {
-        // Ensure that we are not listening so that the pool will not continue growing.
-        // This is a programmer's error if we are ever in this state.
-        if (isAliveAndListening()) {
-            throw new IllegalStateException("Cannot kill request pool while still listening!");
-        }
+        this.currentState = ListenerState.DEAD;
 
         for (EventRequest request : this.requestPool) {
             request.addResult(EventRequestResult.createRejectedEvent(causeOfPanic));
@@ -250,9 +246,6 @@ public final class LogListener implements TailerListener {
 
     @Override
     public void fileNotFound() {
-        // This situation is considered fatal.
-        setDeadAndNotListening();
-
         // Reject all requests in the pool and clear the pool.
         killRequestPool("Log file not found!");
 
@@ -262,9 +255,6 @@ public final class LogListener implements TailerListener {
 
     @Override
     public void fileRotated() {
-        // This situation is considered fatal.
-        setDeadAndNotListening();
-
         // Reject all requests in the pool and clear the pool.
         killRequestPool("Log file not found!");
 
@@ -274,96 +264,24 @@ public final class LogListener implements TailerListener {
 
     @Override
     public synchronized void handle(String nextLine) {
-        // If we are not listening to the log then ignore this line.
-        if (!isAliveAndListening()) {
-            return;
+        if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+
+            // Check the pool and determine if an event has been observed and if so, grab that event.
+            NodeEvent observedEvent = getObservedEvent(nextLine);
+            long timeOfObservation = System.nanoTime();
+
+            // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
+            markRequestAsObservedAndCleanPool(observedEvent, timeOfObservation);
         }
-
-        // Check the pool and determine if an event has been observed and if so, grab that event.
-        NodeEvent observedEvent = getObservedEvent(nextLine);
-        long timeOfObservation = System.nanoTime();
-
-        // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
-        markRequestAsObservedAndCleanPool(observedEvent, timeOfObservation);
     }
 
     @Override
     public void handle(Exception e) {
-        // This situation is considered fatal.
-        setDeadAndNotListening();
-
         // Reject all requests in the pool and clear the pool.
         killRequestPool(e.toString());
 
         // Shut down the tailer.
         this.tailer.stop();
-    }
-
-    //<---------methods below are to ensure we never get into a bad state: dead & listening-------->
-
-    /**
-     * Returns true only if this listener is alive and is listening. Otherwise returns false.
-     *
-     * @return true if alive and listening to the logs.
-     */
-    private synchronized boolean isAliveAndListening() {
-        return !this.isDead && this.isListening;
-    }
-
-    /**
-     * Sets the listener so that it is no longer listening.
-     *
-     * This method can never put the listener into an incorrect state. However, it can certainly get
-     * a listener out of an incorrect state. If it detects that the state was incorrect then an
-     * exception is thrown.
-     */
-    private synchronized void setNotListening() {
-        this.isListening = false;
-    }
-
-    /**
-     * Attempts to set the listener so that it is listening.
-     *
-     * Returns a result such that if the result is successful then this state was successfully
-     * changed. If it is unsuccessful then the state did not change and the result will tell the
-     * caller why.
-     *
-     * Therefore the success of this method is not guaranteed, and this is because we do not want
-     * any setters to be able to get us into an incorrect state (namely, dead & listening).
-     *
-     * This method will throw an exception if it was previously in an incorrect state.
-     *
-     * @return whether the state change was successful or not.
-     */
-    private synchronized Result setIsListening() {
-        if (!this.isDead) {
-            boolean previous = this.isListening;
-            this.isListening = true;
-
-            return (previous)
-                ? Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener was already listening!")
-                : Result.successful();
-
-        } else {
-            if (this.isListening) {
-                throw new IllegalStateException("Listener is currently dead AND listening!");
-            }
-
-            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
-        }
-    }
-
-    /**
-     * This is always a correct state transition. However, we may be coming from an incorrect state,
-     * and if so, we throw an exception.
-     */
-    private synchronized void setDeadAndNotListening() {
-        if (this.isDead && this.isListening) {
-            throw new IllegalStateException("Listener is currently dead AND listening!");
-        }
-
-        this.isDead = true;
-        this.isListening = false;
     }
 
 }
