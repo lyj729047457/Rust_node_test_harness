@@ -245,24 +245,6 @@ public final class LogListener implements TailerListener {
     }
 
     @Override
-    public void fileNotFound() {
-        // Reject all requests in the pool and clear the pool.
-        killRequestPool("Log file not found!");
-
-        // Shut down the tailer.
-        this.tailer.stop();
-    }
-
-    @Override
-    public void fileRotated() {
-        // Reject all requests in the pool and clear the pool.
-        killRequestPool("Log file not found!");
-
-        // Shut down the tailer.
-        this.tailer.stop();
-    }
-
-    @Override
     public synchronized void handle(String nextLine) {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
 
@@ -276,11 +258,23 @@ public final class LogListener implements TailerListener {
     }
 
     @Override
-    public void handle(Exception e) {
-        // Reject all requests in the pool and clear the pool.
-        killRequestPool(e.toString());
+    public void fileNotFound() {
+        panic("Log file not found!");
+    }
 
-        // Shut down the tailer.
+    @Override
+    public void fileRotated() {
+        // File not found because we die immediately there is no time to tell it was rotated.
+        panic("Log file not found!");
+    }
+
+    @Override
+    public void handle(Exception e) {
+        panic(e.toString());
+    }
+
+    private void panic(String cause) {
+        killRequestPool(cause);
         this.tailer.stop();
     }
 
