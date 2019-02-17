@@ -75,6 +75,16 @@ public final class EventRequestResult {
         return new EventRequestResult(RequestResultState.REJECTED, null, causeOfRejection, -1);
     }
 
+    /**
+     * Returns a new expired request event result, indicating that the event request had timed out
+     * before it had been satisfied.
+     *
+     * @return a new expired event request result.
+     */
+    public static EventRequestResult expiredEvent() {
+        return new EventRequestResult(RequestResultState.EXPIRED, null, null, -1);
+    }
+
     public boolean eventWasObserved() {
         return this.resultState == RequestResultState.OBSERVED;
     }

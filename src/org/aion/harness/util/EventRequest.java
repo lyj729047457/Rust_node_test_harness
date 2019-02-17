@@ -16,8 +16,6 @@ public final class EventRequest implements IEventRequest {
     private final IEvent requestedEvent;
     private final long deadline;
 
-    private EventRequestResult eventResult;
-
     private enum RequestState { PENDING, SATISFIED, UNOBSERVED, REJECTED, EXPIRED }
 
     private RequestState currentState = RequestState.PENDING;
@@ -33,22 +31,6 @@ public final class EventRequest implements IEventRequest {
     public EventRequest(IEvent eventToRequest, long deadline) {
         this.requestedEvent = eventToRequest;
         this.deadline = deadline;
-        this.eventResult = null;
-    }
-
-    /**
-     * Sets the result of this event request to the specified result.
-     *
-     * A non-null result can only be set once. The first time this method is called and supplied
-     * with a non-null result, no other results can be set. After this point this method does
-     * effectively nothing.
-     *
-     * @param result The result to set.
-     */
-    public synchronized void addResult(EventRequestResult result) {
-        if (this.eventResult == null) {
-            this.eventResult = result;
-        }
     }
 
     /**
@@ -60,31 +42,9 @@ public final class EventRequest implements IEventRequest {
         return (NodeEvent) this.requestedEvent;
     }
 
-    /**
-     * Returns the result of the requested event or {@code null} if no result has been set yet.
-     *
-     * @return The result or {@code null} if no result has been set.
-     */
-    public synchronized EventRequestResult getResult() {
-        return this.eventResult;
-    }
-
-    /**
-     * Returns {@code true} if, and only if, a non-null result has been set for this request.
-     *
-     * @return Whether or not a result has been set.
-     */
-    public synchronized boolean hasResult() {
-        return this.eventResult != null;
-    }
-
     @Override
     public synchronized String toString() {
-        if (this.eventResult == null) {
-            return "EventRequest { event requested = " + this.requestedEvent + ", event result = pending }";
-        } else {
-            return "EventRequest { event requested = " + this.requestedEvent + ", event result = " + this.eventResult + " }";
-        }
+        return "EventRequest { event request = " + this.requestedEvent + ", event state = " + this.currentState + " }";
     }
 
     @Override
@@ -119,8 +79,6 @@ public final class EventRequest implements IEventRequest {
         if (isSatisfied) {
             this.currentState = RequestState.SATISFIED;
             this.timeOfObservation = currentTimeInMillis;
-
-            this.eventResult = EventRequestResult.observedEvent(this.requestedEvent.getAllObservedEvents(), currentTimeInMillis);
         }
 
         return isSatisfied;
@@ -139,7 +97,6 @@ public final class EventRequest implements IEventRequest {
             try {
                 this.wait(this.deadline - currentTime);
             } catch (InterruptedException e) {
-                this.eventResult = EventRequestResult.rejectedEvent("Interrupted while waiting for request outcome!");
                 markAsRejected("Interrupted while waiting for request outcome!");
             }
 

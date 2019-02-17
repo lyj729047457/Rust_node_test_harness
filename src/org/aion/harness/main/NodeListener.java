@@ -3,6 +3,7 @@ package org.aion.harness.main;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
+import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
 import org.aion.harness.util.NodeEvent;
 
@@ -15,25 +16,29 @@ public final class NodeListener {
     public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(NodeEvent.getStartedMiningEvent(), deadline);
-        return this.logListener.submitEventRequest(request);
+        this.logListener.submitEventRequest(request);
+        return extractResult(request);
     }
 
     public EventRequestResult waitForTransactionToBeSealed(byte[] transactionHash, long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(NodeEvent.getTransactionSealedEvent(transactionHash), deadline);
-        return this.logListener.submitEventRequest(request);
+        this.logListener.submitEventRequest(request);
+        return extractResult(request);
     }
 
     public EventRequestResult waitForHeartbeat(long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(NodeEvent.getHeartbeatEvent(), deadline);
-        return this.logListener.submitEventRequest(request);
+        this.logListener.submitEventRequest(request);
+        return extractResult(request);
     }
 
     public EventRequestResult waitForLine(String line, long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(NodeEvent.getCustomStringEvent(line), deadline);
-        return this.logListener.submitEventRequest(request);
+        this.logListener.submitEventRequest(request);
+        return extractResult(request);
     }
 
     /**
@@ -46,5 +51,20 @@ public final class NodeListener {
     public static int numberOfEventsBeingListenedFor() {
         return SingletonFactory.singleton().logReader().getLogListener().numberOfPendingEventRequests();
     }
+
+    private EventRequestResult extractResult(IEventRequest request) {
+        if (request.isUnobserved()) {
+            return EventRequestResult.unobservedEvent();
+        } else if (request.isSatisfied()) {
+            return EventRequestResult.observedEvent(request.getAllObservedEvents(), request.timeOfObservation());
+        } else if (request.isExpired()) {
+            return EventRequestResult.expiredEvent();
+        } else if (request.isRejected()) {
+            return EventRequestResult.rejectedEvent(request.getCauseOfRejection());
+        } else {
+            throw new IllegalStateException("Waited for event until notified but event is still pending!");
+        }
+    }
+
 
 }

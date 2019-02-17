@@ -57,7 +57,7 @@ public final class LogListener implements TailerListener {
      * 5. The request is observed.
      *    -> request is marked satisfied.
      */
-    public EventRequestResult submitEventRequest(EventRequest eventRequest) {
+    public void submitEventRequest(EventRequest eventRequest) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
@@ -65,7 +65,7 @@ public final class LogListener implements TailerListener {
         synchronized (this) {
 
             if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-                return EventRequestResult.rejectedEvent("Listener is not currently listening to a log file.");
+                eventRequest.markAsRejected("Listener is not currently listening to a log file.");
             }
 
             // Attempt to add the request to the pool.
@@ -77,8 +77,6 @@ public final class LogListener implements TailerListener {
         if (eventRequest.isPending()) {
             eventRequest.waitForOutcome();
         }
-
-        return eventRequest.getResult();
     }
 
     /**
@@ -183,12 +181,10 @@ public final class LogListener implements TailerListener {
             EventRequest request = requestIterator.next();
 
             if (request.isExpired()) {
-                request.addResult(EventRequestResult.rejectedEvent("Request timed out!"));
                 requestIterator.remove();
                 request.notifyRequestIsResolved();
             } else if (request.getRequest().equals(event)) {
                 if (request.isSatisfiedBy(event.getEventString(), timeOfObservation)) {
-                    request.addResult(EventRequestResult.observedEvent(Collections.singletonList(event.getEventString()), timeOfObservation));
                     request.notifyRequestIsResolved();
                     requestIterator.remove();
                 }
@@ -231,7 +227,6 @@ public final class LogListener implements TailerListener {
         this.currentState = ListenerState.DEAD;
 
         for (EventRequest request : this.requestPool) {
-            request.addResult(EventRequestResult.rejectedEvent(causeOfPanic));
             request.markAsRejected(causeOfPanic);
             request.notifyRequestIsResolved();
         }
