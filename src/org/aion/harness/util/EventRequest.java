@@ -1,5 +1,6 @@
 package org.aion.harness.util;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.harness.main.IEvent;
 import org.aion.harness.result.EventRequestResult;
@@ -12,7 +13,7 @@ import org.aion.harness.result.EventRequestResult;
  *
  * This class is thread-safe.
  */
-public final class EventRequest {
+public final class EventRequest implements IEventRequest {
     private final IEvent requestedEvent;
     private AtomicBoolean cancelled = new AtomicBoolean(false);
     private EventRequestResult eventResult;
@@ -115,6 +116,87 @@ public final class EventRequest {
     @Override
     public int hashCode() {
         return this.requestedEvent.eventStatement().hashCode();
+    }
+
+
+    @Override
+    public boolean isSatisfiedBy(String line, long currentTimeInMillis) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isExpiredAtTime(long currentTimeInMillis) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void waitForOutcome() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyRequestIsResolved() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<String> getAllObservedEvents() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long timeOfObservation() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long deadline() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void markAsRejected(String cause) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void markAsUnobserved() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void markAsExpired() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getCauseOfRejection() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isPending() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isRejected() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isUnobserved() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isSatisfied() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isExpired() {
+        throw new UnsupportedOperationException();
     }
 
 }
