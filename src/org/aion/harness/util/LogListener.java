@@ -186,9 +186,6 @@ public final class LogListener implements TailerListener {
                 request.addResult(EventRequestResult.rejectedEvent("Request timed out!"));
                 requestIterator.remove();
                 request.notifyRequestIsResolved();
-            } else if (request.isCancelled()) {
-                request.addResult(EventRequestResult.rejectedEvent("Request was cancelled!"));
-                requestIterator.remove();
             } else if (request.getRequest().equals(event)) {
                 if (request.isSatisfiedBy(event.getEventString(), timeOfObservation)) {
                     request.addResult(EventRequestResult.observedEvent(Collections.singletonList(event.getEventString()), timeOfObservation));
