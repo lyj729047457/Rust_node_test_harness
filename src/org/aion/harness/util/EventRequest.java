@@ -32,15 +32,6 @@ public final class EventRequest implements IEventRequest {
         this.deadline = deadline;
     }
 
-    /**
-     * Returns the event that has been requested to be listened for.
-     *
-     * @return The requested event.
-     */
-    public NodeEvent getRequest() {
-        return (NodeEvent) this.requestedEvent;
-    }
-
     @Override
     public boolean isSatisfiedBy(String line, long currentTimeInMillis) {
         markAsExpiredIfPastDeadline(currentTimeInMillis);

@@ -1,7 +1,6 @@
 package org.aion.harness.util;
 
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -156,68 +155,6 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Runs through the entire request pool and marks every request that is waiting for the
-     * specified event as "observed" and removes it from the request pool.
-     *
-     * In addition to marking the events as observed, any cancelled events are removed from the
-     * request pool.
-     *
-     * If an event is both cancelled and observed then the cancellation trumps the latter and the
-     * event is dropped.
-     *
-     * If {@code event == null} then no events will be marked as "observed".
-     *
-     * After walking through the entire pool, all threads waiting on this object's monitor are
-     * awoken.
-     *
-     * @param event The event that has been observed.
-     * @param timeOfObservation The time at which event was observed, in nanoseconds.
-     */
-    private synchronized void markRequestAsObservedAndCleanPool(NodeEvent event, long timeOfObservation) {
-        System.err.println("Iterating over pool. Current pool size = " + this.requestPool.size());
-        Iterator<EventRequest> requestIterator = this.requestPool.iterator();
-
-        while (requestIterator.hasNext()) {
-            EventRequest request = requestIterator.next();
-
-            if (request.isExpired()) {
-                requestIterator.remove();
-                request.notifyRequestIsResolved();
-            } else if (request.getRequest().equals(event)) {
-                if (request.isSatisfiedBy(event.getEventString(), timeOfObservation)) {
-                    request.notifyRequestIsResolved();
-                    requestIterator.remove();
-                }
-            }
-        }
-
-        System.err.println("Finished iterating. Current pool size is now = " + this.requestPool.size());
-    }
-
-    /**
-     * Returns the {@link NodeEvent} that has been observed in the specified event string.
-     *
-     * If no event in the pool corresponds to the provided event string then no event has been
-     * observed and null is returned.
-     *
-     * @param eventString Some string that may or may not contain an event being listened for.
-     * @return An observed event or null if no event is observed.
-     */
-    private synchronized NodeEvent getObservedEvent(String eventString) {
-        if ((eventString == null) || (this.requestPool.isEmpty())) {
-            return null;
-        }
-
-        for (EventRequest request : this.requestPool) {
-            if (eventString.contains(request.getRequest().getEventString())) {
-                return request.getRequest();
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Rejects every request currently in the pool with the specified cause of the panic, then clears
      * the pool and notifies all waiting threads.
      *
@@ -246,12 +183,22 @@ public final class LogListener implements TailerListener {
     public synchronized void handle(String nextLine) {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
 
-            // Check the pool and determine if an event has been observed and if so, grab that event.
-            NodeEvent observedEvent = getObservedEvent(nextLine);
-            long timeOfObservation = System.currentTimeMillis();
+            long currentTimeInMillis = System.currentTimeMillis();
 
-            // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
-            markRequestAsObservedAndCleanPool(observedEvent, timeOfObservation);
+            // Iterate over each of the requests in the pool.
+            Iterator<EventRequest> requestIterator = this.requestPool.iterator();
+
+            while (requestIterator.hasNext()) {
+                EventRequest request = requestIterator.next();
+
+                if (!request.isPending()) {
+                    requestIterator.remove();
+                    request.notifyRequestIsResolved();
+                } else if (request.isSatisfiedBy(nextLine, currentTimeInMillis)) {
+                    request.notifyRequestIsResolved();
+                    requestIterator.remove();
+                }
+            }
         }
     }
 

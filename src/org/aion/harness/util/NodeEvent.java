@@ -38,10 +38,6 @@ public final class NodeEvent implements IEvent {
         return new NodeEvent(string);
     }
 
-    public String getEventString() {
-        return this.eventString;
-    }
-
     /**
      * {@inheritDoc}
      */
