@@ -1,5 +1,6 @@
 package org.aion.harness.util;
 
+import org.aion.harness.main.event.IEvent;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;
@@ -7,6 +8,34 @@ import org.apache.commons.io.input.TailerListener;
 
 import java.util.*;
 
+/**
+ * A listener that "tails" the output log of a node and processes every line in that log one by one
+ * to determine if any threads have submitted a request for an event string to be observed and
+ * whether this current line satisfies any of those requested events.
+ *
+ * A log listener maintains a pool of pending requests. Each request is an {@link IEvent} object,
+ * and is therefore a conditional request for certain substrings to be witnessed in the log file.
+ *
+ * Each time this listener receives a new line in the log, it checks each of the requests and
+ * attempts to satisfy their logic.
+ *
+ * Requests can be in 1 of 5 states: pending, satisfied, unobserved, expired, rejected.
+ *
+ * All requests enter the pool in the pending state. Once they move out of the pending state this
+ * listener has the right to remove them from the pool.
+ *
+ * If a request is observed then it is marked satisfied.
+ *
+ * If the node shuts down then all pending requests in the pool will be marked unobserved.
+ *
+ * If a request times out it is marked expired.
+ *
+ * If the listener gets into a fatal state, if it is not currently listening to a log file, if it
+ * stops listening to a log file, or if the requester receives an interrupt signal while the request
+ * is in the pool, then it will be marked as rejected.
+ *
+ * This class is thread-safe.
+ */
 public final class LogListener implements TailerListener {
     private static final int CAPACITY = 10;
 
@@ -154,6 +183,16 @@ public final class LogListener implements TailerListener {
         }
     }
 
+    /**
+     * Receives the incoming next line in the log file and processed it.
+     *
+     * If any events are satisfied by this line (or were previously satisfied) then they are removed
+     * from the request pool and their owners are notified.
+     *
+     * The incoming string is only handled if this listener is alive and is listening.
+     *
+     * @param nextLine The next line in the log file.
+     */
     @Override
     public synchronized void handle(String nextLine) {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
@@ -177,6 +216,16 @@ public final class LogListener implements TailerListener {
         }
     }
 
+    /**
+     * Called by the {@link Tailer} when it is first initialized with this listener. This is here
+     * so that we can grab hold of this reference and shut it down if we panic.
+     *
+     * The {@link Tailer} is the class responsible for reading the log file and for invoking our
+     * {@code handle()} method (or any other exceptional method) with the next line it reads in the
+     * file.
+     *
+     * @param tailer The class that is currently "tailing" the log file and alerting us.
+     */
     @Override
     public void init(Tailer tailer) {
         if (tailer == null) {
@@ -202,6 +251,13 @@ public final class LogListener implements TailerListener {
         panic(e.toString());
     }
 
+    /**
+     * Moves this listener to the dead state, rejects all events in the request pool, notifies all
+     * requesting threads that their events are now satisfied, clears the pool, and stops the tailer
+     * from "tailing" the log file.
+     *
+     * @param cause The reason for the fatal panic.
+     */
     private void panic(String cause) {
         killRequestPool(cause);
         this.tailer.stop();

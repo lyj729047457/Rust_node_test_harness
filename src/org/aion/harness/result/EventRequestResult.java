@@ -85,30 +85,69 @@ public final class EventRequestResult {
         return new EventRequestResult(RequestResultState.EXPIRED, null, null, -1);
     }
 
+    /**
+     * Returns {@code true} only if the event was observed.
+     *
+     * @return whether or not the event was observed.
+     */
     public boolean eventWasObserved() {
         return this.resultState == RequestResultState.OBSERVED;
     }
 
+    /**
+     * Returns {@code true} only if the event was rejected.
+     *
+     * @return whether or not the event was rejected.
+     */
     public boolean eventWasRejected() {
         return this.resultState == RequestResultState.REJECTED;
     }
 
+    /**
+     * Returns {@code true} only if the event was unobserved - that is, if the node shut down before
+     * the event was witnessed.
+     *
+     * @return whether or not the event was unobserved.
+     */
     public boolean eventWasUnobserved() {
         return this.resultState == RequestResultState.UNOBSERVED;
     }
 
+    /**
+     * Returns {@code true} only if the event had expired (timed out).
+     *
+     * @return whether or not the event expired.
+     */
     public boolean eventExpired() {
         return this.resultState == RequestResultState.EXPIRED;
     }
 
+    /**
+     * Returns the cause for this result being rejected only if it was rejected. Otherwise, returns
+     * null.
+     *
+     * @return A cause if rejected or else null.
+     */
     public String causeOfRejection() {
         return this.causeOfRejection;
     }
 
+    /**
+     * Returns the time that the event was observed (in milliseconds) only if it was observed.
+     * Otherwise, returns a negative number.
+     *
+     * @return The observation time or a negative number.
+     */
     public long timeOfObservationInMilliseconds() {
         return this.timeOfObservationInMillis;
     }
-    
+
+    /**
+     * Returns a list of all of the underlying event strings that were actually observed by the
+     * listener.
+     *
+     * @return All event strings that were observed by the listener.
+     */
     public List<String> getAllObservedEvents() {
         return new ArrayList<>(this.observedEvents);
     }

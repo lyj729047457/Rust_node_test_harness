@@ -10,33 +10,102 @@ import org.aion.harness.util.LogListener;
 import org.apache.commons.codec.binary.Hex;
 
 /**
- * A class that listens to a node and waits for events to occur.
+ * A listener that listens to a node and waits for logging events to occur.
+ *
+ * If no node is currently alive then all {@code waitFor...} methods in this class return immediately
+ * with rejected results.
+ *
+ * All methods that begin with {@code waitFor} are blocking methods that will not return until the
+ * event has been moved into some final state: either it was observed, unobserved (meaning the node
+ * shut down before it was seen), it expired (timed out) or it was rejected (for various reasons).
+ *
+ * This class is not thread-safe.
  */
 public final class NodeListener {
     private final LogListener logListener = SingletonFactory.singleton().logReader().getLogListener();
 
+    /**
+     * Blocks until the miners have been activated in the node, or until the request has timed out,
+     * was rejected or was not observed before the node's shut down.
+     *
+     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * @return the result of this event.
+     * @throws IllegalArgumentException if timeoutInMillis is negative.
+     */
     public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
+        if (timeoutInMillis < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        }
+
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
+    /**
+     * Blocks until a transaction with the specified hash has been sealed into a block, or until the
+     * request has timed out, was rejected or was not observed before the node's shut down.
+     *
+     * @param transactionHash The hash of the transaction to watch for.
+     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * @return the result of this event.
+     * @throws NullPointerException if transactionHash is null.
+     * @throws IllegalArgumentException if timeoutInMillis is negative.
+     */
     public EventRequestResult waitForTransactionToBeSealed(byte[] transactionHash, long timeoutInMillis) {
+        if (transactionHash == null) {
+            throw new NullPointerException("Cannot wait for a null transaction hash.");
+        }
+        if (timeoutInMillis < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        }
+
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(getTransactionSealedEvent(transactionHash), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
+    /**
+     * Blocks until some "heartbeat" event has been observed, or until the request has timed out,
+     * was rejected or was not observed before the node's shut down.
+     *
+     * A heartbeat event is an internal detail, but is expected to be a consistently occurring event
+     * in the node's output log.
+     *
+     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * @return the result of this event.
+     * @throws IllegalArgumentException if timeoutInMillis is negative.
+     */
     public EventRequestResult waitForHeartbeat(long timeoutInMillis) {
+        if (timeoutInMillis < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        }
+
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
+    /**
+     * Blocks until the specified event has occurred, or until the request has timed out,
+     * was rejected or was not observed before the node's shut down.
+     *
+     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * @return the result of this event.
+     * @throws NullPointerException If event is null.
+     * @throws IllegalArgumentException if timeoutInMillis is negative.
+     */
     public EventRequestResult waitForEvent(IEvent event, long timeoutInMillis) {
+        if (event == null) {
+            throw new NullPointerException("Cannot wait for a null event.");
+        }
+        if (timeoutInMillis < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        }
+
         long deadline = System.currentTimeMillis() + timeoutInMillis;
         EventRequest request = new EventRequest(event, deadline);
         this.logListener.submitEventRequest(request);
