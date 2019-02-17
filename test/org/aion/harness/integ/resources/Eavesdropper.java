@@ -17,7 +17,10 @@ public final class Eavesdropper implements Runnable {
     public enum Gossip {
 
         // Listen for the node's heartbeat.
-        HEARTBEAT
+        HEARTBEAT,
+
+        // Listen for an event that will never occur.
+        UNSPEAKABLE
 
     }
 
@@ -55,6 +58,12 @@ public final class Eavesdropper implements Runnable {
                 } else {
                     System.out.println("Thread #" + this.ID + ": event unobserved.");
                 }
+
+            } else if (this.gossip == Gossip.UNSPEAKABLE) {
+
+                // Listen for an event that will never occur.
+                startTime = System.nanoTime();
+                result = this.listener.waitForLine("I do not exist.", TimeUnit.HOURS.toMillis(1));
 
             }
 

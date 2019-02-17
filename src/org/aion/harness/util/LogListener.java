@@ -318,9 +318,6 @@ public final class LogListener implements TailerListener {
      * exception is thrown.
      */
     private synchronized void setNotListening() {
-        if (this.isDead) {
-            throw new IllegalStateException("Listener is currently dead AND listening!");
-        }
         this.isListening = false;
     }
 
