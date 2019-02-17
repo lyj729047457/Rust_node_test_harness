@@ -57,7 +57,7 @@ public class NodeListenerLifecycleTest {
         // Time out should be irrelevant in this situation.
         EventRequestResult result = listener.waitForHeartbeat(0);
         System.out.println("Result = " + result);
-        assertTrue(result.eventHasBeenRejected());
+        assertTrue(result.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", result.causeOfRejection());
     }
 
@@ -77,7 +77,7 @@ public class NodeListenerLifecycleTest {
 
         EventRequestResult eventResult = listener.waitForHeartbeat(0);
         System.out.println("Result = " + eventResult);
-        assertTrue(eventResult.eventHasBeenRejected());
+        assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());
     }
 
@@ -151,7 +151,7 @@ public class NodeListenerLifecycleTest {
 
         // This event should be rejected due to the file being deleted (which the listener will initially
         // interpret as a log rotation).
-        assertTrue(eventResult.eventHasBeenRejected());
+        assertTrue(eventResult.eventWasRejected());
         assertTrue(eventResult.causeOfRejection().contains("Log file not found!"));
         System.out.println("Event result -> " + eventResult);
 
@@ -164,7 +164,7 @@ public class NodeListenerLifecycleTest {
         Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 
         eventResult = eavesdropper.fetchLatestResult();
-        assertTrue(eventResult.eventHasBeenRejected());
+        assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());
         System.out.println("Latest result -> " + eventResult);
 

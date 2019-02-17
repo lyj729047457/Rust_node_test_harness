@@ -65,7 +65,7 @@ public final class LogListener implements TailerListener {
         synchronized (this) {
 
             if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-                return EventRequestResult.createRejectedEvent("Listener is not currently listening to a log file.");
+                return EventRequestResult.rejectedEvent("Listener is not currently listening to a log file.");
             }
 
             // Attempt to add the request to the pool.
@@ -188,7 +188,7 @@ public final class LogListener implements TailerListener {
             } else if (request.isCancelled()) {
                 requestIterator.remove();
             } else if (request.getRequest().equals(event)) {
-                request.addResult(EventRequestResult.createObservedEvent(Collections.singletonList(event.getEventString()), timeOfObservation));
+                request.addResult(EventRequestResult.observedEvent(Collections.singletonList(event.getEventString()), timeOfObservation));
                 requestIterator.remove();
 
                 request.markAsSatisfied();
@@ -232,7 +232,7 @@ public final class LogListener implements TailerListener {
         this.currentState = ListenerState.DEAD;
 
         for (EventRequest request : this.requestPool) {
-            request.addResult(EventRequestResult.createRejectedEvent(causeOfPanic));
+            request.addResult(EventRequestResult.rejectedEvent(causeOfPanic));
             request.markAsRejected(causeOfPanic);
             request.notifyRequestIsResolved();
         }

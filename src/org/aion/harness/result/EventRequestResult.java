@@ -48,7 +48,7 @@ public final class EventRequestResult {
      * @param timeOfObservationInMillis Time at which event was observed in milliseconds.
      * @return a new observed event request result.
      */
-    public static EventRequestResult createObservedEvent(List<String> observedEvents, long timeOfObservationInMillis) {
+    public static EventRequestResult observedEvent(List<String> observedEvents, long timeOfObservationInMillis) {
         return new EventRequestResult(RequestResultState.OBSERVED, observedEvents, null, timeOfObservationInMillis);
     }
 
@@ -59,7 +59,7 @@ public final class EventRequestResult {
      *
      * @return a new unobserved event request result.
      */
-    public static EventRequestResult createUnobservedEvent() {
+    public static EventRequestResult unobservedEvent() {
         return new EventRequestResult(RequestResultState.UNOBSERVED, null, null, -1);
     }
 
@@ -71,15 +71,15 @@ public final class EventRequestResult {
      * @param causeOfRejection The reason the event request was rejected.
      * @return a new rejected event request result
      */
-    public static EventRequestResult createRejectedEvent(String causeOfRejection) {
+    public static EventRequestResult rejectedEvent(String causeOfRejection) {
         return new EventRequestResult(RequestResultState.REJECTED, null, causeOfRejection, -1);
     }
 
-    public boolean eventHasBeenObserved() {
+    public boolean eventWasObserved() {
         return this.resultState == RequestResultState.OBSERVED;
     }
 
-    public boolean eventHasBeenRejected() {
+    public boolean eventWasRejected() {
         return this.resultState == RequestResultState.REJECTED;
     }
 
