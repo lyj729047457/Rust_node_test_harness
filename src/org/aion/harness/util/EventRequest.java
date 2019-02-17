@@ -2,7 +2,6 @@ package org.aion.harness.util;
 
 import java.util.List;
 import org.aion.harness.main.IEvent;
-import org.aion.harness.result.EventRequestResult;
 
 /**
  * A request for some listener to listen for an event.
@@ -40,30 +39,6 @@ public final class EventRequest implements IEventRequest {
      */
     public NodeEvent getRequest() {
         return (NodeEvent) this.requestedEvent;
-    }
-
-    @Override
-    public synchronized String toString() {
-        return "EventRequest { event request = " + this.requestedEvent + ", event state = " + this.currentState + " }";
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof EventRequest)) {
-            return false;
-        }
-
-        if (this == other) {
-            return true;
-        }
-
-        EventRequest otherEventRequest = (EventRequest) other;
-        return this.requestedEvent.equals(otherEventRequest.requestedEvent);
-    }
-
-    @Override
-    public int hashCode() {
-        return this.requestedEvent.eventStatement().hashCode();
     }
 
     @Override
@@ -186,5 +161,28 @@ public final class EventRequest implements IEventRequest {
         }
     }
 
+    @Override
+    public synchronized String toString() {
+        return "EventRequest { event request = " + this.requestedEvent + ", event state = " + this.currentState + " }";
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof EventRequest)) {
+            return false;
+        }
+
+        if (this == other) {
+            return true;
+        }
+
+        EventRequest otherEventRequest = (EventRequest) other;
+        return this.requestedEvent.equals(otherEventRequest.requestedEvent);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.requestedEvent.eventStatement().hashCode();
+    }
 
 }
