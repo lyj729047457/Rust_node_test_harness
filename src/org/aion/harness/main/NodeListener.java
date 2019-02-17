@@ -6,6 +6,7 @@ import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
 import org.aion.harness.util.NodeEvent;
+import org.apache.commons.codec.binary.Hex;
 
 /**
  * A class that listens to a node and waits for events to occur.
@@ -15,28 +16,28 @@ public final class NodeListener {
 
     public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(NodeEvent.getStartedMiningEvent(), deadline);
+        EventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
     public EventRequestResult waitForTransactionToBeSealed(byte[] transactionHash, long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(NodeEvent.getTransactionSealedEvent(transactionHash), deadline);
+        EventRequest request = new EventRequest(getTransactionSealedEvent(transactionHash), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
     public EventRequestResult waitForHeartbeat(long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(NodeEvent.getHeartbeatEvent(), deadline);
+        EventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
 
-    public EventRequestResult waitForLine(String line, long timeoutInMillis) {
+    public EventRequestResult waitForEvent(IEvent event, long timeoutInMillis) {
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(NodeEvent.getCustomStringEvent(line), deadline);
+        EventRequest request = new EventRequest(event, deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -64,6 +65,23 @@ public final class NodeListener {
         } else {
             throw new IllegalStateException("Waited for event until notified but event is still pending!");
         }
+    }
+
+    // ------------ pre-packaged events that this class provides ---------------
+
+    private IEvent getStartedMiningEvent() {
+        return new NodeEvent("sealer starting");
+    }
+
+    private IEvent getTransactionSealedEvent(byte[] transactionHash) {
+        if (transactionHash == null) {
+            throw new NullPointerException("Cannot get event for null transaction hash.");
+        }
+        return new NodeEvent("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
+    }
+
+    private IEvent getHeartbeatEvent() {
+        return new NodeEvent("p2p-status");
     }
 
 

@@ -2,8 +2,10 @@ package org.aion.harness.integ.resources;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.harness.main.IEvent;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.util.NodeEvent;
 
 public final class Eavesdropper implements Runnable {
     private NodeListener listener;
@@ -36,6 +38,8 @@ public final class Eavesdropper implements Runnable {
 
     @Override
     public void run() {
+        IEvent event = new NodeEvent("I do not exist.");
+
         while (!this.dead.get()) {
 
             long startTime = 0;
@@ -66,8 +70,7 @@ public final class Eavesdropper implements Runnable {
             } else if (this.gossip == Gossip.UNSPEAKABLE) {
 
                 // Listen for an event that will never occur.
-                startTime = System.nanoTime();
-                result = this.listener.waitForLine("I do not exist.", TimeUnit.HOURS.toMillis(1));
+                result = this.listener.waitForEvent(event, TimeUnit.HOURS.toMillis(1));
 
             }
 

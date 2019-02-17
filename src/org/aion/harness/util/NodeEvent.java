@@ -3,39 +3,17 @@ package org.aion.harness.util;
 import java.util.Collections;
 import java.util.List;
 import org.aion.harness.main.IEvent;
-import org.apache.commons.codec.binary.Hex;
 
 public final class NodeEvent implements IEvent {
     private final String eventString;
 
     private boolean isSatisfied = false;
 
-    private NodeEvent(String eventString) {
+    public NodeEvent(String eventString) {
         if (eventString == null) {
             throw new NullPointerException("Cannot construct node event with null event string.");
         }
         this.eventString = eventString;
-    }
-
-    public static NodeEvent getStartedMiningEvent() {
-        return new NodeEvent("sealer starting");
-    }
-
-    public static NodeEvent getTransactionSealedEvent(byte[] transactionHash) {
-        if (transactionHash == null) {
-            throw new NullPointerException("Cannot get event for null transaction hash.");
-        }
-
-        return new NodeEvent("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
-    }
-
-    public static NodeEvent getHeartbeatEvent() {
-        // An event we can consider as consistent, and so a good heartbeat.
-        return new NodeEvent("p2p-status");
-    }
-
-    public static NodeEvent getCustomStringEvent(String string) {
-        return new NodeEvent(string);
     }
 
     /**
