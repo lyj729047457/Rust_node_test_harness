@@ -15,16 +15,25 @@ import org.aion.harness.result.EventRequestResult;
  */
 public final class EventRequest implements IEventRequest {
     private final IEvent requestedEvent;
+    private final long deadline;
+
     private AtomicBoolean cancelled = new AtomicBoolean(false);
     private EventRequestResult eventResult;
+
+    private enum RequestState { PENDING, SATISFIED, UNOBSERVED, REJECTED, EXPIRED }
+
+    private RequestState currentState = RequestState.PENDING;
+
+    private String causeOfRejection;
 
     /**
      * Constructs a new event request for the specified event.
      *
      * @param eventToRequest The event to request to be listened for.
      */
-    public EventRequest(IEvent eventToRequest) {
+    public EventRequest(IEvent eventToRequest, long deadline) {
         this.requestedEvent = eventToRequest;
+        this.deadline = deadline;
         this.eventResult = null;
     }
 
@@ -126,17 +135,31 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public boolean isExpiredAtTime(long currentTimeInMillis) {
-        throw new UnsupportedOperationException();
+        return currentTimeInMillis > this.deadline;
     }
 
     @Override
-    public void waitForOutcome() {
-        throw new UnsupportedOperationException();
+    public synchronized void waitForOutcome() {
+        long currentTime = System.currentTimeMillis();
+
+        while ((this.currentState == RequestState.PENDING) && (!isExpiredAtTime(currentTime))) {
+            try {
+                this.wait(this.deadline - currentTime);
+            } catch (InterruptedException e) {
+                markAsRejected("Interrupted while waiting for request outcome!");
+            }
+
+            currentTime = System.currentTimeMillis();
+        }
+
+        if (isExpiredAtTime(currentTime)) {
+            markAsExpired();
+        }
     }
 
     @Override
-    public void notifyRequestIsResolved() {
-        throw new UnsupportedOperationException();
+    public synchronized void notifyRequestIsResolved() {
+        this.notifyAll();
     }
 
     @Override
@@ -151,12 +174,15 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public long deadline() {
-        throw new UnsupportedOperationException();
+        return this.deadline;
     }
 
     @Override
-    public void markAsRejected(String cause) {
-        throw new UnsupportedOperationException();
+    public synchronized void markAsRejected(String cause) {
+        if (this.currentState == RequestState.PENDING) {
+            this.causeOfRejection = cause;
+            this.currentState = RequestState.REJECTED;
+        }
     }
 
     @Override
@@ -165,38 +191,47 @@ public final class EventRequest implements IEventRequest {
     }
 
     @Override
-    public void markAsExpired() {
+    public synchronized void markAsExpired() {
+        if (this.currentState == RequestState.PENDING) {
+            this.currentState = RequestState.EXPIRED;
+        }
+    }
+
+    //TODO: remove this eventually.
+    public synchronized void markAsSatisfied() {
+        if (this.currentState == RequestState.PENDING) {
+            this.currentState = RequestState.SATISFIED;
+        }
+    }
+
+    @Override
+    public synchronized String getCauseOfRejection() {
+        return this.causeOfRejection;
+    }
+
+    @Override
+    public synchronized boolean isPending() {
+        return this.currentState == RequestState.PENDING;
+    }
+
+    @Override
+    public synchronized boolean isRejected() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getCauseOfRejection() {
+    public synchronized boolean isUnobserved() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isPending() {
+    public synchronized boolean isSatisfied() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isRejected() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isUnobserved() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isSatisfied() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isExpired() {
-        throw new UnsupportedOperationException();
+    public synchronized boolean isExpired() {
+        return this.currentState == RequestState.EXPIRED;
     }
 
 }

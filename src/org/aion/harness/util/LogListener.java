@@ -40,62 +40,45 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Adds the specified event to the list of events that this listener is currently listening for.
+     * Attempts to submit the specified event request into the request pool.
      *
-     * If the listener is already listening to the maximum number of events then the caller will
-     * wait until space becomes available.
+     * This method will block until the request is resolved. The request may
+     * be resolved in any one of the following ways:
      *
-     * This method is blocking and will return only once the event request has been observed or
-     * if the timeout has occurred or if the thread is interrupted, in which case it will return
-     * immediately.
-     *
-     * @param eventRequest The event to request the listener listen for.
-     * @param timeoutInMillis The amount of milliseconds to timeout after.
-     * @return the result of this request.
+     * 1. The listener was not listening when the request came in or it stopped
+     *    listening after the request came in.
+     *    -> request is marked rejected.
+     * 2. The node is shut down after the request has come in.
+     *    -> request is marked unobserved.
+     * 3. The request expires.
+     *    -> request is marked expired.
+     * 4. The requester is interrupted while waiting for the outcome.
+     *    -> request is marked rejected.
+     * 5. The request is observed.
+     *    -> request is marked satisfied.
      */
-    public synchronized EventRequestResult submitEventRequest(EventRequest eventRequest, long timeoutInMillis) {
+    public EventRequestResult submitEventRequest(EventRequest eventRequest) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
 
-        if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-            return EventRequestResult.createRejectedEvent("Listener is not currently listening to a log file.");
+        synchronized (this) {
+
+            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
+                return EventRequestResult.createRejectedEvent("Listener is not currently listening to a log file.");
+            }
+
+            // Attempt to add the request to the pool.
+            addRequest(eventRequest);
         }
 
-        long endTimeInMillis = System.currentTimeMillis() + timeoutInMillis;
-
-        try {
-
-            // Add the request to the pool, if we time out then return.
-            if (!addRequest(eventRequest, endTimeInMillis)) {
-                eventRequest.cancel(); // shouldn't be necessary, here for sanity.
-                return EventRequestResult.createRejectedEvent("Timed out waiting for availability in the request pool.");
-            }
-
-            // Request was added and we have not yet necessarily timed out, so wait for response.
-            long currentTimeInMillis = System.currentTimeMillis();
-
-            synchronized (this) {
-                while ((currentTimeInMillis < endTimeInMillis) && (!eventRequest.hasResult())) {
-                    System.err.println("Waiting for response..");
-                    wait(endTimeInMillis - currentTimeInMillis);
-                    currentTimeInMillis = System.currentTimeMillis();
-                }
-            }
-
-            System.err.println("Got response or timed out!");
-            if (eventRequest.hasResult()) {
-                return eventRequest.getResult();
-            } else {
-                eventRequest.cancel();
-                return EventRequestResult.createRejectedEvent("Timed out waiting for event to occur.");
-            }
-
-        } catch (InterruptedException e) {
-            eventRequest.cancel();
-            return EventRequestResult.createRejectedEvent("Interrupted while waiting for event.");
+        // If the request is pending then it was added to the pool and hasn't been satisfied yet,
+        // so we wait for the outcome.
+        if (eventRequest.isPending()) {
+            eventRequest.waitForOutcome();
         }
 
+        return eventRequest.getResult();
     }
 
     /**
@@ -128,33 +111,50 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Attempts to add the specified request to the list of requests that this listener is listening
-     * for.
+     * Attempts to add the specified request to the request pool.
      *
-     * If the current time (in milliseconds) ever becomes equal to or greater than endTimeInMillis
-     * then this action will be considered as having timed out and the request will not be added.
+     * If the pool is currently full then this method will wait until space frees up and will
+     * add the request then.
      *
-     * @param request The request to add to the list of monitored events.
-     * @param endTimeInMillis The latest current time to continue attempting to add the event at.
-     * @return true if request was added, false if timed out waiting to add request.
+     * This attempt to add the request can fail for the following reasons. In each case the
+     * request will no longer be in a 'pending' state so that the caller can verify whether
+     * or not the request was added:
+     *
+     * 1. The listener stops listening before the request is added to the pool.
+     *    -> request is marked rejected.
+     * 2. The request expires before it is added to the pool.
+     *    -> request is marked expired.
+     * 3. An interrupt exception occurs before adding the request to the pool.
+     *    -> request is marked rejected.
      */
-    private synchronized boolean addRequest(EventRequest request, long endTimeInMillis) throws InterruptedException {
+    private synchronized void addRequest(EventRequest request) {
         long currentTimeInMillis = System.currentTimeMillis();
 
-        while ((currentTimeInMillis < endTimeInMillis) && (this.requestPool.size() == CAPACITY)) {
-            System.err.println("Waiting for capacity to free up...");
-            wait(endTimeInMillis - currentTimeInMillis);
+        // If the pool is full and we are not expired and listener is listening then wait until space frees up.
+        ListenerState state = this.currentState;
+        boolean expired = request.isExpiredAtTime(currentTimeInMillis);
+
+        while ((state == ListenerState.ALIVE_AND_LISTENING) && (!expired) && (this.requestPool.size() == CAPACITY)) {
+
+            try {
+                Thread.sleep(request.deadline() - currentTimeInMillis);
+            } catch (InterruptedException e) {
+                request.markAsRejected("Interrupted while waiting on request!");
+            }
+
             currentTimeInMillis = System.currentTimeMillis();
+            expired = request.isExpiredAtTime(currentTimeInMillis);
+            state = this.currentState;
         }
 
-        if (currentTimeInMillis >= endTimeInMillis) {
-            System.err.println("Timed out waiting for capacity...");
-            return false;
+        // Check which of the above conditions changed and handle it.
+        if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
+            request.markAsRejected("Listener is no longer listening to a log file.");
+        } else if (request.isExpiredAtTime(currentTimeInMillis)) {
+            request.markAsExpired();
+        } else {
+            this.requestPool.add(request);
         }
-
-        this.requestPool.add(request);
-        System.err.println("Added request, pool size is now = " + this.requestPool.size());
-        return true;
     }
 
     /**
@@ -182,17 +182,21 @@ public final class LogListener implements TailerListener {
         while (requestIterator.hasNext()) {
             EventRequest request = requestIterator.next();
 
-            if (request.isCancelled()) {
+            if (request.isExpired()) {
+                requestIterator.remove();
+                request.notifyRequestIsResolved();
+            } else if (request.isCancelled()) {
                 requestIterator.remove();
             } else if (request.getRequest().equals(event)) {
                 request.addResult(EventRequestResult.createObservedEvent(timeOfObservation));
                 requestIterator.remove();
+
+                request.markAsSatisfied();
+                request.notifyRequestIsResolved();
             }
         }
 
         System.err.println("Finished iterating. Current pool size is now = " + this.requestPool.size());
-
-        notifyAll();
     }
 
     /**
@@ -229,10 +233,10 @@ public final class LogListener implements TailerListener {
 
         for (EventRequest request : this.requestPool) {
             request.addResult(EventRequestResult.createRejectedEvent(causeOfPanic));
+            request.markAsRejected(causeOfPanic);
+            request.notifyRequestIsResolved();
         }
         this.requestPool.clear();
-
-        notifyAll();
     }
 
     @Override
