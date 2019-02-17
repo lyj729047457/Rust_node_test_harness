@@ -188,7 +188,7 @@ public final class LogListener implements TailerListener {
             } else if (request.isCancelled()) {
                 requestIterator.remove();
             } else if (request.getRequest().equals(event)) {
-                request.addResult(EventRequestResult.createObservedEvent(timeOfObservation));
+                request.addResult(EventRequestResult.createObservedEvent(Collections.singletonList(event.getEventString()), timeOfObservation));
                 requestIterator.remove();
 
                 request.markAsSatisfied();
@@ -254,7 +254,7 @@ public final class LogListener implements TailerListener {
 
             // Check the pool and determine if an event has been observed and if so, grab that event.
             NodeEvent observedEvent = getObservedEvent(nextLine);
-            long timeOfObservation = System.nanoTime();
+            long timeOfObservation = System.currentTimeMillis();
 
             // Marks all applicable events as "observed", clear the pool of them and notify the waiting threads.
             markRequestAsObservedAndCleanPool(observedEvent, timeOfObservation);

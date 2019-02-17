@@ -1,12 +1,17 @@
 package org.aion.harness.result;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * The result of a request for some event to be observed.
  *
- * An event request result can be in 1 of 3 possible states:
+ * An event request result can be in 1 of 4 possible states:
  *   - The event has been observed: indicates the event occurred.
  *   - The event was not observed: indicates the node shutdown before the event was witnessed.
  *   - The event was rejected: indicates that observation at the time of the request was not possible.
+ *   - The event was expired: indicates that the event timed out before being satisfied.
  *
  * In the case of an event being observed, it will also come with a timestamp (in nanoseconds)
  * indicating when the listener observed the event.
@@ -17,34 +22,34 @@ package org.aion.harness.result;
  * An event request result is immutable.
  */
 public final class EventRequestResult {
-    private final boolean hasBeenObserved;
-    private final boolean hasBeenRejected;
+    private final RequestResultState resultState;
+    private final List<String> observedEvents;
+
+    private final long timeOfObservationInMillis;
     private final String causeOfRejection;
-    private final long timeOfObservationInNanos;
 
-    private EventRequestResult(boolean isObserved, boolean isRejected, String rejectionCause, long observationTime) {
-        if (isObserved && isRejected) {
-            throw new IllegalArgumentException("An event cannot have both been observed and rejected.");
-        }
-        if (rejectionCause == null) {
-            throw new NullPointerException("Cannot create an event request result with a null rejection cause.");
+    private enum RequestResultState { OBSERVED, UNOBSERVED, REJECTED, EXPIRED }
+
+    private EventRequestResult(RequestResultState requestState, List<String> observedEvents, String rejectionCause, long observationTime) {
+        if (requestState == null) {
+            throw new NullPointerException("Cannot construct result with null state.");
         }
 
-        this.hasBeenObserved = isObserved;
-        this.hasBeenRejected = isRejected;
+        this.resultState = requestState;
+        this.observedEvents = (observedEvents == null) ? Collections.emptyList() : observedEvents;
         this.causeOfRejection = rejectionCause;
-        this.timeOfObservationInNanos = observationTime;
+        this.timeOfObservationInMillis = observationTime;
     }
 
     /**
      * Returns a new event request result such that the corresponding event is confirmed to have
      * been observed at the specified time.
      *
-     * @param timeOfObservationInNanoSeconds Time at which event was observed in nanoseconds.
+     * @param timeOfObservationInMillis Time at which event was observed in milliseconds.
      * @return a new observed event request result.
      */
-    public static EventRequestResult createObservedEvent(long timeOfObservationInNanoSeconds) {
-        return new EventRequestResult(true, false, "", timeOfObservationInNanoSeconds);
+    public static EventRequestResult createObservedEvent(List<String> observedEvents, long timeOfObservationInMillis) {
+        return new EventRequestResult(RequestResultState.OBSERVED, observedEvents, null, timeOfObservationInMillis);
     }
 
     /**
@@ -55,7 +60,7 @@ public final class EventRequestResult {
      * @return a new unobserved event request result.
      */
     public static EventRequestResult createUnobservedEvent() {
-        return new EventRequestResult(false, false, "", -1);
+        return new EventRequestResult(RequestResultState.UNOBSERVED, null, null, -1);
     }
 
     /**
@@ -67,33 +72,39 @@ public final class EventRequestResult {
      * @return a new rejected event request result
      */
     public static EventRequestResult createRejectedEvent(String causeOfRejection) {
-        return new EventRequestResult(false, true, causeOfRejection, -1);
+        return new EventRequestResult(RequestResultState.REJECTED, null, causeOfRejection, -1);
     }
 
     public boolean eventHasBeenObserved() {
-        return this.hasBeenObserved;
+        return this.resultState == RequestResultState.OBSERVED;
     }
 
     public boolean eventHasBeenRejected() {
-        return this.hasBeenRejected;
+        return this.resultState == RequestResultState.REJECTED;
     }
 
     public String causeOfRejection() {
         return this.causeOfRejection;
     }
 
-    public long timeOfObservationInNanoseconds() {
-        return this.timeOfObservationInNanos;
+    public long timeOfObservationInMilliseconds() {
+        return this.timeOfObservationInMillis;
+    }
+    
+    public List<String> getAllObservedEvents() {
+        return new ArrayList<>(this.observedEvents);
     }
 
     @Override
     public String toString() {
-        if (this.hasBeenObserved && !this.hasBeenRejected) {
-            return "EventRequestResult { Observed at time: " + this.timeOfObservationInNanos + " (nano) }";
-        } else if (!this.hasBeenObserved && this.hasBeenRejected) {
+        if (this.resultState == RequestResultState.OBSERVED) {
+            return "EventRequestResult { Observed at time: " + this.timeOfObservationInMillis + " (millis) }";
+        } else if (this.resultState == RequestResultState.UNOBSERVED) {
+            return "EventRequestResult { Unobserved }";
+        } else if (this.resultState == RequestResultState.REJECTED) {
             return "EventRequestResult { Rejected due to: " + this.causeOfRejection + " }";
         } else {
-            return "EventRequestResult { Unobserved }";
+            return "EventRequestResult { Expired }";
         }
     }
 

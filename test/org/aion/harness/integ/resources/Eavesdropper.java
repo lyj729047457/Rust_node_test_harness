@@ -51,7 +51,7 @@ public final class Eavesdropper implements Runnable {
                     System.err.println("Result is null - unsupported gossip event specified!");
                     this.dead.set(true);
                 } else if (result.eventHasBeenObserved()) {
-                    long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservationInNanoseconds() - startTime);
+                    long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservationInMilliseconds() - startTime);
                     System.out.println("Thread #" + this.ID + ": event observed | time: " + time + " second(s)");
                 } else if (result.eventHasBeenRejected()) {
                     System.out.println("Thread #" + this.ID + ": event request rejected due to: " + result.causeOfRejection());
