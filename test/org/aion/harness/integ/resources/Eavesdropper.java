@@ -2,10 +2,10 @@ package org.aion.harness.integ.resources;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.result.EventRequestResult;
-import org.aion.harness.main.event.NodeEvent;
 
 public final class Eavesdropper implements Runnable {
     private NodeListener listener;
@@ -38,7 +38,7 @@ public final class Eavesdropper implements Runnable {
 
     @Override
     public void run() {
-        IEvent event = new NodeEvent("I do not exist.");
+        IEvent event = new Event("I do not exist.");
 
         while (!this.dead.get()) {
 

@@ -1,12 +1,12 @@
 package org.aion.harness.main;
 
+import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
-import org.aion.harness.main.event.NodeEvent;
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -71,18 +71,18 @@ public final class NodeListener {
     // ------------ pre-packaged events that this class provides ---------------
 
     private IEvent getStartedMiningEvent() {
-        return new NodeEvent("sealer starting");
+        return new Event("sealer starting");
     }
 
     private IEvent getTransactionSealedEvent(byte[] transactionHash) {
         if (transactionHash == null) {
             throw new NullPointerException("Cannot get event for null transaction hash.");
         }
-        return new NodeEvent("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
+        return new Event("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
     }
 
     private IEvent getHeartbeatEvent() {
-        return new NodeEvent("p2p-status");
+        return new Event("p2p-status");
     }
 
 
