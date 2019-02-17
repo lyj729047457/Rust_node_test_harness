@@ -1,4 +1,4 @@
-package org.aion.harness.main;
+package org.aion.harness.main.event;
 
 import java.util.List;
 

@@ -7,4 +7,5 @@ module aion.node.harness {
     exports org.aion.harness.kernel;
     exports org.aion.harness.main;
     exports org.aion.harness.main.impl;
+    exports org.aion.harness.main.event;
 }

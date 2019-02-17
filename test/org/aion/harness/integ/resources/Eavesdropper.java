@@ -2,10 +2,10 @@ package org.aion.harness.integ.resources;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.harness.main.IEvent;
+import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.result.EventRequestResult;
-import org.aion.harness.util.NodeEvent;
+import org.aion.harness.main.event.NodeEvent;
 
 public final class Eavesdropper implements Runnable {
     private NodeListener listener;

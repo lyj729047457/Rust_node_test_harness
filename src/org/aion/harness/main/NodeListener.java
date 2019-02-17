@@ -1,11 +1,12 @@
 package org.aion.harness.main;
 
+import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
-import org.aion.harness.util.NodeEvent;
+import org.aion.harness.main.event.NodeEvent;
 import org.apache.commons.codec.binary.Hex;
 
 /**

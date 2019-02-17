@@ -1,7 +1,7 @@
 package org.aion.harness.util;
 
 import java.util.List;
-import org.aion.harness.main.IEvent;
+import org.aion.harness.main.event.IEvent;
 
 /**
  * A request for some listener to listen for an event.

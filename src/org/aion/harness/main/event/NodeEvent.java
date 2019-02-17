@@ -1,8 +1,8 @@
-package org.aion.harness.util;
+package org.aion.harness.main.event;
 
 import java.util.Collections;
 import java.util.List;
-import org.aion.harness.main.IEvent;
+import org.aion.harness.main.event.IEvent;
 
 public final class NodeEvent implements IEvent {
     private final String eventString;
