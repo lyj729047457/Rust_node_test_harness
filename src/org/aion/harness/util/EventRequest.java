@@ -180,7 +180,7 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public List<String> getAllObservedEvents() {
-        throw new UnsupportedOperationException();
+        return this.requestedEvent.getAllObservedEvents();
     }
 
     @Override
@@ -203,7 +203,9 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public void markAsUnobserved() {
-        throw new UnsupportedOperationException();
+        if (this.currentState == RequestState.PENDING) {
+            this.currentState = RequestState.UNOBSERVED;
+        }
     }
 
     @Override
@@ -225,17 +227,17 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public synchronized boolean isRejected() {
-        throw new UnsupportedOperationException();
+        return this.currentState == RequestState.REJECTED;
     }
 
     @Override
     public synchronized boolean isUnobserved() {
-        throw new UnsupportedOperationException();
+        return this.currentState == RequestState.UNOBSERVED;
     }
 
     @Override
     public synchronized boolean isSatisfied() {
-        throw new UnsupportedOperationException();
+        return this.currentState == RequestState.SATISFIED;
     }
 
     @Override
