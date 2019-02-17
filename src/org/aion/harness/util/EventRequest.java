@@ -25,6 +25,7 @@ public final class EventRequest implements IEventRequest {
     private RequestState currentState = RequestState.PENDING;
 
     private String causeOfRejection;
+    private long timeOfObservation = -1;
 
     /**
      * Constructs a new event request for the specified event.
@@ -127,10 +128,24 @@ public final class EventRequest implements IEventRequest {
         return this.requestedEvent.eventStatement().hashCode();
     }
 
-
     @Override
     public boolean isSatisfiedBy(String line, long currentTimeInMillis) {
-        throw new UnsupportedOperationException();
+        markAsExpiredIfPastDeadline(currentTimeInMillis);
+
+        if (this.currentState != RequestState.PENDING) {
+            return true;
+        }
+
+        boolean isSatisfied = this.requestedEvent.isSatisfiedBy(line);
+
+        if (isSatisfied) {
+            this.currentState = RequestState.SATISFIED;
+            this.timeOfObservation = currentTimeInMillis;
+
+            this.eventResult = EventRequestResult.observedEvent(this.requestedEvent.getAllObservedEvents(), currentTimeInMillis);
+        }
+
+        return isSatisfied;
     }
 
     @Override
@@ -146,6 +161,7 @@ public final class EventRequest implements IEventRequest {
             try {
                 this.wait(this.deadline - currentTime);
             } catch (InterruptedException e) {
+                this.eventResult = EventRequestResult.rejectedEvent("Interrupted while waiting for request outcome!");
                 markAsRejected("Interrupted while waiting for request outcome!");
             }
 
@@ -169,7 +185,7 @@ public final class EventRequest implements IEventRequest {
 
     @Override
     public long timeOfObservation() {
-        throw new UnsupportedOperationException();
+        return (this.currentState == RequestState.SATISFIED) ? this.timeOfObservation : -1;
     }
 
     @Override
@@ -194,13 +210,6 @@ public final class EventRequest implements IEventRequest {
     public synchronized void markAsExpired() {
         if (this.currentState == RequestState.PENDING) {
             this.currentState = RequestState.EXPIRED;
-        }
-    }
-
-    //TODO: remove this eventually.
-    public synchronized void markAsSatisfied() {
-        if (this.currentState == RequestState.PENDING) {
-            this.currentState = RequestState.SATISFIED;
         }
     }
 
@@ -233,5 +242,12 @@ public final class EventRequest implements IEventRequest {
     public synchronized boolean isExpired() {
         return this.currentState == RequestState.EXPIRED;
     }
+
+    private synchronized void markAsExpiredIfPastDeadline(long currentTimeInMillis) {
+        if (isExpiredAtTime(currentTimeInMillis)) {
+            markAsExpired();
+        }
+    }
+
 
 }

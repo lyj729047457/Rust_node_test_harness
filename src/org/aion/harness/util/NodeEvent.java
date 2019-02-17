@@ -1,11 +1,14 @@
 package org.aion.harness.util;
 
+import java.util.Collections;
 import java.util.List;
 import org.aion.harness.main.IEvent;
 import org.apache.commons.codec.binary.Hex;
 
 public final class NodeEvent implements IEvent {
     private final String eventString;
+
+    private boolean isSatisfied = false;
 
     private NodeEvent(String eventString) {
         if (eventString == null) {
@@ -68,7 +71,11 @@ public final class NodeEvent implements IEvent {
      */
     @Override
     public boolean isSatisfiedBy(String line) {
-        throw new UnsupportedOperationException();
+        // Once satisfied, this value can never change.
+        if (!this.isSatisfied) {
+            this.isSatisfied = line.contains(this.eventString);
+        }
+        return this.isSatisfied;
     }
 
     /**
@@ -76,7 +83,7 @@ public final class NodeEvent implements IEvent {
      */
     @Override
     public List<String> getAllObservedEvents() {
-        throw new UnsupportedOperationException();
+        return (this.isSatisfied) ? Collections.singletonList(this.eventString) : Collections.emptyList();
     }
 
     @Override

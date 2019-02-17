@@ -47,10 +47,14 @@ public final class Eavesdropper implements Runnable {
                 startTime = System.nanoTime();
                 result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
 
-                if (result == null) {
-                    System.err.println("Result is null - unsupported gossip event specified!");
-                    this.dead.set(true);
-                } else if (result.eventWasObserved()) {
+                // If we die during the waitFor it is possible for it to return null.
+                if ((result == null) && (!this.dead.get())) {
+                    throw new IllegalStateException("waitFor returned null and we are still alive!");
+                } else if (result == null) {
+                    break;
+                }
+
+                if (result.eventWasObserved()) {
                     long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservationInMilliseconds() - startTime);
                     System.out.println("Thread #" + this.ID + ": event observed | time: " + time + " second(s)");
                 } else if (result.eventWasRejected()) {
