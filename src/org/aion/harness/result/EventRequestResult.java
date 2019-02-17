@@ -13,7 +13,7 @@ import java.util.List;
  *   - The event was rejected: indicates that observation at the time of the request was not possible.
  *   - The event was expired: indicates that the event timed out before being satisfied.
  *
- * In the case of an event being observed, it will also come with a timestamp (in nanoseconds)
+ * In the case of an event being observed, it will also come with a timestamp (in milliseconds)
  * indicating when the listener observed the event.
  *
  * In the case of an event being rejected, it will also come with a reason for why the event request
@@ -91,6 +91,14 @@ public final class EventRequestResult {
 
     public boolean eventWasRejected() {
         return this.resultState == RequestResultState.REJECTED;
+    }
+
+    public boolean eventWasUnobserved() {
+        return this.resultState == RequestResultState.UNOBSERVED;
+    }
+
+    public boolean eventExpired() {
+        return this.resultState == RequestResultState.EXPIRED;
     }
 
     public String causeOfRejection() {
