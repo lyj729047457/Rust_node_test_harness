@@ -23,7 +23,7 @@ public final class LogListener implements TailerListener {
     /**
      * Returns true only if the listener is not dead.
      */
-    public synchronized boolean isAlive() {
+    synchronized boolean isAlive() {
         return this.currentState != ListenerState.DEAD;
     }
 
@@ -154,31 +154,6 @@ public final class LogListener implements TailerListener {
         }
     }
 
-    /**
-     * Rejects every request currently in the pool with the specified cause of the panic, then clears
-     * the pool and notifies all waiting threads.
-     *
-     * @param causeOfPanic The reason for why the request pool is being killed.
-     */
-    private synchronized void killRequestPool(String causeOfPanic) {
-        this.currentState = ListenerState.DEAD;
-
-        for (EventRequest request : this.requestPool) {
-            request.markAsRejected(causeOfPanic);
-            request.notifyRequestIsResolved();
-        }
-        this.requestPool.clear();
-    }
-
-    @Override
-    public void init(Tailer tailer) {
-        if (tailer == null) {
-            throw new NullPointerException("Cannot initialize with a null tailer.");
-        }
-
-        this.tailer = tailer;
-    }
-
     @Override
     public synchronized void handle(String nextLine) {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
@@ -203,6 +178,15 @@ public final class LogListener implements TailerListener {
     }
 
     @Override
+    public void init(Tailer tailer) {
+        if (tailer == null) {
+            throw new NullPointerException("Cannot initialize with a null tailer.");
+        }
+
+        this.tailer = tailer;
+    }
+
+    @Override
     public void fileNotFound() {
         panic("Log file not found!");
     }
@@ -221,6 +205,22 @@ public final class LogListener implements TailerListener {
     private void panic(String cause) {
         killRequestPool(cause);
         this.tailer.stop();
+    }
+
+    /**
+     * Rejects every request currently in the pool with the specified cause of the panic, then clears
+     * the pool and notifies all waiting threads.
+     *
+     * @param causeOfPanic The reason for why the request pool is being killed.
+     */
+    private synchronized void killRequestPool(String causeOfPanic) {
+        this.currentState = ListenerState.DEAD;
+
+        for (EventRequest request : this.requestPool) {
+            request.markAsRejected(causeOfPanic);
+            request.notifyRequestIsResolved();
+        }
+        this.requestPool.clear();
     }
 
 }
