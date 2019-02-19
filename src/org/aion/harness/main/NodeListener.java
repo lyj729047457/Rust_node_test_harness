@@ -38,7 +38,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
+        IEventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -62,7 +62,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(getTransactionSealedEvent(transactionHash), deadline);
+        IEventRequest request = new EventRequest(getTransactionSealedEvent(transactionHash), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -84,7 +84,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
+        IEventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -107,7 +107,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(event, deadline);
+        IEventRequest request = new EventRequest(event, deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }

@@ -47,7 +47,7 @@ public final class LogListener implements TailerListener {
     // We begin as alive but not listening to any log file.
     private ListenerState currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
 
-    private List<EventRequest> requestPool = new ArrayList<>(CAPACITY);
+    private List<IEventRequest> requestPool = new ArrayList<>(CAPACITY);
 
     /**
      * Returns true only if the listener is not dead.
@@ -85,7 +85,7 @@ public final class LogListener implements TailerListener {
      * 5. The request is observed.
      *    -> request is marked satisfied.
      */
-    public void submitEventRequest(EventRequest eventRequest) {
+    public void submitEventRequest(IEventRequest eventRequest) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
@@ -153,7 +153,7 @@ public final class LogListener implements TailerListener {
      * 3. An interrupt exception occurs before adding the request to the pool.
      *    -> request is marked rejected.
      */
-    private synchronized void addRequest(EventRequest request) {
+    private synchronized void addRequest(IEventRequest request) {
         long currentTimeInMillis = System.currentTimeMillis();
 
         // If the pool is full and we are not expired and listener is listening then wait until space frees up.
@@ -200,10 +200,10 @@ public final class LogListener implements TailerListener {
             long currentTimeInMillis = System.currentTimeMillis();
 
             // Iterate over each of the requests in the pool.
-            Iterator<EventRequest> requestIterator = this.requestPool.iterator();
+            Iterator<IEventRequest> requestIterator = this.requestPool.iterator();
 
             while (requestIterator.hasNext()) {
-                EventRequest request = requestIterator.next();
+                IEventRequest request = requestIterator.next();
 
                 if (!request.isPending()) {
                     requestIterator.remove();
@@ -272,7 +272,7 @@ public final class LogListener implements TailerListener {
     private synchronized void killRequestPool(String causeOfPanic) {
         this.currentState = ListenerState.DEAD;
 
-        for (EventRequest request : this.requestPool) {
+        for (IEventRequest request : this.requestPool) {
             request.markAsRejected(causeOfPanic);
             request.notifyRequestIsResolved();
         }
