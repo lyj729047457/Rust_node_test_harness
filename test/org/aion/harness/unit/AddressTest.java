@@ -11,11 +11,6 @@ import java.util.Arrays;
 public class AddressTest {
     private String testingAddress = "a0ee00c327f522f0c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
 
-    @Test (expected = IllegalArgumentException.class)
-    public void testInstantiatingAddressWithInvalidPrivateKey() throws DecoderException {
-        Address.createAddressWithPrivateKey(Hex.decodeHex(testingAddress), new byte[0]);
-    }
-
     @Test
     public void testAddressEquality() throws DecoderException {
         Address address = Address.createAddress(Hex.decodeHex(testingAddress));
@@ -27,7 +22,7 @@ public class AddressTest {
 
     @Test
     public void testImmutabilityByModifyingOriginalAddressBytes() throws DecoderException {
-        byte[] randomAddressCopy = Hex.decodeHex("a0ee00c327f522f0c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5");
+        byte[] randomAddressCopy = Hex.decodeHex(testingAddress);
         Address address = Address.createAddress(randomAddressCopy);
 
         // modify addressString
@@ -40,7 +35,7 @@ public class AddressTest {
 
     @Test
     public void testImmutabilityByModifyingReturnedAddressBytes() throws DecoderException {
-        byte[] randomAddressCopy = Hex.decodeHex("a0ee00c327f522f0c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5");
+        byte[] randomAddressCopy = Hex.decodeHex(testingAddress);
         Address address = Address.createAddress(randomAddressCopy);
 
         // retrieve the address bytes from the object and modify

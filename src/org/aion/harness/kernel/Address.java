@@ -7,49 +7,25 @@ import java.util.Arrays;
  * An Immutable address, this provides a more intuitive way of talking about an account.
  */
 public class Address {
-    public static final int ADDRESS_BYTES_LENGTH = 32;
-    public static final int PRIVATE_KEY_BYTES_LENGTH = 32;
-
     private final byte[] addressBytes;
-    private final byte[] privateKeyBytes;
+    public static final int SIZE = 32;
 
-    public static Address createAddress(byte[] addressBytes) {
+    private Address(byte[] addressBytes, byte[] privateKeyBytes) {
         if (addressBytes == null) {
             throw new NullPointerException("address bytes cannot be null");
         }
-        if (addressBytes.length != ADDRESS_BYTES_LENGTH) {
-            throw new IllegalArgumentException("bytes of an address must have a length of " + ADDRESS_BYTES_LENGTH);
+        if (addressBytes.length != SIZE) {
+            throw new IllegalArgumentException("bytes of an address must have a length of " + SIZE);
         }
-        return new Address(copyByteArray(addressBytes), null);
+        this.addressBytes = addressBytes;
     }
 
-    public static Address createAddressWithPrivateKey(byte[] addressBytes, byte[] privateKeyBytes) {
-        if (addressBytes == null) {
-            throw new NullPointerException("address bytes cannot be null");
-        }
-        if (privateKeyBytes == null) {
-            throw new NullPointerException("private key bytes cannot be null");
-        }
-        if (addressBytes.length != ADDRESS_BYTES_LENGTH) {
-            throw new IllegalArgumentException("bytes of an address must have a length of " + ADDRESS_BYTES_LENGTH);
-        }
-        if (privateKeyBytes.length != PRIVATE_KEY_BYTES_LENGTH) {
-            throw new IllegalArgumentException("bytes of a private key must have a length of " + PRIVATE_KEY_BYTES_LENGTH);
-        }
-        return new Address(copyByteArray(addressBytes), copyByteArray(privateKeyBytes));
+    public static Address createAddress(byte[] addressBytes) {
+        return new Address(copyByteArray(addressBytes), null);
     }
 
     public byte[] getAddressBytes() {
         return copyByteArray(this.addressBytes);
-    }
-
-    public byte[] getPrivateKeyBytes() {
-        return copyByteArray(this.privateKeyBytes);
-    }
-
-    private Address(byte[] addressBytes, byte[] privateKeyBytes) {
-        this.addressBytes = addressBytes;
-        this.privateKeyBytes = privateKeyBytes;
     }
 
     /**

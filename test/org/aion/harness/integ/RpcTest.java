@@ -1,6 +1,7 @@
 package org.aion.harness.integ;
 
 import org.aion.harness.kernel.Address;
+import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
@@ -32,14 +33,16 @@ public class RpcTest {
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
     private static Address preminedAddress;
+    private static PrivateKey preminedPrivateKey;
 
     private RPC rpc;
     private Node node;
 
     @Before
     public void setup() throws IOException, DecoderException {
-        preminedAddress = Address.createAddressWithPrivateKey(Hex.decodeHex(Assumptions.PREMINED_ADDRESS), Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedAddress = Address.createAddress(Hex.decodeHex(Assumptions.PREMINED_ADDRESS));
         destination = Address.createAddress(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
+        preminedPrivateKey = PrivateKey.createPrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.rpc = new RPC();
@@ -60,7 +63,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
@@ -90,7 +93,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.valueOf(100));
@@ -109,7 +112,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
@@ -128,7 +131,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
@@ -147,7 +150,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
@@ -158,7 +161,7 @@ public class RpcTest {
         assertTrue(result.getResultOnly().success);
 
         transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ONE);
@@ -174,7 +177,7 @@ public class RpcTest {
     public void testSendTransactionWhenNoNodeIsAlive() {
         assertFalse(this.node.isAlive());
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
@@ -190,7 +193,7 @@ public class RpcTest {
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            preminedAddress,
+            preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
@@ -206,13 +209,13 @@ public class RpcTest {
     @Test
     public void testSendValueWithInsufficientBalance() throws Exception {
         byte[] badKey = Hex.decodeHex("223f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5");
-        Address badKeyAddress = Address.createAddressWithPrivateKey(Hex.decodeHex("a03f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5"), badKey);
+        PrivateKey badPrivateKey = PrivateKey.createPrivateKey(badKey);
 
         initializeNodeWithChecks();
         assertTrue(this.node.start().success);
 
         TransactionResult transactionResult = constructTransaction(
-            badKeyAddress,
+            badPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
@@ -314,7 +317,7 @@ public class RpcTest {
 
     private void doBalanceTransfer(BigInteger transferValue) {
         TransactionResult transactionResult = constructTransaction(
-                preminedAddress,
+                preminedPrivateKey,
                 destination,
                 transferValue,
                 BigInteger.ZERO);
@@ -328,9 +331,9 @@ public class RpcTest {
         assertTrue(eventResult.eventWasObserved());
     }
 
-    private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
+    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return Transaction
-            .buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private Result initializeNode() throws IOException, InterruptedException {

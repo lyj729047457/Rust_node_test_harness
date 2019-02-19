@@ -2,6 +2,7 @@ package org.aion.harness.integ;
 
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
+import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
@@ -40,11 +41,12 @@ public class AwkwardListenerTest {
         Node node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 
         String recipient = "a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30";
-        Address preminedAddress = Address.createAddressWithPrivateKey(Hex.decodeHex(Assumptions.PREMINED_ADDRESS), Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        Address preminedAddress = Address.createAddress(Hex.decodeHex(Assumptions.PREMINED_ADDRESS));
+        PrivateKey preminedPrivateKey = PrivateKey.createPrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         Address destination = Address.createAddress(Hex.decodeHex(recipient));
 
         TransactionResult transactionResult = constructTransaction(
-                preminedAddress,
+                preminedPrivateKey,
                 destination,
                 BigInteger.ONE,
                 BigInteger.ZERO);
@@ -72,7 +74,7 @@ public class AwkwardListenerTest {
         // ------------------------------------------------------------------------------
 
         transactionResult = constructTransaction(
-                preminedAddress,
+                preminedPrivateKey,
                 destination,
                 BigInteger.ONE,
                 BigInteger.ONE);
@@ -95,9 +97,9 @@ public class AwkwardListenerTest {
         node.stop();
     }
 
-    private TransactionResult constructTransaction(Address sender, Address destination, BigInteger value, BigInteger nonce) {
+    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return Transaction
-            .buildAndSignTransaction(sender, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
 }

@@ -19,7 +19,7 @@ import org.apache.commons.codec.binary.Hex;
 public final class Transaction {
     private final byte[] signedTransaction;
 
-    private Transaction(Address sender, BigInteger nonce, Address destination, byte[] data,
+    private Transaction(PrivateKey sender, BigInteger nonce, Address destination, byte[] data,
         long energyLimit, long energyPrice, BigInteger value, boolean isForAvm)
         throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
 
@@ -49,21 +49,21 @@ public final class Transaction {
         this.signedTransaction = transactionBuilder.buildSignedTransaction();
     }
 
-    public static TransactionResult buildAndSignTransaction(Address sender, BigInteger nonce,
+    public static TransactionResult buildAndSignTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
         Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
 
         try {
-            return TransactionResult.successful(new Transaction(sender, nonce, destination, data, energyLimit, energyPrice, value, false));
+            return TransactionResult.successful(new Transaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false));
         } catch (Exception e) {
             return TransactionResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, (e.getMessage() == null) ? e.toString() : e.getMessage());
         }
     }
 
-    public static TransactionResult buildAndSignAvmTransaction(Address sender, BigInteger nonce,
+    public static TransactionResult buildAndSignAvmTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
         Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
 
         try {
-            return TransactionResult.successful(new Transaction(sender, nonce, destination, data, energyLimit, energyPrice, value, true));
+            return TransactionResult.successful(new Transaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, true));
         } catch (Exception e) {
             return TransactionResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, (e.getMessage() == null) ? e.toString() : e.getMessage());
         }
