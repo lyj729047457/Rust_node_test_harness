@@ -29,6 +29,36 @@ public final class Event implements IEvent {
     }
 
     /**
+     * Returns the logical-and of the two event strings, each of which will be
+     * wrapped up into single Event objects.
+     */
+    public static AndEvent and(String eventString1, String eventString2) {
+        return new AndEvent(new Event(eventString1), new Event(eventString2));
+    }
+
+    /**
+     * Returns the logical-and of the two events.
+     */
+    public static AndEvent and(IEvent event1, IEvent event2) {
+        return new AndEvent(event1, event2);
+    }
+
+    /**
+     * Returns the logical-or of the two event strings, each of which will be
+     * wrapped up into single Event objects.
+     */
+    public static OrEvent or(String eventString1, String eventString2) {
+        return new OrEvent(new Event(eventString1), new Event(eventString2));
+    }
+
+    /**
+     * Returns the logical-or of the two events.
+     */
+    public static OrEvent or(IEvent event1, IEvent event2) {
+        return new OrEvent(event1, event2);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -40,16 +70,16 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public IEvent and(IEvent event) {
-        throw new UnsupportedOperationException();
+    public AndEvent and(IEvent event) {
+        return new AndEvent(this, event);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public IEvent or(IEvent event) {
-        throw new UnsupportedOperationException();
+    public OrEvent or(IEvent event) {
+        return new OrEvent(this, event);
     }
 
     /**
@@ -80,7 +110,7 @@ public final class Event implements IEvent {
      */
     @Override
     public String toString() {
-        return "NodeEvent { " + this.eventStatement() + " }";
+        return "Event { " + this.eventStatement() + " }";
     }
 
 }
