@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-public class PrivateKeytest {
+public class PrivateKeyTest {
     private String testingPrivateKey = "32ee00c327f522f0c8d300921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
 
     @Test (expected = IllegalArgumentException.class)
