@@ -1,8 +1,13 @@
 package org.aion.harness.main.impl;
 
 import org.aion.harness.main.Node;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.event.Event;
+import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.*;
 import org.apache.commons.io.FileUtils;
@@ -44,7 +49,7 @@ public final class JavaNode implements Node {
      * @throws IllegalStateException if the node is already started or the kernel does not exist.
      */
     @Override
-    public synchronized StatusResult start() throws IOException, InterruptedException {
+    public synchronized Result start() {
         if (isAlive()) {
             throw new IllegalStateException("there is already a kernel running.");
         }
@@ -54,29 +59,24 @@ public final class JavaNode implements Node {
         }
 
         System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
-        ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.NETWORK)
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.NETWORK)
                 .directory(NodeFileManager.getKernelDirectory());
 
-        LogManager logManager = SingletonFactory.singleton().logManager();
-        File outputLog = logManager.getCurrentOutputLogFile();
+            LogManager logManager = SingletonFactory.singleton().logManager();
+            File outputLog = logManager.getCurrentOutputLogFile();
 
-        builder.redirectOutput(outputLog);
-        builder.redirectError(logManager.getCurrentErrorLogFile());
+            builder.redirectOutput(outputLog);
+            builder.redirectError(logManager.getCurrentErrorLogFile());
 
-        this.runningKernel = builder.start();
+            this.runningKernel = builder.start();
 
-        //TODO: probably a better solution than this (scanning logs?)
-        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+            return waitForRpcServerToStart(outputLog);
 
-        StatusResult result = isAlive()
-            ? StatusResult.successful()
-            : StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "node has not started");
-
-        if (result.success) {
-            result = SingletonFactory.singleton().logReader().startReading(outputLog);
+        } catch (Exception e) {
+            return Result.unsuccessfulDueToException(e);
         }
-
-        return result;
     }
 
     /**
@@ -217,6 +217,33 @@ public final class JavaNode implements Node {
         }
 
         return builder.start().waitFor() == 0;
+    }
+
+    /**
+     * Waits for the RPC server to start before returning.
+     */
+    private Result waitForRpcServerToStart(File outputLog) {
+        // We wait for the rpc event to know we are ok to return. There is a chance that we will miss
+        // this event and start listening too late. That is why we timeout after 20 seconds, which
+        // should be more than sufficient for the server to activate, and then we check if the node
+        // is still live.
+        // See issue #1 relating to this decision, which will be refactored in the future.
+
+        if (isAlive()) {
+            // We wait for the Rpc event or else 20 seconds, in case we come too late and never see it.
+            IEvent rpcEvent = new Event("rpc-server - (UNDERTOW) started");
+
+            StatusResult result = SingletonFactory.singleton().logReader().startReading(outputLog);
+            if (!result.success) {
+                return Result.unsuccessfulDueTo(result.error);
+            }
+
+            new NodeListener().waitForEvent(rpcEvent, TimeUnit.SECONDS.toMillis(20));
+        }
+
+        return (isAlive())
+            ? Result.successful()
+            : Result.unsuccessfulDueTo("Node failed to start!");
     }
 
 }

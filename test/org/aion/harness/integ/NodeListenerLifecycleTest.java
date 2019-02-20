@@ -18,6 +18,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -65,7 +66,7 @@ public class NodeListenerLifecycleTest {
     public void testNodeListenerAfterShuttingDownNode() throws IOException, InterruptedException {
         initializeNodeWithChecks();
 
-        StatusResult result = this.node.start();
+        Result result = this.node.start();
         System.out.println("Start result = " + result);
         assertTrue(result.success);
 
@@ -93,7 +94,7 @@ public class NodeListenerLifecycleTest {
 
         // Initialize and start the node.
         initializeNodeWithChecks();
-        StatusResult result = this.node.start();
+        Result result = this.node.start();
         System.out.println("Start result = " + result);
         assertTrue(result.success);
 

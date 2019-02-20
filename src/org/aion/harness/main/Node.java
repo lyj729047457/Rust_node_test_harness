@@ -1,5 +1,6 @@
 package org.aion.harness.main;
 
+import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import java.io.IOException;
 
@@ -24,7 +25,7 @@ public interface Node {
     /**
      * Starts running the node.
      */
-    public StatusResult start() throws IOException, InterruptedException;
+    public Result start();
 
     /**
      * Shuts the node down.
