@@ -2,6 +2,7 @@ package org.aion.harness.main;
 
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.event.OrEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.util.EventRequest;
@@ -53,7 +54,7 @@ public final class NodeListener {
      * @throws NullPointerException if transactionHash is null.
      * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public EventRequestResult waitForTransactionToBeSealed(byte[] transactionHash, long timeoutInMillis) {
+    public EventRequestResult waitForTransactionToBeProcessed(byte[] transactionHash, long timeoutInMillis) {
         if (transactionHash == null) {
             throw new NullPointerException("Cannot wait for a null transaction hash.");
         }
@@ -62,7 +63,13 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        IEventRequest request = new EventRequest(getTransactionSealedEvent(transactionHash), deadline);
+
+        IEvent transactionSealedEvent = getTransactionSealedEvent(transactionHash);
+        IEvent transactionRejectedEvent = getTransactionRejectedEvent(transactionHash);
+        IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
+
+        IEventRequest request = new EventRequest(transactionProcessedEvent, deadline);
+
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -148,6 +155,13 @@ public final class NodeListener {
             throw new NullPointerException("Cannot get event for null transaction hash.");
         }
         return new Event("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
+    }
+
+    private IEvent getTransactionRejectedEvent(byte[] transactionHash) {
+        if (transactionHash == null) {
+            throw new NullPointerException("Cannot get event for null transaction hash.");
+        }
+        return new Event("tx " + Hex.encodeHexString(transactionHash) + " is rejected");
     }
 
     private IEvent getHeartbeatEvent() {

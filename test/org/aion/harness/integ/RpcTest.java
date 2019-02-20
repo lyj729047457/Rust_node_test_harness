@@ -327,7 +327,7 @@ public class RpcTest {
         byte[] transactionHash = transactionResult.getTransaction().getTransactionHash();
         long timeout = TimeUnit.MINUTES.toMillis(1);
 
-        EventRequestResult eventResult = new NodeListener().waitForTransactionToBeSealed(transactionHash, timeout);
+        EventRequestResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);
         assertTrue(eventResult.eventWasObserved());
     }
 

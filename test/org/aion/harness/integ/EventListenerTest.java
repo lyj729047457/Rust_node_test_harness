@@ -1,6 +1,7 @@
 package org.aion.harness.integ;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
@@ -76,7 +77,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testTransactionSealed() throws Exception {
+    public void testTransactionProcessed() throws Exception {
         TransactionResult transactionResult = constructTransaction(
                 preminedPrivateKey,
                 destination,
@@ -97,9 +98,13 @@ public class EventListenerTest {
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        EventRequestResult result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        EventRequestResult result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
         System.out.println(result);
         Assert.assertTrue(result.eventWasObserved());
+
+        List<String> observed = result.getAllObservedEvents();
+        assertEquals(1, observed.size());
+        assertTrue(observed.get(0).contains("sealed"));
 
         this.node.stop();
 
@@ -125,9 +130,49 @@ public class EventListenerTest {
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        result = listener.waitForTransactionToBeSealed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
         System.out.println(result);
         Assert.assertTrue(result.eventWasObserved());
+
+        observed = result.getAllObservedEvents();
+        assertEquals(1, observed.size());
+        assertTrue(observed.get(0).contains("sealed"));
+
+        this.node.stop();
+    }
+
+    @Test
+    public void testWaitForTransactionToBeRejected() throws IOException, InterruptedException, DecoderException {
+        // create a private key, has zero balance, sending balance from it would cause transaction to fail
+        PrivateKey privateKeyWithNoBalance = PrivateKey.createPrivateKey(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
+
+        TransactionResult transactionResult = constructTransaction(
+                privateKeyWithNoBalance,
+                destination,
+                BigInteger.ONE,
+                BigInteger.ZERO);
+
+        if (!transactionResult.getResultOnly().success) {
+            System.err.println("CONSTRUCT TRANSACTION FAILED");
+            return;
+        }
+
+        ((JavaNode) this.node).initializeButSkipKernelBuild(false);
+        System.out.println(this.node.start());
+        Assert.assertTrue(this.node.isAlive());
+
+        NodeListener listener = new NodeListener();
+
+        this.rpc.sendTransaction(transactionResult.getTransaction());
+
+        EventRequestResult result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        System.out.println(result);
+        Assert.assertTrue(result.eventWasObserved());
+
+        // check it was a rejected event that was observed
+        List<String> observed = result.getAllObservedEvents();
+        assertEquals(1, observed.size());
+        assertTrue(observed.get(0).contains("rejected"));
 
         this.node.stop();
     }
