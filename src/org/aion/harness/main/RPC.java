@@ -65,7 +65,7 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
             return sendTransactionOverRPC(transaction.getBytes(), verbose);
         } catch (Exception e) {
-            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()), System.currentTimeMillis());
+            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }
     }
 
@@ -122,9 +122,9 @@ public final class RPC {
         String response = stringBuilder.toString();
 
         if (status != 0) {
-            return RPCResult.unsuccessful(status, "RPC call failed!", timestamp);
+            return RPCResult.unsuccessful(status, "RPC call failed!");
         } else if (response.contains("error")) {
-            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1), timestamp);
+            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
         } else {
             return RPCResult.successful(response, timestamp);
         }

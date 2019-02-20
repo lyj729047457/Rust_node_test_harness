@@ -12,9 +12,6 @@ public final class RPCResult {
         if (output == null) {
             throw new NullPointerException("output cannot be null");
         }
-        if (timestamp < 0) {
-            throw new IllegalArgumentException("timestamp cannot be less than zero");
-        }
 
         this.result = result;
         this.output = output;
@@ -22,11 +19,14 @@ public final class RPCResult {
     }
 
     public static RPCResult successful(String output, long timestamp) {
+        if (timestamp < 0) {
+            throw new IllegalArgumentException("timestamp cannot be less than zero");
+        }
         return new RPCResult(Result.successful(), output, timestamp);
     }
 
-    public static RPCResult unsuccessful(int status, String error, long timestamp) {
-        return new RPCResult(Result.unsuccessful(status, error), "", timestamp);
+    public static RPCResult unsuccessful(int status, String error) {
+        return new RPCResult(Result.unsuccessful(status, error), "", -1);
     }
 
     public Result getResultOnly() {
@@ -50,7 +50,7 @@ public final class RPCResult {
 
     @Override
     public String toString() {
-        return "Result { success = " + this.result.success + ", output = " + this.output
+        return "RPCResult { success = " + this.result.success + ", output = " + this.output
                 + ", status = " + this.result.status + ", error = " + this.result.error + " }";
     }
 }
