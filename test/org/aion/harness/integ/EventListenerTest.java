@@ -13,6 +13,7 @@ import org.aion.harness.main.RPC;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
@@ -63,15 +64,18 @@ public class EventListenerTest {
     public void testWaitForMinersToStart() throws IOException, InterruptedException {
         initializeNodeWithChecks();
 
-        System.out.println(this.node.start());
-        Assert.assertTrue(this.node.isAlive());
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         NodeListener listener = new NodeListener();
 
-        EventRequestResult result = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
+        EventRequestResult requestResult = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
 
-        System.out.println(result);
-        Assert.assertTrue(result.eventWasObserved());
+        System.out.println(requestResult);
+        Assert.assertTrue(requestResult.eventWasObserved());
 
         this.node.stop();
     }
@@ -90,19 +94,25 @@ public class EventListenerTest {
         }
 
         ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-        System.out.println(this.node.start());
-        Assert.assertTrue(this.node.isAlive());
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         NodeListener listener = new NodeListener();
 
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        EventRequestResult result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
-        System.out.println(result);
-        Assert.assertTrue(result.eventWasObserved());
+        EventRequestResult requestResult = listener.waitForTransactionToBeProcessed(
+            transactionResult.getTransaction().getTransactionHash(),
+            TimeUnit.MINUTES.toMillis(2));
 
-        List<String> observed = result.getAllObservedEvents();
+        System.out.println(requestResult);
+        Assert.assertTrue(requestResult.eventWasObserved());
+
+        List<String> observed = requestResult.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("sealed"));
 
@@ -130,11 +140,14 @@ public class EventListenerTest {
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
-        System.out.println(result);
-        Assert.assertTrue(result.eventWasObserved());
+        requestResult = listener.waitForTransactionToBeProcessed(
+            transactionResult.getTransaction().getTransactionHash(),
+            TimeUnit.MINUTES.toMillis(2));
 
-        observed = result.getAllObservedEvents();
+        System.out.println(requestResult);
+        Assert.assertTrue(requestResult.eventWasObserved());
+
+        observed = requestResult.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("sealed"));
 
@@ -158,19 +171,25 @@ public class EventListenerTest {
         }
 
         ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-        System.out.println(this.node.start());
-        Assert.assertTrue(this.node.isAlive());
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         NodeListener listener = new NodeListener();
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        EventRequestResult result = listener.waitForTransactionToBeProcessed(transactionResult.getTransaction().getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
-        System.out.println(result);
-        Assert.assertTrue(result.eventWasObserved());
+        EventRequestResult requestResult = listener.waitForTransactionToBeProcessed(
+            transactionResult.getTransaction().getTransactionHash(),
+            TimeUnit.MINUTES.toMillis(2));
+
+        System.out.println(requestResult);
+        Assert.assertTrue(requestResult.eventWasObserved());
 
         // check it was a rejected event that was observed
-        List<String> observed = result.getAllObservedEvents();
+        List<String> observed = requestResult.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("rejected"));
 

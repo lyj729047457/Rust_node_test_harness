@@ -87,7 +87,9 @@ public class ComplexEventTest {
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         EventRequestResult eventResult = listener.waitForEvent(event1, TimeUnit.MINUTES.toMillis(1));
 
@@ -115,7 +117,9 @@ public class ComplexEventTest {
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         EventRequestResult eventResult = listener.waitForEvent(event2, TimeUnit.MINUTES.toMillis(1));
 
@@ -147,7 +151,9 @@ public class ComplexEventTest {
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         EventRequestResult eventResult = listener.waitForEvent(event3, TimeUnit.MINUTES.toMillis(1));
 

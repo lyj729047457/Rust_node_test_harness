@@ -68,7 +68,9 @@ public class NodeListenerLifecycleTest {
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         NodeListener listener = new NodeListener();
 
@@ -96,7 +98,9 @@ public class NodeListenerLifecycleTest {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         // We launch the listener on a separate thread so that we don't get blocked by it.
         ExecutorService executor = Executors.newSingleThreadExecutor();

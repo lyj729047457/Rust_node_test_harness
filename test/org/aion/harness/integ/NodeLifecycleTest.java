@@ -4,6 +4,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.StatusResult;
 import org.apache.commons.io.FileUtils;
@@ -69,7 +70,11 @@ public class NodeLifecycleTest {
     @Test
     public void testStart() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -80,7 +85,7 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testStartWhenNoNodeDirectoryExists() throws IOException, InterruptedException {
+    public void testStartWhenNoNodeDirectoryExists() {
         this.node.start();
     }
 
@@ -94,7 +99,11 @@ public class NodeLifecycleTest {
     @Test
     public void testStop() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         this.node.stop();
         assertFalse(this.node.isAlive());
@@ -110,7 +119,11 @@ public class NodeLifecycleTest {
     @Test
     public void testInvokingStopTwice() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         this.node.stop();
         assertFalse(this.node.isAlive());
@@ -121,7 +134,11 @@ public class NodeLifecycleTest {
     @Test
     public void testNodeHeartbeat() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         Thread.sleep(TimeUnit.SECONDS.toMillis(heartbeatDurationInSeconds));
         assertTrue(this.node.isAlive());
@@ -141,7 +158,12 @@ public class NodeLifecycleTest {
     @Test(expected = IllegalStateException.class)
     public void testResetWhileNodeIsRunning() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
         this.node.resetState();
     }
 
@@ -176,7 +198,11 @@ public class NodeLifecycleTest {
 
     private void setupDatabase() throws IOException, InterruptedException {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         File database = NodeFileManager.getKernelDatabase();
 

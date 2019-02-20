@@ -15,7 +15,6 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -52,9 +51,11 @@ public class MultipleListenerThreadsTest {
         Node node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         ((JavaNode) node).initializeButSkipKernelBuild(false);
 
-        Result result = node.start();
+        Result result = this.node.start();
         System.out.println("Start result = " + result);
+
         assertTrue(result.success);
+        assertTrue(this.node.isAlive());
 
         // Create the thread pool and all of our eavesdroppers.
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
