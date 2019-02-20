@@ -3,8 +3,8 @@ package org.aion.harness.main.impl;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.*;
-import org.aion.harness.result.Result;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -26,7 +26,7 @@ public final class JavaNode implements Node {
      * Builds a new kernel and copies it into a directory named node.
      */
     @Override
-    public Result initialize() throws IOException, InterruptedException {
+    public StatusResult initialize() throws IOException, InterruptedException {
         return initialize(false);
     }
 
@@ -34,7 +34,7 @@ public final class JavaNode implements Node {
      * Builds a new kernel and copies it into a directory named node.
      */
     @Override
-    public Result initializeVerbose() throws IOException, InterruptedException {
+    public StatusResult initializeVerbose() throws IOException, InterruptedException {
         return initialize(true);
     }
 
@@ -44,7 +44,7 @@ public final class JavaNode implements Node {
      * @throws IllegalStateException if the node is already started or the kernel does not exist.
      */
     @Override
-    public synchronized Result start() throws IOException, InterruptedException {
+    public synchronized StatusResult start() throws IOException, InterruptedException {
         if (isAlive()) {
             throw new IllegalStateException("there is already a kernel running.");
         }
@@ -67,7 +67,10 @@ public final class JavaNode implements Node {
 
         //TODO: probably a better solution than this (scanning logs?)
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-        Result result = isAlive() ? Result.successful() : Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "node has not started");
+
+        StatusResult result = isAlive()
+            ? StatusResult.successful()
+            : StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "node has not started");
 
         if (result.success) {
             result = SingletonFactory.singleton().logReader().startReading(outputLog);
@@ -130,13 +133,13 @@ public final class JavaNode implements Node {
         }
     }
 
-    private synchronized Result initialize(boolean verbose) throws IOException, InterruptedException {
+    private synchronized StatusResult initialize(boolean verbose) throws IOException, InterruptedException {
         if (!buildJavaKernel(verbose)) {
-            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Kernel source build failed.");
+            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Kernel source build failed.");
         }
 
         if (!initializeButSkipKernelBuild(verbose)) {
-            return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Fetching kernel build failed.");
+            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Fetching kernel build failed.");
         }
 
         return SingletonFactory.singleton().logManager().setupLogFiles();

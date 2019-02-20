@@ -1,6 +1,6 @@
 package org.aion.harness.main;
 
-import org.aion.harness.result.Result;
+import org.aion.harness.result.StatusResult;
 import java.io.IOException;
 
 public interface Node {
@@ -10,7 +10,7 @@ public interface Node {
      *
      * Returns a result indicating the success or failure of this method.
      */
-    Result initialize() throws IOException, InterruptedException;
+    StatusResult initialize() throws IOException, InterruptedException;
 
     /**
      * Creates a directory named "node" in the current working directory, and places the kernel inside that directory.
@@ -19,12 +19,12 @@ public interface Node {
      *
      * Returns a result indicating the success or failure of this method.
      */
-    Result initializeVerbose() throws IOException, InterruptedException;
+    StatusResult initializeVerbose() throws IOException, InterruptedException;
 
     /**
      * Starts running the node.
      */
-    public Result start() throws IOException, InterruptedException;
+    public StatusResult start() throws IOException, InterruptedException;
 
     /**
      * Shuts the node down.

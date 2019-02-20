@@ -11,22 +11,22 @@ import org.aion.harness.kernel.Transaction;
  */
 public final class TransactionResult {
     private final Transaction transaction;
-    private final Result result;
+    private final StatusResult result;
 
-    private TransactionResult(Result result, Transaction transaction) {
+    private TransactionResult(StatusResult result, Transaction transaction) {
         this.result = result;
         this.transaction = transaction;
     }
 
     public static TransactionResult successful(Transaction transaction) {
-        return new TransactionResult(Result.successful(), transaction);
+        return new TransactionResult(StatusResult.successful(), transaction);
     }
 
     public static TransactionResult unsuccessful(int status, String error) {
-        return new TransactionResult(Result.unsuccessful(status, error), null);
+        return new TransactionResult(StatusResult.unsuccessful(status, error), null);
     }
 
-    public Result getResultOnly() {
+    public StatusResult getResultOnly() {
         return this.result;
     }
 

@@ -13,7 +13,7 @@ import org.aion.harness.main.RPC;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
-import org.aion.harness.result.Result;
+import org.aion.harness.result.StatusResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
@@ -182,17 +182,17 @@ public class EventListenerTest {
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
-    private Result initializeNode() throws IOException, InterruptedException {
+    private StatusResult initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             return this.node.initialize();
         } else {
             boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? Result.successful() : Result.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
         }
     }
 
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        StatusResult result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.

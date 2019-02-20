@@ -9,28 +9,28 @@ package org.aion.harness.result;
  *
  * A result is immutable.
  */
-public final class Result {
+public final class StatusResult {
     public final boolean success;
     public final int status;
     public final String error;
 
-    private Result(boolean success, int status, String error) {
+    private StatusResult(boolean success, int status, String error) {
         this.success = success;
         this.status = status;
         this.error = (error == null) ? "" : error;
     }
 
-    public static Result successful() {
-        return new Result(true, 0, "");
+    public static StatusResult successful() {
+        return new StatusResult(true, 0, "");
     }
 
-    public static Result unsuccessful(int status, String error) {
-        return new Result(false, status, error);
+    public static StatusResult unsuccessful(int status, String error) {
+        return new StatusResult(false, status, error);
     }
 
     @Override
     public String toString() {
-        return "Result { success = " + this.success + ", status = " + this.status + ", error = " + this.error + " }";
+        return "StatusResult { success = " + this.success + ", status = " + this.status + ", error = " + this.error + " }";
     }
 
 }
