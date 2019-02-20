@@ -127,12 +127,22 @@ public final class LogListener implements TailerListener {
     }
 
     /**
-     * Sets the current state of the listener to be not listening only if the listener is currently
-     * listening.
+     * If the listener is listening when this method is invoked, then it will be moved into the
+     * not listening state, all requests currently in the pool will be marked unobserved and all
+     * waiting threads will be notified, and the request pool will be cleared.
+     *
+     * Otherwise, if the listener is not listening when this method is invoked, nothing happens.
      */
     synchronized void stopListening() {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
             this.currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
+
+            for (IEventRequest request : this.requestPool) {
+                request.markAsUnobserved();
+                request.notifyRequestIsResolved();
+            }
+            this.requestPool.clear();
+
         }
     }
 
