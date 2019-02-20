@@ -114,7 +114,7 @@ public final class LogListener implements TailerListener {
      * If the listener is currently dead or is already listening then an appropriate unsuccessful
      * result is returned.
      */
-    Result startListening() {
+    synchronized Result startListening() {
         if (this.currentState == ListenerState.DEAD) {
             return Result.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
         } else if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
@@ -130,7 +130,7 @@ public final class LogListener implements TailerListener {
      * Sets the current state of the listener to be not listening only if the listener is currently
      * listening.
      */
-    void stopListening() {
+    synchronized void stopListening() {
         if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
             this.currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
         }
