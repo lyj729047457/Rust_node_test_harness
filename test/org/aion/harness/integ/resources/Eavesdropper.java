@@ -42,13 +42,13 @@ public final class Eavesdropper implements Runnable {
 
         while (!this.dead.get()) {
 
-            long startTime = 0;
+            long startTime;
             EventRequestResult result = null;
 
             if (this.gossip == Gossip.HEARTBEAT) {
 
                 // Listen for a regular heartbeat event.
-                startTime = System.nanoTime();
+                startTime = System.currentTimeMillis();
                 result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
 
                 // If we die during the waitFor it is possible for it to return null.
