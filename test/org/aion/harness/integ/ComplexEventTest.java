@@ -24,6 +24,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Note that we are unable to latch on to any set of X,Y,Z events that are guaranteed to occur exactly
+ * once (so that we don't witness them out of order), always in that order, and late enough after
+ * the start so that they are witnessed.
+ *
+ * What we have below meets the first two requirements, but sometimes these events have been missed
+ * by the time the listener starts up.
+ *
+ * This is why these tests are excluded from 'ant test'.
+ */
 public class ComplexEventTest {
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
