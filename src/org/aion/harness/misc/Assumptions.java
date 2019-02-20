@@ -9,7 +9,7 @@ public final class Assumptions {
     // Genesis node has the appropriate pre-mined account set in 'mastery'
     // Config has all peers removed from 'mastery'
     // Config has mining enabled, RPC enabled on port 8545
-    // Config has the TX log set to DEBUG
+    // Config has the TX log set to TRACE
     // AionBlockchainImpl broadcasts all transactions, by hash, when successfully sealed into block
     // aion project is in same directory as this project
     // aion project must be using node_test_harness branch
