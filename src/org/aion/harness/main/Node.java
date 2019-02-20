@@ -30,7 +30,7 @@ public interface Node {
     /**
      * Shuts the node down.
      */
-    public void stop() throws InterruptedException;
+    public Result stop();
 
     /**
      * Returns true if node is running, false otherwise.

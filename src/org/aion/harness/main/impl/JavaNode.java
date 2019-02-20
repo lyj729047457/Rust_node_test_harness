@@ -83,15 +83,29 @@ public final class JavaNode implements Node {
      * Stops the node if it is currently running.
      */
     @Override
-    public synchronized void stop() throws InterruptedException {
+    public synchronized Result stop() {
+        Result result;
+
         if (isAlive()) {
             System.out.println(Assumptions.LOGGER_BANNER + "Stopping Java kernel node...");
-            this.runningKernel.destroy();
-            this.runningKernel = null;
 
-            SingletonFactory.singleton().logReader().stopReading();
+            try {
 
-            //TODO: wait until the shutdown message is read or a timeout?
+                this.runningKernel.destroy();
+                boolean shutdown = this.runningKernel.waitFor(1, TimeUnit.MINUTES);
+                this.runningKernel = null;
+                SingletonFactory.singleton().logReader().stopReading();
+
+                result = (shutdown) ? Result.successful() : Result.unsuccessfulDueTo("Timed out waiting for node to shut down!");
+
+            } catch (Exception e) {
+                result = Result.unsuccessfulDueToException(e);
+            } finally {
+                System.out.println(Assumptions.LOGGER_BANNER + "Java kernel node stopped.");
+            }
+
+        } else {
+            result = Result.unsuccessfulDueTo("Node is not currently alive!");
         }
 
         // Finds the kernel and kills it (above we are killing the aion.sh script,
@@ -99,8 +113,10 @@ public final class JavaNode implements Node {
         // directory of the executable, so we can hunt it down precisely.
         String executableDir = NodeFileManager.getDirectoryOfExecutableKernel().getAbsolutePath();
         ProcessHandle.allProcesses()
-                .filter(process -> process.info().command().toString().contains(executableDir))
-                .forEach(kernel -> kernel.destroy());
+            .filter(process -> process.info().command().toString().contains(executableDir))
+            .forEach(kernel -> kernel.destroy());
+
+        return result;
     }
 
     /**
