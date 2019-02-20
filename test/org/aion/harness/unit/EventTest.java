@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class EventTest {
@@ -21,6 +22,9 @@ public class EventTest {
 
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
+
+        List<String> logs = event.getAllEventLogs();
+        assertTrue(logs.isEmpty());
 
         assertTrue(event.isSatisfiedBy("me2"));
 
@@ -42,17 +46,30 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
+        List<String> logs = event.getAllEventLogs();
+        assertTrue(logs.isEmpty());
+
         // The condition is not satisfied by this, but one part of it is.
-        assertFalse(event.isSatisfiedBy("i read the news today"));
+        String logLine = "i read the news today";
+        assertFalse(event.isSatisfiedBy(logLine));
 
         observed = event.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertEquals(condition2string, observed.get(0));
 
-        assertTrue(event.isSatisfiedBy("news l ucky news lucky"));
+        logs = event.getAllEventLogs();
+        assertEquals(1, logs.size());
+        assertEquals(logLine, logs.get(0));
+
+        String logLine2 = "news l ucky news lucky";
+        assertTrue(event.isSatisfiedBy(logLine2));
 
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
+
+        logs = event.getAllEventLogs();
+        assertEquals(2, logs.size());
+        assertEquals(logLine2, logs.get(0));
 
         boolean saw1 = false;
         boolean saw2 = false;
@@ -83,12 +100,20 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
+        List<String> logs = event.getAllEventLogs();
+        assertTrue(logs.isEmpty());
+
         // This satisfies one condition and therefore the whole thing.
-        assertTrue(event.isSatisfiedBy("i read the news today"));
+        String logLine = "i read the news today";
+        assertTrue(event.isSatisfiedBy(logLine));
 
         observed = event.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertEquals(condition2string, observed.get(0));
+
+        logs = event.getAllEventLogs();
+        assertEquals(1, logs.size());
+        assertEquals(logLine, logs.get(0));
     }
 
     @Test
@@ -104,10 +129,16 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
-        assertTrue(event.isSatisfiedBy("news l ucky news lucky"));
+        Assert.assertTrue(event.getAllEventLogs().isEmpty());
+
+        String logLine = "news l ucky news lucky";
+        assertTrue(event.isSatisfiedBy(logLine));
 
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
+
+        List<String> logs = event.getAllEventLogs();
+        assertEquals(2, logs.size());
 
         boolean saw1 = false;
         boolean saw2 = false;
@@ -123,6 +154,18 @@ public class EventTest {
         }
 
         assertTrue(saw1 && saw2);
+
+        int count = 0;
+
+        for (String seen : logs) {
+            if (seen.equals(logLine)) {
+                count++;
+            } else {
+                fail("Not one of the expected strings: " + seen);
+            }
+        }
+
+        assertEquals(2, count);
     }
 
     @Test
@@ -143,11 +186,15 @@ public class EventTest {
         IEvent total = Event.or(Event.and(hammerOrNails, drillAndTimberOrChalk), chalkAndMill);
 
         // --------------------------
-        assertTrue(total.isSatisfiedBy("millchalk"));
+        String logLine = "millchalk";
+        assertTrue(total.isSatisfiedBy(logLine));
         List<String> observed = total.getAllObservedEvents();
 
         // 3 because there are 2 "chalk" events in the logic.
         assertEquals(3, observed.size());
+
+        List<String> logs = total.getAllEventLogs();
+        assertEquals(3, logs.size());
 
         int sawChalkCount = 0;
         boolean sawMill = false;
@@ -163,6 +210,17 @@ public class EventTest {
         }
 
         assertTrue((sawChalkCount == 2) && sawMill);
+        int sawLogCount = 0;
+
+        for (String seen : logs) {
+            if (seen.equals(logLine)) {
+                sawLogCount++;
+            } else {
+                fail("Unexpected observed string: " + seen);
+            }
+        }
+
+        assertEquals(3, sawLogCount);
     }
 
     @Test
@@ -185,20 +243,35 @@ public class EventTest {
         // --------------------------
 
         List<String> expectedStrings = new ArrayList<>();
+        List<String> expectedLogs = new ArrayList<>();
 
         // Satisfy the "hammer or nails" clause.
-        assertFalse(total.isSatisfiedBy("ammerorails - nails!"));
+        String logLine = "ammerorails - nails!";
+        assertFalse(total.isSatisfiedBy(logLine));
         assertEquals(1, total.getAllObservedEvents().size());
+
+        // we observed the event: nails
+        List<String> logs = total.getAllEventLogs();
+        assertEquals(1, logs.size());
 
         expectedStrings.add(nailsString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
+        expectedLogs.add(logLine);
+        assertEquals(expectedLogs, total.getAllEventLogs());
 
         // Observe "drill", have still not satisfied: "(drill and timber) or chalk"
-        assertFalse(total.isSatisfiedBy("drilll"));
+        String logLine2 = "drilll";
+        assertFalse(total.isSatisfiedBy(logLine2));
         assertEquals(2, total.getAllObservedEvents().size());
+
+        // we observed the events: nails, drill
+        logs = total.getAllEventLogs();
+        assertEquals(2, logs.size());
 
         expectedStrings.add(drillString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
+        expectedLogs.add(logLine2);
+        assertEquals(expectedLogs, total.getAllEventLogs());
 
         // Observe "hammer", this changes nothing because that clause was satisfied
         // and cannot be 're-satisfied'.
@@ -206,9 +279,14 @@ public class EventTest {
         assertEquals(2, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
+        logs = total.getAllEventLogs();
+        assertEquals(2, logs.size());
+        assertEquals(expectedLogs, total.getAllEventLogs());
+
         // Observe "chalk", now "(drill and timber) or chalk" is satisfied and
         // thus the AND is too and thus the top-level OR also.
-        assertTrue(total.isSatisfiedBy("chalk"));
+        String logLine3 = "chalk";
+        assertTrue(total.isSatisfiedBy(logLine3));
 
         // 4 because there are 2 "chalk" events.
         assertEquals(4, total.getAllObservedEvents().size());
@@ -217,12 +295,78 @@ public class EventTest {
         expectedStrings.add(chalkString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
+        logs = total.getAllEventLogs();
+        assertEquals(4, logs.size());
+        expectedLogs.add(logLine3);
+        expectedLogs.add(logLine3);
+        assertEquals(expectedLogs, total.getAllEventLogs());
+
         // Now observe "mill", which should 're-satisfy' the top level clause.
         // But this is not possible, so nothing changes.
         assertTrue(total.isSatisfiedBy("mill"));
 
         assertEquals(4, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());
+
+        logs = total.getAllEventLogs();
+        assertEquals(4, logs.size());
+        assertEquals(expectedLogs, total.getAllEventLogs());
+
+        // check for each observed event
+
+        int sawHammerCounter = 0;
+        int sawNailsCounter = 0;
+        int sawChalkCounter = 0;
+        int sawDrillCounter = 0;
+        int sawTimberCounter = 0;
+        int sawMillCounter = 0;
+
+        for (String seen : total.getAllObservedEvents()) {
+            if (seen.equals(hammerString)) {
+                sawHammerCounter++;
+            } else if (seen.equals(nailsString)) {
+                sawNailsCounter++;
+            } else if (seen.equals(chalkString)) {
+                sawChalkCounter++;
+            } else if (seen.equals(drillString)) {
+                sawDrillCounter++;
+            } else if (seen.equals(timberString)) {
+                sawTimberCounter++;
+            } else if (seen.equals(millString)) {
+                sawMillCounter++;
+            } else {
+                fail("Unexpected observed string: " + seen);
+            }
+        }
+
+        assertEquals(0, sawHammerCounter);
+        assertEquals(1, sawNailsCounter);
+        assertEquals(2, sawChalkCounter);
+        assertEquals(1, sawDrillCounter);
+        assertEquals(0, sawTimberCounter);
+        assertEquals(0, sawMillCounter);
+
+        // check for each observed log
+
+        int sawLogLineCounter = 0;
+        int sawLogLine2Counter = 0;
+        int sawLogLine3Counter = 0;
+
+        for (String seen : logs) {
+            if (seen.equals(logLine)) {
+                sawLogLineCounter++;
+            } else if (seen.equals(logLine2)) {
+                sawLogLine2Counter++;
+            } else if (seen.equals(logLine3)) {
+                sawLogLine3Counter++;
+            } else {
+                fail("Unexpected observed string: " + seen);
+            }
+        }
+
+        assertEquals(1, sawLogLineCounter);
+        assertEquals(1, sawLogLine2Counter);
+        assertEquals(2, sawLogLine3Counter);
     }
 
 }

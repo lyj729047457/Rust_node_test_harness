@@ -75,6 +75,20 @@ public final class OrEvent implements IEvent {
         return events;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getAllEventLogs() {
+        List<String> allEventLogs = new ArrayList<>();
+        allEventLogs.addAll(this.event1.getAllEventLogs());
+        allEventLogs.addAll(this.event2.getAllEventLogs());
+        return allEventLogs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String eventStatement() {
         return "(" + this.event1.eventStatement() + " OR " + this.event2.eventStatement() + ")";

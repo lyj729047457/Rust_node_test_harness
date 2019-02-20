@@ -102,4 +102,11 @@ public interface IEvent {
      * @return all observed event strings.
      */
     List<String> getAllObservedEvents();
+
+    /**
+     * Returns a list of all the logs that have been recorded so far.
+     *
+     * @return all logs that are recorded
+     */
+    List<String> getAllEventLogs();
 }

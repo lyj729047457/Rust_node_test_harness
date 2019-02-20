@@ -13,6 +13,7 @@ import java.util.List;
 public final class Event implements IEvent {
     private final String eventString;
     private boolean isSatisfied = false;
+    private String log = null;
 
     /**
      * Constrcuts a new event that is considered to be observed once the provided event string has
@@ -89,7 +90,10 @@ public final class Event implements IEvent {
     public boolean isSatisfiedBy(String line) {
         // Once satisfied, this value can never change.
         if (!this.isSatisfied) {
-            this.isSatisfied = line.contains(this.eventString);
+            if (line.contains(this.eventString)) {
+                this.log = line;
+                this.isSatisfied = true;
+            }
         }
         return this.isSatisfied;
     }
@@ -100,6 +104,14 @@ public final class Event implements IEvent {
     @Override
     public List<String> getAllObservedEvents() {
         return (this.isSatisfied) ? Collections.singletonList(this.eventString) : Collections.emptyList();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getAllEventLogs() {
+        return (this.isSatisfied) ? Collections.singletonList(this.log) : Collections.emptyList();
     }
 
     /**
