@@ -65,7 +65,7 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
             return sendTransactionOverRPC(transaction.getBytes(), verbose);
         } catch (Exception e) {
-            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
+            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()), System.currentTimeMillis());
         }
     }
 
@@ -79,7 +79,7 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        return callRPC(processBuilder.start());
+        return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
     private RPCResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
@@ -92,7 +92,7 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        return callRPC(processBuilder.start());
+        return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
     private RPCResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
@@ -105,10 +105,10 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        return callRPC(processBuilder.start());
+        return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
-    private RPCResult callRPC(Process process) throws IOException, InterruptedException {
+    private RPCResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {
         int status = process.waitFor();
 
         String line;
@@ -122,11 +122,11 @@ public final class RPC {
         String response = stringBuilder.toString();
 
         if (status != 0) {
-            return RPCResult.unsuccessful(status, "RPC call failed!");
+            return RPCResult.unsuccessful(status, "RPC call failed!", timestamp);
         } else if (response.contains("error")) {
-            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
+            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1), timestamp);
         } else {
-            return RPCResult.successful(response);
+            return RPCResult.successful(response, timestamp);
         }
     }
 }
