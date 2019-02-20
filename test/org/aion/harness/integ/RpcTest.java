@@ -50,7 +50,7 @@ public class RpcTest {
     }
 
     @After
-    public void tearDown() throws IOException, InterruptedException {
+    public void tearDown() throws IOException {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -78,7 +78,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -93,7 +97,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -116,7 +124,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -139,7 +151,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -162,7 +178,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -195,7 +215,11 @@ public class RpcTest {
         rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -232,7 +256,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -258,7 +286,11 @@ public class RpcTest {
         RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertFalse(rpcResult.getResultOnly().success);
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -426,9 +458,13 @@ public class RpcTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() throws InterruptedException {
+    private void shutdownNodeIfRunning() {
         if ((this.node != null) && (this.node.isAlive())) {
-            this.node.stop();
+            Result result = this.node.stop();
+            System.out.println("shutdownNodeIfRunning Stop result = " + result);
+
+            assertTrue(result.success);
+            assertFalse(this.node.isAlive());
         }
     }
 }

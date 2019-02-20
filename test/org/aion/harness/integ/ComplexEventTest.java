@@ -1,6 +1,7 @@
 package org.aion.harness.integ;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -61,7 +62,7 @@ public class ComplexEventTest {
     }
 
     @After
-    public void tearDown() throws IOException, InterruptedException {
+    public void tearDown() throws IOException {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -96,7 +97,11 @@ public class ComplexEventTest {
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     /**
@@ -126,7 +131,11 @@ public class ComplexEventTest {
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     /**
@@ -160,7 +169,11 @@ public class ComplexEventTest {
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
@@ -201,9 +214,13 @@ public class ComplexEventTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() throws InterruptedException {
+    private void shutdownNodeIfRunning() {
         if ((this.node != null) && (this.node.isAlive())) {
-            this.node.stop();
+            Result result = this.node.stop();
+            System.out.println("Stop result = " + result);
+
+            assertTrue(result.success);
+            assertFalse(this.node.isAlive());
         }
     }
 

@@ -27,11 +27,6 @@ public final class LogReader {
             this.listener = new LogListener();
         }
 
-        // If the listener moved into a dead state then we need a new listener.
-        if (!this.listener.isAlive()) {
-            this.listener = new LogListener();
-        }
-
         if (log == null) {
             return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Output log file does not exist!");
         }

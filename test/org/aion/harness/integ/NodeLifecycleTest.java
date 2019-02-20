@@ -43,7 +43,7 @@ public class NodeLifecycleTest {
     }
 
     @After
-    public void tearDown() throws IOException, InterruptedException {
+    public void tearDown() throws IOException {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -105,14 +105,20 @@ public class NodeLifecycleTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
         assertFalse(this.node.isAlive());
     }
 
     @Test
-    public void testStopWhenKernelIsNotStarted() throws InterruptedException {
+    public void testStopWhenKernelIsNotStarted() {
         assertFalse(this.node.isAlive());
-        this.node.stop();
+        Result result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertFalse(result.success);
         assertFalse(this.node.isAlive());
     }
 
@@ -125,9 +131,16 @@ public class NodeLifecycleTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
         assertFalse(this.node.isAlive());
-        this.node.stop();
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertFalse(result.success);
         assertFalse(this.node.isAlive());
     }
 
@@ -143,7 +156,10 @@ public class NodeLifecycleTest {
         Thread.sleep(TimeUnit.SECONDS.toMillis(heartbeatDurationInSeconds));
         assertTrue(this.node.isAlive());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
         assertFalse(this.node.isAlive());
     }
 
@@ -219,7 +235,11 @@ public class NodeLifecycleTest {
             fail("Timed out waiting for database to be created!");
         }
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     private StatusResult initializeNode() throws IOException, InterruptedException {
@@ -260,9 +280,13 @@ public class NodeLifecycleTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() throws InterruptedException {
+    private void shutdownNodeIfRunning() {
         if ((this.node != null) && (this.node.isAlive())) {
-            this.node.stop();
+            Result result = this.node.stop();
+            System.out.println("Stop result = " + result);
+
+            assertTrue(result.success);
+            assertFalse(this.node.isAlive());
         }
     }
 

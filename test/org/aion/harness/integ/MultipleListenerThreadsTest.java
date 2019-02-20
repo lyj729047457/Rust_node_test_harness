@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -38,7 +39,7 @@ public class MultipleListenerThreadsTest {
     }
 
     @After
-    public void tearDown() throws IOException, InterruptedException {
+    public void tearDown() throws IOException {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -48,8 +49,7 @@ public class MultipleListenerThreadsTest {
     @Test
     public void testMultipleThreadsRequestingHeartbeatEvents() throws IOException, InterruptedException {
         // Start the node.
-        Node node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        ((JavaNode) node).initializeButSkipKernelBuild(false);
+        ((JavaNode) this.node).initializeButSkipKernelBuild(false);
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -79,7 +79,12 @@ public class MultipleListenerThreadsTest {
         executor.shutdownNow();
 
         // Shut down the node and wait for the threads to finish.
-        node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+
         executor.awaitTermination(30, TimeUnit.SECONDS);
     }
 
@@ -96,9 +101,13 @@ public class MultipleListenerThreadsTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() throws InterruptedException {
+    private void shutdownNodeIfRunning() {
         if ((this.node != null) && (this.node.isAlive())) {
-            this.node.stop();
+            Result result = this.node.stop();
+            System.out.println("Stop result = " + result);
+
+            assertTrue(result.success);
+            assertFalse(this.node.isAlive());
         }
     }
 

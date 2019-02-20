@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -52,7 +53,7 @@ public class EventListenerTest {
     }
 
     @After
-    public void tearDown() throws IOException, InterruptedException {
+    public void tearDown() throws IOException {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -77,7 +78,11 @@ public class EventListenerTest {
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -116,7 +121,11 @@ public class EventListenerTest {
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("sealed"));
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
 
         Thread.sleep(15000);
 
@@ -151,7 +160,11 @@ public class EventListenerTest {
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("sealed"));
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     @Test
@@ -193,7 +206,11 @@ public class EventListenerTest {
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("rejected"));
 
-        this.node.stop();
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
@@ -239,9 +256,13 @@ public class EventListenerTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() throws InterruptedException {
+    private void shutdownNodeIfRunning() {
         if ((this.node != null) && (this.node.isAlive())) {
-            this.node.stop();
+            Result result = this.node.stop();
+            System.out.println("Stop result = " + result);
+
+            assertTrue(result.success);
+            assertFalse(this.node.isAlive());
         }
     }
 }
