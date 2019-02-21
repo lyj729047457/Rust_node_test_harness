@@ -19,7 +19,7 @@ public interface Node {
      *
      * @return a result indicating the success or failure of this method.
      */
-    public Result fetchBuiltKernelVerbose();
+    public Result initializeKernelVerbose();
 
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
@@ -32,7 +32,7 @@ public interface Node {
      *
      * @return a result indicating the success or failure of this method.
      */
-    public Result fetchBuiltKernel();
+    public Result initializeKernel();
 
     /**
      * Builds the kernel from source.

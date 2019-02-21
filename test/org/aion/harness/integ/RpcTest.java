@@ -426,7 +426,7 @@ public class RpcTest {
             }
         }
 
-        return this.node.fetchBuiltKernel();
+        return this.node.initializeKernel();
     }
 
     private void initializeNodeWithChecks() {

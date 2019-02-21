@@ -214,7 +214,7 @@ public class NodeListenerLifecycleTest {
             }
         }
 
-        return this.node.fetchBuiltKernel();
+        return this.node.initializeKernel();
     }
 
     private static void deleteInitializationDirectories() throws IOException {

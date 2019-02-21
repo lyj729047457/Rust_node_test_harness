@@ -97,7 +97,7 @@ public class EventListenerTest {
             return;
         }
 
-        ((JavaNode) this.node).initializeButSkipKernelBuild(false);
+        ((JavaNode) this.node).initialize(false);
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -182,7 +182,7 @@ public class EventListenerTest {
             return;
         }
 
-        ((JavaNode) this.node).initializeButSkipKernelBuild(false);
+        ((JavaNode) this.node).initialize(false);
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -225,7 +225,7 @@ public class EventListenerTest {
             }
         }
 
-        return this.node.fetchBuiltKernel();
+        return this.node.initializeKernel();
     }
 
     private void initializeNodeWithChecks() {

@@ -260,7 +260,7 @@ public class NodeLifecycleTest {
             }
         }
 
-        return this.node.fetchBuiltKernel();
+        return this.node.initializeKernel();
     }
 
     private void initializeNodeWithChecks() {

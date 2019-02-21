@@ -49,13 +49,13 @@ public final class JavaNode implements Node {
     }
 
     @Override
-    public Result fetchBuiltKernelVerbose() {
-        return initializeButSkipKernelBuild(true);
+    public Result initializeKernelVerbose() {
+        return initialize(true);
     }
 
     @Override
-    public Result fetchBuiltKernel() {
-        return initializeButSkipKernelBuild(false);
+    public Result initializeKernel() {
+        return initialize(false);
     }
 
     /**
@@ -172,16 +172,7 @@ public final class JavaNode implements Node {
         }
     }
 
-    /**
-     * FOR TESTING.
-     *
-     * This skips the process of building the kernel, assumes it is already built and is in the
-     * pack directory, and continues the initialization from there.
-     *
-     * This is mostly just a convenience method for tests to bring down the time it takes to run
-     * them all.
-     */
-    public synchronized Result initializeButSkipKernelBuild(boolean verbose) {
+    public synchronized Result initialize(boolean verbose) {
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
             throw new IllegalStateException("node directory already exists.");
