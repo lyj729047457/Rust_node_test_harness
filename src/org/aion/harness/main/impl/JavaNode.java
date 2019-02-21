@@ -133,7 +133,7 @@ public final class JavaNode implements Node {
      * @throws IllegalStateException if the node is currently running or there is no kernel.
      */
     @Override
-    public synchronized void resetState() throws IOException {
+    public synchronized Result resetState() {
         if (isAlive()){
             throw new IllegalStateException("Cannot reset state while the node is running.");
         }
@@ -143,9 +143,17 @@ public final class JavaNode implements Node {
         }
 
         System.out.println(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");
-        File database = NodeFileManager.getKernelDatabase();
-        if (database.exists()) {
-            FileUtils.deleteDirectory(database);
+
+        try {
+
+            File database = NodeFileManager.getKernelDatabase();
+            if (database.exists()) {
+                FileUtils.deleteDirectory(database);
+            }
+            return Result.successful();
+
+        } catch (Exception e) {
+            return Result.unsuccessfulDueToException(e);
         }
     }
 

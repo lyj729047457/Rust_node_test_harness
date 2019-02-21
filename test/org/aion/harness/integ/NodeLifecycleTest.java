@@ -167,7 +167,10 @@ public class NodeLifecycleTest {
     public void testReset() throws IOException, InterruptedException {
         setupDatabase();
 
-        this.node.resetState();
+        Result result = this.node.resetState();
+        System.out.println("Reset result = " + result);
+        assertTrue(result.success);
+
         assertFalse(NodeFileManager.getKernelDatabase().exists());
     }
 
@@ -189,12 +192,18 @@ public class NodeLifecycleTest {
     @Test
     public void testInvokingResetTwice() throws IOException, InterruptedException {
         setupDatabase();
-        this.node.resetState();
-        this.node.resetState();
+
+        Result result = this.node.resetState();
+        System.out.println("Reset result = " + result);
+        assertTrue(result.success);
+
+        result = this.node.resetState();
+        System.out.println("Reset result = " + result);
+        assertTrue(result.success);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testResetWhenNoNodeDirectoryExists() throws IOException {
+    public void testResetWhenNoNodeDirectoryExists() {
         this.node.resetState();
     }
 
@@ -209,7 +218,11 @@ public class NodeLifecycleTest {
         FileUtils.deleteDirectory(database);
 
         assertTrue(!database.exists());
-        this.node.resetState();
+
+        Result result = this.node.resetState();
+        System.out.println("Reset result = " + result);
+
+        assertTrue(result.success);
     }
 
     private void setupDatabase() throws IOException, InterruptedException {

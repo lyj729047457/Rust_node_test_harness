@@ -40,5 +40,5 @@ public interface Node {
     /**
      * Resets the node's database
      */
-    public void resetState() throws IOException;
+    public Result resetState();
 }
