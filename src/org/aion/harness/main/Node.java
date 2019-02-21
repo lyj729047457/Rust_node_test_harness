@@ -4,6 +4,9 @@ import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import java.io.IOException;
 
+/**
+ * An Aion node.
+ */
 public interface Node {
 
     /**
@@ -52,21 +55,31 @@ public interface Node {
 
     /**
      * Starts running the node.
+     *
+     * @return a result indicating the success of failure of this method.
      */
     public Result start();
 
     /**
      * Shuts the node down.
+     *
+     * @return a result indicating the success of failure of this method.
      */
     public Result stop();
 
     /**
-     * Returns true if node is running, false otherwise.
+     * Returns {@code true} if node is running, {@code false} otherwise.
+     *
+     * @return true only if this node is running.
      */
     public boolean isAlive();
 
     /**
-     * Resets the node's database
+     * Resets the node's database.
+     *
+     * Typically this method is only safe to call if {@code isAlive() == false}.
+     *
+     * @return a result indicating the success of failure of this method.
      */
     public Result resetState();
 }
