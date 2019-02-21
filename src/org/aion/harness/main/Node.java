@@ -23,6 +23,22 @@ public interface Node {
     StatusResult initializeVerbose() throws IOException, InterruptedException;
 
     /**
+     * Builds the kernel from source.
+     *
+     * Displays the I/O of the build process.
+     *
+     * @return a result indicating the success of failure of this method.
+     */
+    public Result buildKernelVerbose();
+
+    /**
+     * Builds the kernel from source.
+     *
+     * @return a result indicating the success of failure of this method.
+     */
+    public Result buildKernel();
+
+    /**
      * Starts running the node.
      */
     public Result start();

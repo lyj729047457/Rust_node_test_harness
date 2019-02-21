@@ -6,7 +6,6 @@ import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.*;
@@ -41,6 +40,28 @@ public final class JavaNode implements Node {
     @Override
     public StatusResult initializeVerbose() throws IOException, InterruptedException {
         return initialize(true);
+    }
+
+    /**
+     * Builds the kernel from source.
+     *
+     * Displays the I/O of the build process.
+     *
+     * @return a result indicating the success of failure of this method.
+     */
+    @Override
+    public Result buildKernelVerbose() {
+        return buildJavaKernel(true);
+    }
+
+    /**
+     * Builds the kernel from source.
+     *
+     * @return a result indicating the success of failure of this method.
+     */
+    @Override
+    public Result buildKernel() {
+        return buildJavaKernel(false);
     }
 
     /**
@@ -158,7 +179,7 @@ public final class JavaNode implements Node {
     }
 
     private synchronized StatusResult initialize(boolean verbose) throws IOException, InterruptedException {
-        if (!buildJavaKernel(verbose)) {
+        if (!buildJavaKernel(verbose).success) {
             return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Kernel source build failed.");
         }
 
@@ -230,17 +251,25 @@ public final class JavaNode implements Node {
         return untarStatus == 0;
     }
 
-    private boolean buildJavaKernel(boolean verbose) throws IOException, InterruptedException {
+    private Result buildJavaKernel(boolean verbose) {
         System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
-        ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
+        try {
+
+            ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
                 .directory(NodeFileManager.getKernelRepositoryDirectory());
 
-        if (verbose) {
-            builder.inheritIO();
-        }
+            if (verbose) {
+                builder.inheritIO();
+            }
 
-        return builder.start().waitFor() == 0;
+            return (builder.start().waitFor() == 0)
+                ? Result.successful()
+                : Result.unsuccessfulDueTo("An error occurred building the kernel!");
+
+        } catch (Exception e) {
+            return Result.unsuccessfulDueToException(e);
+        }
     }
 
     /**
