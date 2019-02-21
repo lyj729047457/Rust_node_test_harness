@@ -4,26 +4,37 @@ import org.apache.commons.codec.binary.Hex;
 import java.util.Arrays;
 
 /**
- * An Immutable address, this provides a more intuitive way of talking about an account.
+ * An Aion address.
+ *
+ * An address consists of {@value SIZE} bytes.
+ *
+ * This class is immutable.
  */
-public class Address {
-    private final byte[] addressBytes;
+public final class Address {
     public static final int SIZE = 32;
 
-    private Address(byte[] addressBytes, byte[] privateKeyBytes) {
+    private final byte[] addressBytes;
+
+    /**
+     * Constructs a new address using the provided bytes.
+     *
+     * @param addressBytes The bytes of the address.
+     */
+    public Address(byte[] addressBytes) {
         if (addressBytes == null) {
             throw new NullPointerException("address bytes cannot be null");
         }
         if (addressBytes.length != SIZE) {
             throw new IllegalArgumentException("bytes of an address must have a length of " + SIZE);
         }
-        this.addressBytes = addressBytes;
+        this.addressBytes = copyByteArray(addressBytes);
     }
 
-    public static Address createAddress(byte[] addressBytes) {
-        return new Address(copyByteArray(addressBytes), null);
-    }
-
+    /**
+     * Returns the bytes of this address.
+     *
+     * @return the bytes of this address.
+     */
     public byte[] getAddressBytes() {
         return copyByteArray(this.addressBytes);
     }
@@ -35,6 +46,7 @@ public class Address {
         return Arrays.copyOf(byteArray, byteArray.length);
     }
 
+    @Override
     public String toString() {
         return "Address { " + Hex.encodeHexString(this.addressBytes) + " }";
     }

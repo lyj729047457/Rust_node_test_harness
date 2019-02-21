@@ -13,8 +13,8 @@ public class AddressTest {
 
     @Test
     public void testAddressEquality() throws DecoderException {
-        Address address = Address.createAddress(Hex.decodeHex(testingAddress));
-        Address address2 = Address.createAddress(Hex.decodeHex(testingAddress));
+        Address address = new Address(Hex.decodeHex(testingAddress));
+        Address address2 = new Address(Hex.decodeHex(testingAddress));
 
         Assert.assertTrue(address.equals(address2));
         Assert.assertEquals(address.hashCode(), address2.hashCode());
@@ -23,7 +23,7 @@ public class AddressTest {
     @Test
     public void testImmutabilityByModifyingOriginalAddressBytes() throws DecoderException {
         byte[] randomAddressCopy = Hex.decodeHex(testingAddress);
-        Address address = Address.createAddress(randomAddressCopy);
+        Address address = new Address(randomAddressCopy);
 
         // modify addressString
         randomAddressCopy[0] = (byte)((int) randomAddressCopy[0] + 1);
@@ -36,7 +36,7 @@ public class AddressTest {
     @Test
     public void testImmutabilityByModifyingReturnedAddressBytes() throws DecoderException {
         byte[] randomAddressCopy = Hex.decodeHex(testingAddress);
-        Address address = Address.createAddress(randomAddressCopy);
+        Address address = new Address(randomAddressCopy);
 
         // retrieve the address bytes from the object and modify
         byte[] retrievedAddress = address.getAddressBytes();
