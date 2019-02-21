@@ -63,7 +63,7 @@ public final class RPC {
 
         try {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
-            return sendTransactionOverRPC(transaction.getBytes(), verbose);
+            return sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
         } catch (Exception e) {
             return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }
