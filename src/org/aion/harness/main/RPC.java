@@ -10,20 +10,43 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
- * A class that facilitates communication with the node.
+ * A class that facilitates communication with the node via the kernel's RPC server.
+ *
+ * This class interacts directly with the RPC endpoints in the kernel and does not go through the
+ * Java or Web3 APIs, for example.
  *
  * This class is not thread-safe.
  */
 public final class RPC {
 
+    /**
+     * Sends the specified transaction to the node.
+     *
+     * @param transaction The transaction to send.
+     * @return the result of this attempt to send the transaction.
+     */
     public RPCResult sendTransaction(Transaction transaction) {
         return sendTransactionInternal(transaction, false);
     }
 
+    /**
+     * Sends the specified transaction to the node.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @param transaction The transaction to send.
+     * @return the result of this attempt to send the transaction.
+     */
     public RPCResult sendTransactionVerbose(Transaction transaction) {
         return sendTransactionInternal(transaction, true);
     }
 
+    /**
+     * Returns the balance of the specified address.
+     *
+     * @param address The address whose balance is to be queried.
+     * @return the result of the call.
+     */
     public RPCResult getBalance(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
@@ -32,6 +55,14 @@ public final class RPC {
         return getBalanceOverRPC(address, false);
     }
 
+    /**
+     * Returns the balance of the specified address.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @param address The address whose balance is to be queried.
+     * @return the result of the call.
+     */
     public RPCResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
@@ -40,6 +71,12 @@ public final class RPC {
         return getBalanceOverRPC(address, true);
     }
 
+    /**
+     * Returns the nonce of the specified address.
+     *
+     * @param address The address whose nonce is to be queried.
+     * @return the result of the call.
+     */
     public RPCResult getNonce(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
@@ -48,6 +85,14 @@ public final class RPC {
         return getNonceOverRPC(address, false);
     }
 
+    /**
+     * Returns the nonce of the specified address.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @param address The address whose nonce is to be queried.
+     * @return the result of the call.
+     */
     public RPCResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
