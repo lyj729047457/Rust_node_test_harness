@@ -13,13 +13,13 @@ public class PrivateKeyTest {
 
     @Test (expected = IllegalArgumentException.class)
     public void testInstantiatingAddressWithInvalidPrivateKey() {
-        PrivateKey.createPrivateKey(new byte[0]);
+        new PrivateKey(new byte[0]);
     }
 
     @Test
     public void testPrivateKeyEquality() throws DecoderException {
-        PrivateKey privateKey = PrivateKey.createPrivateKey(Hex.decodeHex(testingPrivateKey));
-        PrivateKey privateKey2 = PrivateKey.createPrivateKey(Hex.decodeHex(testingPrivateKey));
+        PrivateKey privateKey = new PrivateKey(Hex.decodeHex(testingPrivateKey));
+        PrivateKey privateKey2 = new PrivateKey(Hex.decodeHex(testingPrivateKey));
 
         Assert.assertTrue(privateKey.equals(privateKey2));
         Assert.assertEquals(privateKey.hashCode(), privateKey2.hashCode());
@@ -28,7 +28,7 @@ public class PrivateKeyTest {
     @Test
     public void testImmutabilityByModifyingOriginalPrivateKeyBytes() throws DecoderException {
         byte[] randomPrivateKeyCopy = Hex.decodeHex(testingPrivateKey);
-        PrivateKey privateKey = PrivateKey.createPrivateKey(randomPrivateKeyCopy);
+        PrivateKey privateKey = new PrivateKey(randomPrivateKeyCopy);
 
         // modify PrivateKeyString
         randomPrivateKeyCopy[0] = (byte)((int) randomPrivateKeyCopy[0] + 1);
@@ -41,7 +41,7 @@ public class PrivateKeyTest {
     @Test
     public void testImmutabilityByModifyingReturnedPrivateKeyBytes() throws DecoderException {
         byte[] randomPrivateKeyCopy = Hex.decodeHex(testingPrivateKey);
-        PrivateKey privateKey = PrivateKey.createPrivateKey(randomPrivateKeyCopy);
+        PrivateKey privateKey = new PrivateKey(randomPrivateKeyCopy);
 
         // retrieve the PrivateKey bytes from the object and modify
         byte[] retrievedPrivateKey = privateKey.getPrivateKeyBytes();

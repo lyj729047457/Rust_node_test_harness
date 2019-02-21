@@ -41,7 +41,7 @@ public class RpcTest {
     public void setup() throws IOException, DecoderException {
         preminedAddress = new Address(Hex.decodeHex(Assumptions.PREMINED_ADDRESS));
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
-        preminedPrivateKey = PrivateKey.createPrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.rpc = new RPC();
@@ -264,7 +264,7 @@ public class RpcTest {
     @Test
     public void testSendValueWithInsufficientBalance() throws Exception {
         byte[] badKey = Hex.decodeHex("223f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5");
-        PrivateKey badPrivateKey = PrivateKey.createPrivateKey(badKey);
+        PrivateKey badPrivateKey = new PrivateKey(badKey);
 
         initializeNodeWithChecks();
         Result result = this.node.start();
