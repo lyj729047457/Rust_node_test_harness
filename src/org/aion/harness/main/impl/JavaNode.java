@@ -182,19 +182,28 @@ public final class JavaNode implements Node {
             throw new IllegalStateException("Failed to make directory: " + nodeDestination);
         }
 
+        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
+
+        if (verbose) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
+                + NodeFileManager.getKernelTarSourceDirectory());
+        }
+
         File tarSourceDirectory = NodeFileManager.getKernelTarSourceDirectory();
         if (!tarSourceDirectory.isDirectory()) {
             throw new IllegalStateException(
                 "Unable to find kernel tar source directory at: " + tarSourceDirectory);
         }
 
-        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
-
         try {
             File kernelTarFile = null;
             File[] entries = tarSourceDirectory.listFiles();
             if (entries == null) {
                 throw new NoSuchFileException("Could not find kernel tar file.");
+            }
+
+            if (verbose) {
+                System.out.println(Assumptions.LOGGER_BANNER + "Looking for file with the following format: aion-v***.tar.bz2");
             }
 
             for (File file : entries) {
@@ -211,6 +220,10 @@ public final class JavaNode implements Node {
             File tarDestination = new File(
                 nodeDestination.getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
             Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
+
+            if (verbose) {
+                System.out.println(Assumptions.LOGGER_BANNER + "Unzipping Java Kernel tar file using command: tar xvjf");
+            }
 
             ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
                 .directory(tarDestination.getParentFile());
@@ -239,6 +252,12 @@ public final class JavaNode implements Node {
         System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
         try {
+
+            if (verbose) {
+                System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
+                System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: "
+                    + NodeFileManager.getKernelRepositoryDirectory());
+            }
 
             ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
                 .directory(NodeFileManager.getKernelRepositoryDirectory());
