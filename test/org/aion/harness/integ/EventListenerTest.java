@@ -14,7 +14,6 @@ import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
@@ -62,7 +61,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForMinersToStart() throws IOException, InterruptedException {
+    public void testWaitForMinersToStart() {
         initializeNodeWithChecks();
 
         Result result = this.node.start();
@@ -168,7 +167,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForTransactionToBeRejected() throws IOException, InterruptedException, DecoderException {
+    public void testWaitForTransactionToBeRejected() throws DecoderException {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
         PrivateKey privateKeyWithNoBalance = PrivateKey.createPrivateKey(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
@@ -218,17 +217,19 @@ public class EventListenerTest {
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
-    private StatusResult initializeNode() throws IOException, InterruptedException {
+    private Result initializeNode() {
         if (doFullInitialization) {
-            return this.node.initialize();
-        } else {
-            boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            Result result = this.node.buildKernel();
+            if (!result.success) {
+                return result;
+            }
         }
+
+        return this.node.fetchBuiltKernel();
     }
 
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    private void initializeNodeWithChecks() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.

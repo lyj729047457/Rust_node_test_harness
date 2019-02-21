@@ -7,12 +7,10 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
-import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.RPCResult;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.NodeFileManager;
 import org.aion.harness.result.TransactionResult;
 import org.apache.commons.codec.DecoderException;
@@ -59,7 +57,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueViaRPC() throws Exception {
+    public void testSendValueViaRPC() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -105,7 +103,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueWithIncorrectNonceViaRPC() throws Exception {
+    public void testSendValueWithIncorrectNonceViaRPC() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -132,7 +130,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendNegativeValueViaRPC() throws Exception {
+    public void testSendNegativeValueViaRPC() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -159,7 +157,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendZeroValueViaRPC() throws Exception {
+    public void testSendZeroValueViaRPC() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -186,7 +184,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendMultipleValueTransfersViaRPC() throws Exception {
+    public void testSendMultipleValueTransfersViaRPC() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -237,7 +235,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueToInvalidAddress() throws Exception {
+    public void testSendValueToInvalidAddress() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -420,17 +418,19 @@ public class RpcTest {
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
-    private StatusResult initializeNode() throws IOException, InterruptedException {
+    private Result initializeNode() {
         if (doFullInitialization) {
-            return this.node.initialize();
-        } else {
-            boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            Result result = this.node.buildKernel();
+            if (!result.success) {
+                return result;
+            }
         }
+
+        return this.node.fetchBuiltKernel();
     }
 
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    private void initializeNodeWithChecks() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.

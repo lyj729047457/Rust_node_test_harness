@@ -2,11 +2,8 @@ package org.aion.harness.integ;
 
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.impl.JavaNode;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
-import org.aion.harness.result.StatusResult;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 
@@ -51,8 +48,8 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testInitializeNode() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    public void testInitializeNode() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.
@@ -68,7 +65,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testStart() throws IOException, InterruptedException {
+    public void testStart() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -78,7 +75,7 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testStartWhenNoAionKernelBuildExistsInNodeDirectory() throws IOException, InterruptedException {
+    public void testStartWhenNoAionKernelBuildExistsInNodeDirectory() throws IOException {
         initializeNodeWithChecks();
         FileUtils.deleteDirectory(kernelDirectory);
         this.node.start();
@@ -90,14 +87,14 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testInvokingStartTwice() throws IOException, InterruptedException {
+    public void testInvokingStartTwice() {
         initializeNodeWithChecks();
         assertTrue(this.node.start().success);
         this.node.start();
     }
 
     @Test
-    public void testStop() throws IOException, InterruptedException {
+    public void testStop() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -123,7 +120,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testInvokingStopTwice() throws IOException, InterruptedException {
+    public void testInvokingStopTwice() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -145,7 +142,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testNodeHeartbeat() throws IOException, InterruptedException {
+    public void testNodeHeartbeat() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -175,7 +172,7 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testResetWhileNodeIsRunning() throws IOException, InterruptedException {
+    public void testResetWhileNodeIsRunning() {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -225,7 +222,7 @@ public class NodeLifecycleTest {
         assertTrue(result.success);
     }
 
-    private void setupDatabase() throws IOException, InterruptedException {
+    private void setupDatabase() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -255,17 +252,19 @@ public class NodeLifecycleTest {
         assertFalse(this.node.isAlive());
     }
 
-    private StatusResult initializeNode() throws IOException, InterruptedException {
+    private Result initializeNode() {
         if (doFullInitialization) {
-            return this.node.initialize();
-        } else {
-            boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            Result result = this.node.buildKernel();
+            if (!result.success) {
+                return result;
+            }
         }
+
+        return this.node.fetchBuiltKernel();
     }
 
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    private void initializeNodeWithChecks() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.

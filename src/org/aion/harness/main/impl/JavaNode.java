@@ -27,22 +27,6 @@ public final class JavaNode implements Node {
     private Process runningKernel = null;
 
     /**
-     * Builds a new kernel and copies it into a directory named node.
-     */
-    @Override
-    public StatusResult initialize() throws IOException, InterruptedException {
-        return initialize(false);
-    }
-
-    /**
-     * Builds a new kernel and copies it into a directory named node.
-     */
-    @Override
-    public StatusResult initializeVerbose() throws IOException, InterruptedException {
-        return initialize(true);
-    }
-
-    /**
      * Builds the kernel from source.
      *
      * Displays the I/O of the build process.
@@ -62,6 +46,16 @@ public final class JavaNode implements Node {
     @Override
     public Result buildKernel() {
         return buildJavaKernel(false);
+    }
+
+    @Override
+    public Result fetchBuiltKernelVerbose() {
+        return initializeButSkipKernelBuild(true);
+    }
+
+    @Override
+    public Result fetchBuiltKernel() {
+        return initializeButSkipKernelBuild(false);
     }
 
     /**
@@ -178,18 +172,6 @@ public final class JavaNode implements Node {
         }
     }
 
-    private synchronized StatusResult initialize(boolean verbose) throws IOException, InterruptedException {
-        if (!buildJavaKernel(verbose).success) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Kernel source build failed.");
-        }
-
-        if (!initializeButSkipKernelBuild(verbose)) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Fetching kernel build failed.");
-        }
-
-        return SingletonFactory.singleton().logManager().setupLogFiles();
-    }
-
     /**
      * FOR TESTING.
      *
@@ -199,7 +181,7 @@ public final class JavaNode implements Node {
      * This is mostly just a convenience method for tests to bring down the time it takes to run
      * them all.
      */
-    public synchronized boolean initializeButSkipKernelBuild(boolean verbose) throws IOException, InterruptedException {
+    public synchronized Result initializeButSkipKernelBuild(boolean verbose) {
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
             throw new IllegalStateException("node directory already exists.");
@@ -209,46 +191,57 @@ public final class JavaNode implements Node {
             throw new IllegalStateException("Failed to make directory: " + nodeDestination);
         }
 
-        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
         File tarSourceDirectory = NodeFileManager.getKernelTarSourceDirectory();
         if (!tarSourceDirectory.isDirectory()) {
-            throw new IllegalStateException("Unable to find kernel tar source directory at: " + tarSourceDirectory);
+            throw new IllegalStateException(
+                "Unable to find kernel tar source directory at: " + tarSourceDirectory);
         }
 
-        File kernelTarFile = null;
-        File[] entries = tarSourceDirectory.listFiles();
-        if (entries == null) {
-            throw new NoSuchFileException("Could not find kernel tar file.");
-        }
+        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
 
-        for (File file : entries) {
-            if (Assumptions.KERNEL_TAR_PATTERN.matcher(file.getName()).matches()) {
-                kernelTarFile = file;
+        try {
+            File kernelTarFile = null;
+            File[] entries = tarSourceDirectory.listFiles();
+            if (entries == null) {
+                throw new NoSuchFileException("Could not find kernel tar file.");
             }
-        }
 
-        if (kernelTarFile == null) {
-            throw new NoSuchFileException("Could not find kernel tar file.");
-        }
+            for (File file : entries) {
+                if (Assumptions.KERNEL_TAR_PATTERN.matcher(file.getName()).matches()) {
+                    kernelTarFile = file;
+                }
+            }
 
-        File tarDestination = new File(nodeDestination.getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
-        Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
+            if (kernelTarFile == null) {
+                throw new NoSuchFileException("Could not find kernel tar file.");
+            }
 
-        ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
+
+            File tarDestination = new File(
+                nodeDestination.getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
+            Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
+
+            ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
                 .directory(tarDestination.getParentFile());
 
-        if (verbose) {
-            builder.inheritIO();
+            if (verbose) {
+                builder.inheritIO();
+            }
+
+            int untarStatus = builder.start().waitFor();
+            tarDestination.delete();
+
+            if (!SingletonFactory.singleton().logManager().setupLogFiles().success) {
+                return Result.unsuccessfulDueTo("Failed to set up log files!");
+            }
+
+            return (untarStatus == 0)
+                ? Result.successful()
+                : Result.unsuccessfulDueTo("Failed to prepare the kernel");
+
+        } catch (Exception e) {
+            return Result.unsuccessfulDueToException(e);
         }
-
-        int untarStatus = builder.start().waitFor();
-        tarDestination.delete();
-
-        if (!SingletonFactory.singleton().logManager().setupLogFiles().success) {
-            return false;
-        }
-
-        return untarStatus == 0;
     }
 
     private Result buildJavaKernel(boolean verbose) {

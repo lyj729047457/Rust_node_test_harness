@@ -7,20 +7,32 @@ import java.io.IOException;
 public interface Node {
 
     /**
-     * Creates a directory named "node" in the current working directory, and places the kernel inside that directory.
+     * Grabs a built kernel and brings it into the working directory, doing whatever other
+     * preparation is necessary so that the kernel is ready to be used after this method returns.
      *
-     * Returns a result indicating the success or failure of this method.
+     * If this method is successful, then {@code start()} can be called.
+     *
+     * If there is no built kernel or the kernel source code has been updated, a call to
+     * {@code buildKernel()} should be made prior to this method.
+     *
+     * Displays the I/O of any external processed launched as well as additional information.
+     *
+     * @return a result indicating the success or failure of this method.
      */
-    StatusResult initialize() throws IOException, InterruptedException;
+    public Result fetchBuiltKernelVerbose();
 
     /**
-     * Creates a directory named "node" in the current working directory, and places the kernel inside that directory.
+     * Grabs a built kernel and brings it into the working directory, doing whatever other
+     * preparation is necessary so that the kernel is ready to be used after this method returns.
      *
-     * Displays the I/O of the initialization processes.
+     * If this method is successful, then {@code start()} can be called.
      *
-     * Returns a result indicating the success or failure of this method.
+     * If there is no built kernel or the kernel source code has been updated, a call to
+     * {@code buildKernel()} should be made prior to this method.
+     *
+     * @return a result indicating the success or failure of this method.
      */
-    StatusResult initializeVerbose() throws IOException, InterruptedException;
+    public Result fetchBuiltKernel();
 
     /**
      * Builds the kernel from source.

@@ -16,11 +16,8 @@ import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.impl.JavaNode;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -64,7 +61,7 @@ public class NodeListenerLifecycleTest {
     }
 
     @Test
-    public void testNodeListenerAfterShuttingDownNode() throws IOException, InterruptedException {
+    public void testNodeListenerAfterShuttingDownNode() throws InterruptedException {
         initializeNodeWithChecks();
 
         Result result = this.node.start();
@@ -97,7 +94,7 @@ public class NodeListenerLifecycleTest {
      * panic, and all subsequent requests will be immediately rejected.
      */
     @Test
-    public void testDeletingLogFileWhileNodeIsRunning() throws IOException, InterruptedException {
+    public void testDeletingLogFileWhileNodeIsRunning() throws InterruptedException {
 
         // Initialize and start the node.
         initializeNodeWithChecks();
@@ -193,8 +190,8 @@ public class NodeListenerLifecycleTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    private void initializeNodeWithChecks() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.
@@ -209,13 +206,15 @@ public class NodeListenerLifecycleTest {
         assertTrue(nodeDirectoryEntries[0].isDirectory());
     }
 
-    private StatusResult initializeNode() throws IOException, InterruptedException {
+    private Result initializeNode() {
         if (doFullInitialization) {
-            return this.node.initialize();
-        } else {
-            boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            Result result = this.node.buildKernel();
+            if (!result.success) {
+                return result;
+            }
         }
+
+        return this.node.fetchBuiltKernel();
     }
 
     private static void deleteInitializationDirectories() throws IOException {

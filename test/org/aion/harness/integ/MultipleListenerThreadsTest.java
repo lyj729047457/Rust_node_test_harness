@@ -47,7 +47,7 @@ public class MultipleListenerThreadsTest {
     }
 
     @Test
-    public void testMultipleThreadsRequestingHeartbeatEvents() throws IOException, InterruptedException {
+    public void testMultipleThreadsRequestingHeartbeatEvents() throws InterruptedException {
         // Start the node.
         ((JavaNode) this.node).initializeButSkipKernelBuild(false);
 

@@ -15,11 +15,8 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.impl.JavaNode;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.EventRequestResult;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -77,7 +74,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X, Y.
      */
     @Test
-    public void testComplexLogic1() throws IOException, InterruptedException {
+    public void testComplexLogic1() {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -112,7 +109,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X.
      */
     @Test
-    public void testComplexLogic2() throws IOException, InterruptedException {
+    public void testComplexLogic2() {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -148,7 +145,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: W, Y, Z.
      */
     @Test
-    public void testComplexLogic3() throws IOException, InterruptedException {
+    public void testComplexLogic3() {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -176,8 +173,8 @@ public class ComplexEventTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        StatusResult result = initializeNode();
+    private void initializeNodeWithChecks() {
+        Result result = initializeNode();
         assertTrue(result.success);
 
         // verify the node directory was created.
@@ -192,13 +189,15 @@ public class ComplexEventTest {
         assertTrue(nodeDirectoryEntries[0].isDirectory());
     }
 
-    private StatusResult initializeNode() throws IOException, InterruptedException {
+    private Result initializeNode() {
         if (doFullInitialization) {
-            return this.node.initialize();
-        } else {
-            boolean status = ((JavaNode) this.node).initializeButSkipKernelBuild(false);
-            return (status) ? StatusResult.successful() : StatusResult.unsuccessful(Assumptions.TESTING_ERROR_STATUS, "Failed partial initialization in test");
+            Result result = this.node.buildKernel();
+            if (!result.success) {
+                return result;
+            }
         }
+
+        return this.node.fetchBuiltKernel();
     }
 
     private static void deleteInitializationDirectories() throws IOException {
