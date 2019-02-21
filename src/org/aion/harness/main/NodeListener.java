@@ -132,13 +132,13 @@ public final class NodeListener {
 
     private EventRequestResult extractResult(IEventRequest request) {
         if (request.isUnobserved()) {
-            return EventRequestResult.unobservedEvent();
+            return EventRequestResult.unobservedEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isSatisfied()) {
-            return EventRequestResult.observedEvent(request.getAllObservedEvents(), request.timeOfObservation());
+            return EventRequestResult.observedEvent(request.getAllObservedEvents(), request.getAllObservedEvents(), request.timeOfObservation());
         } else if (request.isExpired()) {
-            return EventRequestResult.expiredEvent();
+            return EventRequestResult.expiredEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isRejected()) {
-            return EventRequestResult.rejectedEvent(request.getCauseOfRejection());
+            return EventRequestResult.rejectedEvent(request.getCauseOfRejection(), request.getAllObservedEvents(), request.getAllObservedEvents());
         } else {
             throw new IllegalStateException("Waited for event until notified but event is still pending!");
         }

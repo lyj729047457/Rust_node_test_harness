@@ -23,7 +23,7 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
-        List<String> logs = event.getAllEventLogs();
+        List<String> logs = event.getAllObservedLogs();
         assertTrue(logs.isEmpty());
 
         assertTrue(event.isSatisfiedBy("me2"));
@@ -46,7 +46,7 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
-        List<String> logs = event.getAllEventLogs();
+        List<String> logs = event.getAllObservedLogs();
         assertTrue(logs.isEmpty());
 
         // The condition is not satisfied by this, but one part of it is.
@@ -57,7 +57,7 @@ public class EventTest {
         assertEquals(1, observed.size());
         assertEquals(condition2string, observed.get(0));
 
-        logs = event.getAllEventLogs();
+        logs = event.getAllObservedLogs();
         assertEquals(1, logs.size());
         assertEquals(logLine, logs.get(0));
 
@@ -67,7 +67,7 @@ public class EventTest {
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
 
-        logs = event.getAllEventLogs();
+        logs = event.getAllObservedLogs();
         assertEquals(2, logs.size());
         assertEquals(logLine2, logs.get(0));
 
@@ -100,7 +100,7 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
-        List<String> logs = event.getAllEventLogs();
+        List<String> logs = event.getAllObservedLogs();
         assertTrue(logs.isEmpty());
 
         // This satisfies one condition and therefore the whole thing.
@@ -111,7 +111,7 @@ public class EventTest {
         assertEquals(1, observed.size());
         assertEquals(condition2string, observed.get(0));
 
-        logs = event.getAllEventLogs();
+        logs = event.getAllObservedLogs();
         assertEquals(1, logs.size());
         assertEquals(logLine, logs.get(0));
     }
@@ -129,7 +129,7 @@ public class EventTest {
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
 
-        Assert.assertTrue(event.getAllEventLogs().isEmpty());
+        Assert.assertTrue(event.getAllObservedLogs().isEmpty());
 
         String logLine = "news l ucky news lucky";
         assertTrue(event.isSatisfiedBy(logLine));
@@ -137,7 +137,7 @@ public class EventTest {
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
 
-        List<String> logs = event.getAllEventLogs();
+        List<String> logs = event.getAllObservedLogs();
         assertEquals(2, logs.size());
 
         boolean saw1 = false;
@@ -193,7 +193,7 @@ public class EventTest {
         // 3 because there are 2 "chalk" events in the logic.
         assertEquals(3, observed.size());
 
-        List<String> logs = total.getAllEventLogs();
+        List<String> logs = total.getAllObservedLogs();
         assertEquals(3, logs.size());
 
         int sawChalkCount = 0;
@@ -251,13 +251,13 @@ public class EventTest {
         assertEquals(1, total.getAllObservedEvents().size());
 
         // we observed the event: nails
-        List<String> logs = total.getAllEventLogs();
+        List<String> logs = total.getAllObservedLogs();
         assertEquals(1, logs.size());
 
         expectedStrings.add(nailsString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
         expectedLogs.add(logLine);
-        assertEquals(expectedLogs, total.getAllEventLogs());
+        assertEquals(expectedLogs, total.getAllObservedLogs());
 
         // Observe "drill", have still not satisfied: "(drill and timber) or chalk"
         String logLine2 = "drilll";
@@ -265,13 +265,13 @@ public class EventTest {
         assertEquals(2, total.getAllObservedEvents().size());
 
         // we observed the events: nails, drill
-        logs = total.getAllEventLogs();
+        logs = total.getAllObservedLogs();
         assertEquals(2, logs.size());
 
         expectedStrings.add(drillString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
         expectedLogs.add(logLine2);
-        assertEquals(expectedLogs, total.getAllEventLogs());
+        assertEquals(expectedLogs, total.getAllObservedLogs());
 
         // Observe "hammer", this changes nothing because that clause was satisfied
         // and cannot be 're-satisfied'.
@@ -279,9 +279,9 @@ public class EventTest {
         assertEquals(2, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
-        logs = total.getAllEventLogs();
+        logs = total.getAllObservedLogs();
         assertEquals(2, logs.size());
-        assertEquals(expectedLogs, total.getAllEventLogs());
+        assertEquals(expectedLogs, total.getAllObservedLogs());
 
         // Observe "chalk", now "(drill and timber) or chalk" is satisfied and
         // thus the AND is too and thus the top-level OR also.
@@ -295,11 +295,11 @@ public class EventTest {
         expectedStrings.add(chalkString);
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
-        logs = total.getAllEventLogs();
+        logs = total.getAllObservedLogs();
         assertEquals(4, logs.size());
         expectedLogs.add(logLine3);
         expectedLogs.add(logLine3);
-        assertEquals(expectedLogs, total.getAllEventLogs());
+        assertEquals(expectedLogs, total.getAllObservedLogs());
 
         // Now observe "mill", which should 're-satisfy' the top level clause.
         // But this is not possible, so nothing changes.
@@ -308,9 +308,9 @@ public class EventTest {
         assertEquals(4, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
-        logs = total.getAllEventLogs();
+        logs = total.getAllObservedLogs();
         assertEquals(4, logs.size());
-        assertEquals(expectedLogs, total.getAllEventLogs());
+        assertEquals(expectedLogs, total.getAllObservedLogs());
 
         // check for each observed event
 

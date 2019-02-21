@@ -110,7 +110,7 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public List<String> getAllEventLogs() {
+    public List<String> getAllObservedLogs() {
         return (this.isSatisfied) ? Collections.singletonList(this.log) : Collections.emptyList();
     }
 

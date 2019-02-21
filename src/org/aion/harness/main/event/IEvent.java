@@ -99,14 +99,23 @@ public interface IEvent {
     /**
      * Returns a list of all the event strings that have been observed so far.
      *
+     * For all strings returned by {@code getAllObservedLogs()}, each should be a superstring of a
+     * string returned by this method. Furthermore, all strings returned by this method should be a
+     * substring of a string returned by {@code getAllObservedLogs()}.
+     *
      * @return all observed event strings.
      */
     List<String> getAllObservedEvents();
 
     /**
-     * Returns a list of all the logs that have been recorded so far.
+     * Returns a list of all the logs that have contributed to an underlying event string being
+     * observed.
+     *
+     * For all strings returned by {@code getAllObservedLogs()}, each should be a superstring of a
+     * string returned by this method. Furthermore, all strings returned by this method should be a
+     * substring of a string returned by {@code getAllObservedLogs()}.
      *
      * @return all logs that are recorded
      */
-    List<String> getAllEventLogs();
+    List<String> getAllObservedLogs();
 }

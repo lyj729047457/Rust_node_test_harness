@@ -74,10 +74,10 @@ public final class AndEvent implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public List<String> getAllEventLogs() {
+    public List<String> getAllObservedLogs() {
         List<String> allEventLogs = new ArrayList<>();
-        allEventLogs.addAll(this.event1.getAllEventLogs());
-        allEventLogs.addAll(this.event2.getAllEventLogs());
+        allEventLogs.addAll(this.event1.getAllObservedLogs());
+        allEventLogs.addAll(this.event2.getAllObservedLogs());
         return allEventLogs;
     }
 

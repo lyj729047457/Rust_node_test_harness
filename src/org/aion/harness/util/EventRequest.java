@@ -112,6 +112,16 @@ public final class EventRequest implements IEventRequest {
      * Thread safe.
      */
     @Override
+    public synchronized List<String> getAllObservedLogs() {
+        return this.requestedEvent.getAllObservedLogs();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Thread safe.
+     */
+    @Override
     public long timeOfObservation() {
         return (this.currentState == RequestState.SATISFIED) ? this.timeOfObservation : -1;
     }

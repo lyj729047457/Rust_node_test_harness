@@ -63,9 +63,25 @@ public interface IEventRequest {
      * while the request was pending, including whatever event strings caused the request to enter
      * a "satisfied" state if it did indeed enter one.
      *
+     * For all strings returned by {@code getAllObservedLogs()}, each should be a superstring of a
+     * string returned by this method. Furthermore, all strings returned by this method should be a
+     * substring of a string returned by {@code getAllObservedLogs()}.
+     *
      * @return All event strings witnessed before the request was finalized.
      */
     public List<String> getAllObservedEvents();
+
+    /**
+     * Returns a list of all the log lines that contributed towards an underlying event string being
+     * observed.
+     *
+     * For all strings returned by {@code getAllObservedEvents()}, each should be a substring of a
+     * string returned by this method. Furthermore, all strings returned by this method should be a
+     * superstring of a string returned by {@code getAllObservedEvents()}.
+     *
+     * @return All log lines that witnessed an event string.
+     */
+    public List<String> getAllObservedLogs();
 
     /**
      * The time that the request was moved into a "satisfied" state if it was moved into this state.
