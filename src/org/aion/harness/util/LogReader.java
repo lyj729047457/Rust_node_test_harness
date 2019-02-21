@@ -38,7 +38,7 @@ public final class LogReader {
         }
 
         this.threadExecutor = Executors.newSingleThreadExecutor();
-        this.logTailer = new Tailer(log, this.listener, 0);
+        this.logTailer = new Tailer(log, this.listener, TimeUnit.SECONDS.toMillis(2), true);
         this.threadExecutor.execute(this.logTailer);
 
         return StatusResult.successful();

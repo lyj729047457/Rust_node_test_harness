@@ -1,5 +1,6 @@
 package org.aion.harness.util;
 
+import org.aion.harness.main.tools.Network;
 import java.io.File;
 
 /**
@@ -7,14 +8,17 @@ import java.io.File;
  * and provides descriptively named getter methods for ease of use.
  */
 public class NodeFileManager {
-    public static final String NETWORK = "mastery";
+    /**
+     * network is set to mastery on default.
+     */
+    private static String network = "mastery";
 
     private static final String WORKING_DIR = System.getProperty("user.dir");
     private static final File KERNEL_REPO = new File(WORKING_DIR + File.separator + ".." + File.separator + "aion");
     private static final File TAR_SOURCE = new File(KERNEL_REPO + File.separator + "pack");
     private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
     private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
-    private static final File DATABASE = new File(KERNEL_DIR + File.separator + NETWORK + File.separator + "database");
+    private static final File DATABASE = new File(KERNEL_DIR + File.separator + network + File.separator + "database");
     private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
@@ -51,4 +55,14 @@ public class NodeFileManager {
         return LOG_ARCHIVE_DIR;
     }
 
+    public static String getNetwork() {
+        return network;
+    }
+
+    public static void setNetwork(Network network) {
+        if (network == null) {
+            throw new NullPointerException("network cannot be null");
+        }
+        NodeFileManager.network = network.getNetwork();
+    }
 }

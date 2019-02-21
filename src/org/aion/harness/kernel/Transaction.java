@@ -29,14 +29,11 @@ public final class Transaction {
         if (sender == null) {
             throw new NullPointerException("sender cannot be null");
         }
-        if (destination == null){
-            throw new NullPointerException("destination cannot be null");
-        }
 
         SignedTransactionBuilder transactionBuilder = new SignedTransactionBuilder()
                 .privateKey(sender.getPrivateKeyBytes())
                 .senderNonce(nonce)
-                .destination(destination.getAddressBytes())
+                .destination((destination == null) ? null : destination.getAddressBytes())
                 .data(data)
                 .energyLimit(energyLimit)
                 .energyPrice(energyPrice)
