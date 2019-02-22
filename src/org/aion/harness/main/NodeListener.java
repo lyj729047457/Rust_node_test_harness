@@ -4,7 +4,7 @@ import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.OrEvent;
 import org.aion.harness.main.global.SingletonFactory;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
@@ -33,7 +33,7 @@ public final class NodeListener {
      * @return the result of this event.
      * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public EventRequestResult waitForMinersToStart(long timeoutInMillis) {
+    public LogEventResult waitForMinersToStart(long timeoutInMillis) {
         if (timeoutInMillis < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
         }
@@ -54,7 +54,7 @@ public final class NodeListener {
      * @throws NullPointerException if transactionHash is null.
      * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public EventRequestResult waitForTransactionToBeProcessed(byte[] transactionHash, long timeoutInMillis) {
+    public LogEventResult waitForTransactionToBeProcessed(byte[] transactionHash, long timeoutInMillis) {
         if (transactionHash == null) {
             throw new NullPointerException("Cannot wait for a null transaction hash.");
         }
@@ -85,7 +85,7 @@ public final class NodeListener {
      * @return the result of this event.
      * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public EventRequestResult waitForHeartbeat(long timeoutInMillis) {
+    public LogEventResult waitForHeartbeat(long timeoutInMillis) {
         if (timeoutInMillis < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
         }
@@ -105,7 +105,7 @@ public final class NodeListener {
      * @throws NullPointerException If event is null.
      * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public EventRequestResult waitForEvent(IEvent event, long timeoutInMillis) {
+    public LogEventResult waitForEvent(IEvent event, long timeoutInMillis) {
         if (event == null) {
             throw new NullPointerException("Cannot wait for a null event.");
         }
@@ -130,15 +130,15 @@ public final class NodeListener {
         return SingletonFactory.singleton().logReader().getLogListener().numberOfPendingEventRequests();
     }
 
-    private EventRequestResult extractResult(IEventRequest request) {
+    private LogEventResult extractResult(IEventRequest request) {
         if (request.isUnobserved()) {
-            return EventRequestResult.unobservedEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
+            return LogEventResult.unobservedEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isSatisfied()) {
-            return EventRequestResult.observedEvent(request.getAllObservedEvents(), request.getAllObservedEvents(), request.timeOfObservation());
+            return LogEventResult.observedEvent(request.getAllObservedEvents(), request.getAllObservedEvents(), request.timeOfObservation());
         } else if (request.isExpired()) {
-            return EventRequestResult.expiredEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
+            return LogEventResult.expiredEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isRejected()) {
-            return EventRequestResult.rejectedEvent(request.getCauseOfRejection(), request.getAllObservedEvents(), request.getAllObservedEvents());
+            return LogEventResult.rejectedEvent(request.getCauseOfRejection(), request.getAllObservedEvents(), request.getAllObservedEvents());
         } else {
             throw new IllegalStateException("Waited for event until notified but event is still pending!");
         }

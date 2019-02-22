@@ -16,7 +16,7 @@ import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -54,7 +54,7 @@ public class NodeListenerLifecycleTest {
         NodeListener listener = new NodeListener();
 
         // Time out should be irrelevant in this situation.
-        EventRequestResult result = listener.waitForHeartbeat(0);
+        LogEventResult result = listener.waitForHeartbeat(0);
         System.out.println("Result = " + result);
         assertTrue(result.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", result.causeOfRejection());
@@ -80,7 +80,7 @@ public class NodeListenerLifecycleTest {
         assertTrue(result.success);
         assertFalse(this.node.isAlive());
 
-        EventRequestResult eventResult = listener.waitForHeartbeat(0);
+        LogEventResult eventResult = listener.waitForHeartbeat(0);
         System.out.println("Result = " + eventResult);
         assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());
@@ -146,7 +146,7 @@ public class NodeListenerLifecycleTest {
         assertTrue(eavesdropper.isAlive());
 
         timeout = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
-        EventRequestResult eventResult = null;
+        LogEventResult eventResult = null;
         while ((System.currentTimeMillis() < timeout) && (eventResult == null)) {
             eventResult = eavesdropper.fetchLatestResult();
             Thread.sleep(TimeUnit.SECONDS.toMillis(2));

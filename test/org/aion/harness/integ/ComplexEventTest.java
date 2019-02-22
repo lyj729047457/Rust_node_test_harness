@@ -15,7 +15,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -89,7 +89,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        EventRequestResult eventResult = listener.waitForEvent(event1, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.waitForEvent(event1, TimeUnit.MINUTES.toMillis(1));
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
@@ -123,7 +123,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        EventRequestResult eventResult = listener.waitForEvent(event2, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.waitForEvent(event2, TimeUnit.MINUTES.toMillis(1));
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
@@ -161,7 +161,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        EventRequestResult eventResult = listener.waitForEvent(event3, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.waitForEvent(event3, TimeUnit.MINUTES.toMillis(1));
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());

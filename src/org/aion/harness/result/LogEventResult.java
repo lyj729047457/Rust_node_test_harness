@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The result of a request for some event to be observed.
+ * The result of a request for some log event to be observed.
  *
- * An event request result can be in 1 of 4 possible states:
+ * A log event result can be in 1 of 4 possible states:
  *   - The event has been observed: indicates the event occurred.
  *   - The event was not observed: indicates the node shutdown before the event was witnessed.
  *   - The event was rejected: indicates that observation at the time of the request was not possible.
@@ -19,9 +19,11 @@ import java.util.List;
  * In the case of an event being rejected, it will also come with a reason for why the event request
  * was rejected.
  *
- * An event request result is immutable.
+ * There is not concept of equality defined for a log event result.
+ *
+ * A log event result is immutable.
  */
-public final class EventRequestResult {
+public final class LogEventResult {
     private final RequestResultState resultState;
     private final List<String> observedEvents;
     private final List<String> observedLogs;
@@ -31,7 +33,7 @@ public final class EventRequestResult {
 
     private enum RequestResultState { OBSERVED, UNOBSERVED, REJECTED, EXPIRED }
 
-    private EventRequestResult(RequestResultState requestState, List<String> observedEvents, List<String> observedLogs, String rejectionCause, long observationTime) {
+    private LogEventResult(RequestResultState requestState, List<String> observedEvents, List<String> observedLogs, String rejectionCause, long observationTime) {
         if (requestState == null) {
             throw new NullPointerException("Cannot construct result with null state.");
         }
@@ -52,8 +54,8 @@ public final class EventRequestResult {
      * @param timeOfObservationInMillis Time at which event was observed in milliseconds.
      * @return a new observed event request result.
      */
-    public static EventRequestResult observedEvent(List<String> observedEvents, List<String> observedLogs, long timeOfObservationInMillis) {
-        return new EventRequestResult(RequestResultState.OBSERVED, observedEvents, observedLogs, null, timeOfObservationInMillis);
+    public static LogEventResult observedEvent(List<String> observedEvents, List<String> observedLogs, long timeOfObservationInMillis) {
+        return new LogEventResult(RequestResultState.OBSERVED, observedEvents, observedLogs, null, timeOfObservationInMillis);
     }
 
     /**
@@ -65,8 +67,8 @@ public final class EventRequestResult {
      * @param observedLogs The log lines that satisfied the observed event strings.
      * @return a new unobserved event request result.
      */
-    public static EventRequestResult unobservedEvent(List<String> observedEvents, List<String> observedLogs) {
-        return new EventRequestResult(RequestResultState.UNOBSERVED, observedEvents, observedLogs, null, -1);
+    public static LogEventResult unobservedEvent(List<String> observedEvents, List<String> observedLogs) {
+        return new LogEventResult(RequestResultState.UNOBSERVED, observedEvents, observedLogs, null, -1);
     }
 
     /**
@@ -79,8 +81,8 @@ public final class EventRequestResult {
      * @param observedLogs The log lines that satisfied the observed event strings.
      * @return a new rejected event request result
      */
-    public static EventRequestResult rejectedEvent(String causeOfRejection, List<String> observedEvents, List<String> observedLogs) {
-        return new EventRequestResult(RequestResultState.REJECTED, observedEvents, observedLogs, causeOfRejection, -1);
+    public static LogEventResult rejectedEvent(String causeOfRejection, List<String> observedEvents, List<String> observedLogs) {
+        return new LogEventResult(RequestResultState.REJECTED, observedEvents, observedLogs, causeOfRejection, -1);
     }
 
     /**
@@ -91,8 +93,8 @@ public final class EventRequestResult {
      * @param observedLogs The log lines that satisfied the observed event strings.
      * @return a new expired event request result.
      */
-    public static EventRequestResult expiredEvent(List<String> observedEvents, List<String> observedLogs) {
-        return new EventRequestResult(RequestResultState.EXPIRED, observedEvents, observedLogs,null, -1);
+    public static LogEventResult expiredEvent(List<String> observedEvents, List<String> observedLogs) {
+        return new LogEventResult(RequestResultState.EXPIRED, observedEvents, observedLogs,null, -1);
     }
 
     /**
@@ -175,13 +177,13 @@ public final class EventRequestResult {
     @Override
     public String toString() {
         if (this.resultState == RequestResultState.OBSERVED) {
-            return "EventRequestResult { Observed at time: " + this.timeOfObservationInMillis + " (millis) }";
+            return "LogEventResult { Observed at time: " + this.timeOfObservationInMillis + " (millis) }";
         } else if (this.resultState == RequestResultState.UNOBSERVED) {
-            return "EventRequestResult { Unobserved }";
+            return "LogEventResult { Unobserved }";
         } else if (this.resultState == RequestResultState.REJECTED) {
-            return "EventRequestResult { Rejected due to: " + this.causeOfRejection + " }";
+            return "LogEventResult { Rejected due to: " + this.causeOfRejection + " }";
         } else {
-            return "EventRequestResult { Expired }";
+            return "LogEventResult { Expired }";
         }
     }
 

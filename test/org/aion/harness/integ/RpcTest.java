@@ -8,7 +8,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RPCResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -409,7 +409,7 @@ public class RpcTest {
         byte[] transactionHash = transactionResult.getTransaction().getTransactionHash();
         long timeout = TimeUnit.MINUTES.toMillis(1);
 
-        EventRequestResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);
+        LogEventResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);
         assertTrue(eventResult.eventWasObserved());
     }
 

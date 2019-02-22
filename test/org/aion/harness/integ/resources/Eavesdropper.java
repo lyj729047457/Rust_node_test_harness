@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.NodeListener;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 
 public final class Eavesdropper implements Runnable {
     private NodeListener listener;
@@ -14,7 +14,7 @@ public final class Eavesdropper implements Runnable {
     private AtomicBoolean dead = new AtomicBoolean(false);
 
     private AtomicBoolean freezeResult = new AtomicBoolean(false);
-    private EventRequestResult latestResult = null;
+    private LogEventResult latestResult = null;
 
     public enum Gossip {
 
@@ -43,7 +43,7 @@ public final class Eavesdropper implements Runnable {
         while (!this.dead.get()) {
 
             long startTime;
-            EventRequestResult result = null;
+            LogEventResult result = null;
 
             if (this.gossip == Gossip.HEARTBEAT) {
 
@@ -110,7 +110,7 @@ public final class Eavesdropper implements Runnable {
         this.freezeResult.set(false);
     }
 
-    public synchronized EventRequestResult fetchLatestResult() {
+    public synchronized LogEventResult fetchLatestResult() {
         return this.latestResult;
     }
 

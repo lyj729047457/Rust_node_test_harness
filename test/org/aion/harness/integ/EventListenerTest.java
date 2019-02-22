@@ -12,7 +12,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.EventRequestResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
@@ -72,7 +72,7 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        EventRequestResult requestResult = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
+        LogEventResult requestResult = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -109,7 +109,7 @@ public class EventListenerTest {
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        EventRequestResult requestResult = listener.waitForTransactionToBeProcessed(
+        LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
             transactionResult.getTransaction().getTransactionHash(),
             TimeUnit.MINUTES.toMillis(2));
 
@@ -193,7 +193,7 @@ public class EventListenerTest {
 
         this.rpc.sendTransaction(transactionResult.getTransaction());
 
-        EventRequestResult requestResult = listener.waitForTransactionToBeProcessed(
+        LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
             transactionResult.getTransaction().getTransactionHash(),
             TimeUnit.MINUTES.toMillis(2));
 
