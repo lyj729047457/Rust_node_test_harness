@@ -1,11 +1,17 @@
 package org.aion.harness.result;
 
 /**
- * A simple result specifying successful and error messaging.
+ * A simple status result specifying whether something was successful or not, and if not, displaying
+ * a status code and an error message.
+ *
+ * Typically, a status result is returned as the result of running an external process, which
+ * returns status/exit codes.
  *
  * If {@code success == true} then the values of {@code status} and {@code error} are meaningless.
  *
  * It is guaranteed that {@code error != null}.
+ *
+ * There is not concept of equality defined for a status result.
  *
  * A result is immutable.
  */
@@ -30,7 +36,11 @@ public final class StatusResult {
 
     @Override
     public String toString() {
-        return "StatusResult { success = " + this.success + ", status = " + this.status + ", error = " + this.error + " }";
+        if (this.success) {
+            return "StatusResult { successful }";
+        } else {
+            return "StatusResult { unsuccessful | status code: " + this.success + " | error: " + this.error + " }";
+        }
     }
 
 }
