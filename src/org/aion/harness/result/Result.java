@@ -7,6 +7,11 @@ package org.aion.harness.result;
  * will hold an exception.
  *
  * If successful, then both the error string and the exception are meaningless and possibly null.
+ *
+ * There is not concept of equality defined for a result.
+ *
+ * A result is partially immutable; the exception field's immutability is subject to the immutability
+ * guarantees of that particular class.
  */
 public final class Result {
     public final boolean success;
