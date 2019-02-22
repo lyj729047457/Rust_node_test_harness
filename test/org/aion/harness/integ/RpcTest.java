@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
@@ -9,6 +10,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
+import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -74,7 +76,8 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -93,7 +96,8 @@ public class RpcTest {
         assertTrue(this.node.isAlive());
 
         RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -120,7 +124,8 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -147,7 +152,8 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -174,7 +180,8 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -201,7 +208,7 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        assertTrue(rpcResult.success);
 
         transactionResult = constructTransaction(
             preminedPrivateKey,
@@ -211,7 +218,8 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
         rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -231,7 +239,9 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        System.out.println("Rpc result = " + rpcResult);
+        assertFalse(rpcResult.success);
     }
 
     @Test
@@ -252,7 +262,8 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertTrue(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -282,7 +293,9 @@ public class RpcTest {
         assertTrue(transactionResult.success);
 
         RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
-        assertFalse(rpcResult.getResultOnly().success);
+        System.out.println("Rpc result = " + rpcResult);
+        assertFalse(rpcResult.success);
+        assertTrue(rpcResult.error.contains("Transaction dropped"));
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -304,16 +317,28 @@ public class RpcTest {
 
         // check balance before
         RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        Assert.assertEquals(BigInteger.ZERO, new BigInteger(rpcResult.getOutputResult(), 16));
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
+        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        assertEquals(BigInteger.ZERO, bigIntegerResult.get());
 
         // transfer and wait
         doBalanceTransfer(transferValue);
 
         // check balance after
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        BigInteger balanceAfter = new BigInteger(rpcResult.getOutputResult(), 16);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        outputParser = new RpcOutputParser(rpcResult.output);
+        bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        BigInteger balanceAfter = bigIntegerResult.get();
         Assert.assertEquals(transferValue, balanceAfter);
     }
 
@@ -330,16 +355,28 @@ public class RpcTest {
 
         // check balance before
         RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        Assert.assertEquals(BigInteger.ZERO, new BigInteger(rpcResult.getOutputResult(), 16));
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
+        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        Assert.assertEquals(BigInteger.ZERO, bigIntegerResult.get());
 
         // transfer and wait
         doBalanceTransfer(transferValue);
 
         // check balance after
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        BigInteger balanceAfter = new BigInteger(rpcResult.getOutputResult(), 16);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        outputParser = new RpcOutputParser(rpcResult.output);
+        bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        BigInteger balanceAfter = bigIntegerResult.get();
         Assert.assertEquals(BigInteger.ZERO, balanceAfter);
     }
 
@@ -359,16 +396,28 @@ public class RpcTest {
 
         // check balance before
         RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        Assert.assertEquals(BigInteger.ZERO, new BigInteger(rpcResult.getOutputResult(), 16));
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
+        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        Assert.assertEquals(BigInteger.ZERO, bigIntegerResult.get());
 
         // transfer and wait
         doBalanceTransfer(negativeTransferValue);
 
         // check balance after - for positive representation
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
-        assertTrue(rpcResult.getResultOnly().success);
-        BigInteger balanceAfter = new BigInteger(rpcResult.getOutputResult(), 16);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        outputParser = new RpcOutputParser(rpcResult.output);
+        bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        BigInteger balanceAfter = bigIntegerResult.get();
         Assert.assertEquals(positiveRepresentation, balanceAfter);
     }
 
@@ -383,7 +432,13 @@ public class RpcTest {
 
         // check nonce before
         RpcResult rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
-        BigInteger nonceBefore = new BigInteger(rpcResult.getOutputResult(), 16);
+        System.out.println("Rpc result = " + rpcResult);
+
+        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
+        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        BigInteger nonceBefore = bigIntegerResult.get();
         System.out.println("nonce is: " + nonceBefore);
 
         // do a transfer and wait
@@ -391,7 +446,13 @@ public class RpcTest {
 
         // check nonce after
         rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
-        BigInteger nonceAfter = new BigInteger(rpcResult.getOutputResult(), 16);
+        System.out.println("Rpc result = " + rpcResult);
+
+        outputParser = new RpcOutputParser(rpcResult.output);
+        bigIntegerResult = outputParser.resultAsBigInteger();
+
+        assertTrue(bigIntegerResult.isPresent());
+        BigInteger nonceAfter = bigIntegerResult.get();
         System.out.println("nonce is: " + nonceAfter);
 
         Assert.assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
@@ -407,7 +468,8 @@ public class RpcTest {
         Transaction transaction = transactionResult.getTransaction().get();
 
         RpcResult result = this.rpc.sendTransaction(transaction);
-        assertTrue(result.getResultOnly().success);
+        System.out.println("Rpc result = " + result);
+        assertTrue(result.success);
 
         byte[] transactionHash = transaction.getTransactionHash();
         long timeout = TimeUnit.MINUTES.toMillis(1);

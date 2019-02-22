@@ -30,6 +30,15 @@ public final class RpcOutputParser {
     }
 
     /**
+     * Returns {@code true} if, and only if, the rpc output string has an 'error' attribute.
+     *
+     * @return if the rpc output has an error attribute.
+     */
+    public boolean hasErrorAttribute() {
+        return this.outputAsJson.has("error");
+    }
+
+    /**
      * Returns the content of the 'result' attribute of the rpc output string as a String.
      *
      * If this method is unable to parse the 'result' attribute then an empty optional is returned.
@@ -133,7 +142,7 @@ public final class RpcOutputParser {
             result = (resultString.startsWith("0x")) ? resultString.substring(2) : resultString;
 
         } catch (Exception e) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Unable to parse result attribute for: " + this.outputAsJson);
+            System.out.println(Assumptions.LOGGER_BANNER + "Unable to parse " + attribute + " attribute for: " + this.outputAsJson);
             System.out.println(Assumptions.LOGGER_BANNER + "Parsing error: " + e.toString());
         }
 

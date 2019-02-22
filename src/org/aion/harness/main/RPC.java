@@ -1,6 +1,8 @@
 package org.aion.harness.main;
 
+import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
+import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.binary.Hex;
@@ -110,8 +112,7 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
             return sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
         } catch (Exception e) {
-            return RpcResult
-                .unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
+            return RpcResult.unsuccessful(((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }
     }
 
@@ -167,13 +168,60 @@ public final class RPC {
 
         String response = stringBuilder.toString();
 
-        if (status != 0) {
-            return RpcResult.unsuccessful(status, "RPC call failed!");
-        } else if (response.contains("error")) {
-            return RpcResult
-                .unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
+        RpcResult errorResult;
+        if (status == 0) {
+
+            // There could still be a kernel-side error. If there is, this method will produce it.
+            // Otherwise, this method returns null.
+            errorResult = extractKernelError(response);
+            return (errorResult == null) ? RpcResult.successful(response, timestamp) : errorResult;
+
         } else {
-            return RpcResult.successful(response, timestamp);
+
+            errorResult = extractKernelError(response);
+            return (errorResult == null) ? RpcResult.unsuccessful("RPC exit code: " + status) : errorResult;
         }
+
+    }
+
+    /**
+     * Extracts any error returned by the kernel in the provided rpc output and returns that error
+     * as an unsuccessful rpc result object.
+     *
+     * Otherwise, if no kernel error was reported, this method returns null.
+     *
+     * @param output The rpc output.
+     * @return null if no error, otherwise an unsuccessful rpc result.
+     */
+    private RpcResult extractKernelError(String output) {
+        RpcOutputParser outputParser = (output.isEmpty()) ? null : new RpcOutputParser(output);
+
+        // If output was empty or there is no 'error' attribute we can return now.
+        if ((outputParser == null) || (!outputParser.hasErrorAttribute())) {
+            return null;
+        }
+
+        Optional<String> kernelError = outputParser.errorAsString();
+
+        if (kernelError.isPresent()) {
+            String kernelErrorString = kernelError.get();
+            RpcOutputParser errorParser = new RpcOutputParser(kernelErrorString);
+            Optional<String> kernelErrorData = errorParser.dataAsString();
+
+            if (kernelErrorData.isPresent()) {
+                return RpcResult.unsuccessful("RPC call failed due to: " + kernelErrorData.get());
+            } else {
+                // There may still be a 'message' attribute with error information.
+                Optional<String> kernelMessageString = errorParser.messageAsString();
+                if (kernelMessageString.isPresent()) {
+                    return RpcResult.unsuccessful("RPC call failed due to: " + kernelMessageString.get());
+                } else {
+                    return RpcResult.unsuccessful("RPC call failued due to: unknown cause.");
+                }
+            }
+
+        }
+
+        return null;
     }
 }
