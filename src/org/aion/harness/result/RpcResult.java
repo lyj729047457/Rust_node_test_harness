@@ -1,11 +1,11 @@
 package org.aion.harness.result;
 
-public final class RPCResult {
+public final class RpcResult {
     private final StatusResult result;
     private final String output;
     private final long timestamp;
 
-    private RPCResult(StatusResult result, String output, long timestamp) {
+    private RpcResult(StatusResult result, String output, long timestamp) {
         if (result == null) {
             throw new NullPointerException("result cannot be null");
         }
@@ -18,15 +18,15 @@ public final class RPCResult {
         this.timestamp = timestamp;
     }
 
-    public static RPCResult successful(String output, long timestamp) {
+    public static RpcResult successful(String output, long timestamp) {
         if (timestamp < 0) {
             throw new IllegalArgumentException("timestamp cannot be less than zero");
         }
-        return new RPCResult(StatusResult.successful(), output, timestamp);
+        return new RpcResult(StatusResult.successful(), output, timestamp);
     }
 
-    public static RPCResult unsuccessful(int status, String error) {
-        return new RPCResult(StatusResult.unsuccessful(status, error), "", -1);
+    public static RpcResult unsuccessful(int status, String error) {
+        return new RpcResult(StatusResult.unsuccessful(status, error), "", -1);
     }
 
     public StatusResult getResultOnly() {
@@ -50,7 +50,7 @@ public final class RPCResult {
 
     @Override
     public String toString() {
-        return "RPCResult { success = " + this.result.success + ", output = " + this.output
+        return "RpcResult { success = " + this.result.success + ", output = " + this.output
                 + ", status = " + this.result.status + ", error = " + this.result.error + " }";
     }
 }

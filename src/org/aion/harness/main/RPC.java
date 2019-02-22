@@ -2,7 +2,7 @@ package org.aion.harness.main;
 
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.RPCResult;
+import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.BufferedReader;
@@ -25,7 +25,7 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RPCResult sendTransaction(Transaction transaction) {
+    public RpcResult sendTransaction(Transaction transaction) {
         return sendTransactionInternal(transaction, false);
     }
 
@@ -37,7 +37,7 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RPCResult sendTransactionVerbose(Transaction transaction) {
+    public RpcResult sendTransactionVerbose(Transaction transaction) {
         return sendTransactionInternal(transaction, true);
     }
 
@@ -47,7 +47,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RPCResult getBalance(byte[] address) throws IOException, InterruptedException {
+    public RpcResult getBalance(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -63,7 +63,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RPCResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -77,7 +77,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RPCResult getNonce(byte[] address) throws IOException, InterruptedException {
+    public RpcResult getNonce(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -93,7 +93,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RPCResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -101,7 +101,7 @@ public final class RPC {
         return getNonceOverRPC(address, true);
     }
 
-    private RPCResult sendTransactionInternal(Transaction transaction, boolean verbose) {
+    private RpcResult sendTransactionInternal(Transaction transaction, boolean verbose) {
         if (transaction == null) {
             throw new IllegalArgumentException("transaction cannot be null.");
         }
@@ -110,11 +110,12 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
             return sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
         } catch (Exception e) {
-            return RPCResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
+            return RpcResult
+                .unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Error: " + ((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }
     }
 
-    private RPCResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
+    private RpcResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_sendRawTransaction\",\"params\":[\"0x" + Hex.encodeHexString(signedTransaction) + "\"],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -127,7 +128,7 @@ public final class RPC {
         return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
-    private RPCResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
+    private RpcResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -140,7 +141,7 @@ public final class RPC {
         return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
-    private RPCResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
+    private RpcResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -153,7 +154,7 @@ public final class RPC {
         return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
-    private RPCResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {
+    private RpcResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {
         int status = process.waitFor();
 
         String line;
@@ -167,11 +168,12 @@ public final class RPC {
         String response = stringBuilder.toString();
 
         if (status != 0) {
-            return RPCResult.unsuccessful(status, "RPC call failed!");
+            return RpcResult.unsuccessful(status, "RPC call failed!");
         } else if (response.contains("error")) {
-            return RPCResult.unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
+            return RpcResult
+                .unsuccessful(status, response.substring(response.indexOf("error") + 7, response.length() - 1));
         } else {
-            return RPCResult.successful(response, timestamp);
+            return RpcResult.successful(response, timestamp);
         }
     }
 }
