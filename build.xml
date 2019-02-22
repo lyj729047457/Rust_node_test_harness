@@ -22,6 +22,7 @@
         <pathelement location="${dependencies}/modAionBase.jar"/>
         <pathelement location="${dependencies}/modRlp.jar"/>
         <pathelement location="${dependencies}/modUtil.jar"/>
+        <pathelement location="${dependencies}/gson-2.8.5.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
@@ -37,6 +38,7 @@
                 <pathelement location="${dependencies}/modRlp.jar"/>
                 <pathelement location="${dependencies}/modUtil.jar"/>
                 <pathelement location="${dependencies}/offline-signer-628d997.jar"/>
+                <pathelement location="${dependencies}/gson-2.8.5.jar"/>
             </modulepath>
         </javac>
 
