@@ -1,43 +1,57 @@
 package org.aion.harness.result;
 
+import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
 
 /**
- * Holds a simple result and a transaction.
+ * A result from some process that generates a {@link Transaction} upon success.
  *
- * If the result is successful then transaction is meaningful.
+ * If {@code success == true} then the transaction will be non-null.
  *
- * Otherwise, if the result is unsuccessful, then the transaction will be null.
+ * If {@code success == false} then the transaction field is meaningless, and error will be non-null.
+ *
+ * There is not concept of equality defined for a log event result.
+ *
+ * A transaction result is immutable.
  */
 public final class TransactionResult {
+    public final boolean success;
+    public final String error;
     private final Transaction transaction;
-    private final StatusResult result;
 
-    private TransactionResult(StatusResult result, Transaction transaction) {
-        this.result = result;
+    private TransactionResult(boolean success, String error, Transaction transaction) {
+        if (error == null) {
+            throw new NullPointerException("Cannot construct transaction result with null error.");
+        }
+
+        this.success = success;
+        this.error = error;
         this.transaction = transaction;
     }
 
     public static TransactionResult successful(Transaction transaction) {
-        return new TransactionResult(StatusResult.successful(), transaction);
+        if (transaction == null) {
+            throw new NullPointerException("Cannot construct successful transaction result with null transaction.");
+        }
+
+        return new TransactionResult(true, "", transaction);
     }
 
-    public static TransactionResult unsuccessful(int status, String error) {
-        return new TransactionResult(StatusResult.unsuccessful(status, error), null);
+    public static TransactionResult unsuccessful(String error) {
+        return new TransactionResult(false, error, null);
     }
 
-    public StatusResult getResultOnly() {
-        return this.result;
-    }
-
-    public Transaction getTransaction() {
-        return this.transaction;
+    public Optional<Transaction> getTransaction() {
+        return (this.transaction == null) ? Optional.empty() : Optional.of(this.transaction);
     }
 
     @Override
     public String toString() {
-        return "Result { success = " + this.result.success + ", transaction = " + this.transaction
-            + ", status = " + this.result.status + ", error = " + this.result.error + " }";
+        if (this.success) {
+            return "TransactionResult { successful | transaction: " + this.transaction + " }";
+        } else {
+            return "TransactionResult { unsuccessful due to: " + this.error + " }";
+        }
     }
 
 }

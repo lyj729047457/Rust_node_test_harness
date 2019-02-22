@@ -71,9 +71,9 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -117,9 +117,9 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.valueOf(100));
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -144,9 +144,9 @@ public class RpcTest {
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -171,9 +171,9 @@ public class RpcTest {
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -198,9 +198,9 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         transactionResult = constructTransaction(
@@ -209,8 +209,8 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ONE);
 
-        assertTrue(transactionResult.getResultOnly().success);
-        rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        assertTrue(transactionResult.success);
+        rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -229,9 +229,9 @@ public class RpcTest {
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        this.rpc.sendTransaction(transactionResult.getTransaction());
+        this.rpc.sendTransaction(transactionResult.getTransaction().get());
     }
 
     @Test
@@ -249,9 +249,9 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -279,9 +279,9 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.getResultOnly().success);
+        assertTrue(transactionResult.success);
 
-        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RPCResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertFalse(rpcResult.getResultOnly().success);
 
         result = this.node.stop();
@@ -403,10 +403,13 @@ public class RpcTest {
                 destination,
                 transferValue,
                 BigInteger.ZERO);
-        RPCResult result = this.rpc.sendTransaction(transactionResult.getTransaction());
+
+        Transaction transaction = transactionResult.getTransaction().get();
+
+        RPCResult result = this.rpc.sendTransaction(transaction);
         assertTrue(result.getResultOnly().success);
 
-        byte[] transactionHash = transactionResult.getTransaction().getTransactionHash();
+        byte[] transactionHash = transaction.getTransactionHash();
         long timeout = TimeUnit.MINUTES.toMillis(1);
 
         LogEventResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);

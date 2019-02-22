@@ -2,6 +2,7 @@ package org.aion.harness.integ;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
@@ -92,7 +93,7 @@ public class EventListenerTest {
                 BigInteger.ONE,
                 BigInteger.ZERO);
 
-        if (!transactionResult.getResultOnly().success) {
+        if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }
@@ -106,11 +107,12 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
+        Transaction transaction = transactionResult.getTransaction().get();
 
-        this.rpc.sendTransaction(transactionResult.getTransaction());
+        this.rpc.sendTransaction(transaction);
 
         LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
-            transactionResult.getTransaction().getTransactionHash(),
+            transaction.getTransactionHash(),
             TimeUnit.MINUTES.toMillis(2));
 
         System.out.println(requestResult);
@@ -136,7 +138,7 @@ public class EventListenerTest {
                 BigInteger.ONE,
                 BigInteger.ONE);
 
-        if (!transactionResult.getResultOnly().success) {
+        if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }
@@ -146,10 +148,12 @@ public class EventListenerTest {
 
         listener = new NodeListener();
 
-        this.rpc.sendTransaction(transactionResult.getTransaction());
+        transaction = transactionResult.getTransaction().get();
+
+        this.rpc.sendTransaction(transaction);
 
         requestResult = listener.waitForTransactionToBeProcessed(
-            transactionResult.getTransaction().getTransactionHash(),
+            transaction.getTransactionHash(),
             TimeUnit.MINUTES.toMillis(2));
 
         System.out.println(requestResult);
@@ -177,7 +181,7 @@ public class EventListenerTest {
                 BigInteger.ONE,
                 BigInteger.ZERO);
 
-        if (!transactionResult.getResultOnly().success) {
+        if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }
@@ -191,10 +195,12 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        this.rpc.sendTransaction(transactionResult.getTransaction());
+        Transaction transaction = transactionResult.getTransaction().get();
+
+        this.rpc.sendTransaction(transaction);
 
         LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
-            transactionResult.getTransaction().getTransactionHash(),
+            transaction.getTransactionHash(),
             TimeUnit.MINUTES.toMillis(2));
 
         System.out.println(requestResult);

@@ -72,7 +72,7 @@ public final class Transaction {
         try {
             return TransactionResult.successful(new Transaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false));
         } catch (Exception e) {
-            return TransactionResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, (e.getMessage() == null) ? e.toString() : e.getMessage());
+            return TransactionResult.unsuccessful((e.getMessage() == null) ? e.toString() : e.getMessage());
         }
     }
 
@@ -100,7 +100,7 @@ public final class Transaction {
         try {
             return TransactionResult.successful(new Transaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, true));
         } catch (Exception e) {
-            return TransactionResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, (e.getMessage() == null) ? e.toString() : e.getMessage());
+            return TransactionResult.unsuccessful((e.getMessage() == null) ? e.toString() : e.getMessage());
         }
     }
 
