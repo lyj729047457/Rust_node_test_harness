@@ -63,10 +63,6 @@ public final class RPC {
      * @return the result of the call.
      */
     public RpcResult<BigInteger> getBalance(byte[] address) throws InterruptedException {
-        if (address == null) {
-            throw new IllegalArgumentException("address cannot be null.");
-        }
-
         return callGetBalance(address, false);
     }
 
@@ -79,10 +75,6 @@ public final class RPC {
      * @return the result of the call.
      */
     public RpcResult<BigInteger> getBalanceVerbose(byte[] address) throws InterruptedException {
-        if (address == null) {
-            throw new IllegalArgumentException("address cannot be null.");
-        }
-
         return callGetBalance(address, true);
     }
 
@@ -93,10 +85,6 @@ public final class RPC {
      * @return the result of the call.
      */
     public RpcResult<BigInteger> getNonce(byte[] address) throws InterruptedException {
-        if (address == null) {
-            throw new IllegalArgumentException("address cannot be null.");
-        }
-
         return callGetNonce(address, false);
     }
 
@@ -109,14 +97,14 @@ public final class RPC {
      * @return the result of the call.
      */
     public RpcResult<BigInteger> getNonceVerbose(byte[] address) throws InterruptedException {
-        if (address == null) {
-            throw new IllegalArgumentException("address cannot be null.");
-        }
-
         return callGetNonce(address, true);
     }
 
     private RpcResult<ReceiptHash> callSendTransaction(Transaction transaction, boolean verbose) throws InterruptedException {
+        if (transaction == null) {
+            throw new IllegalArgumentException("Cannot send a null transaction.");
+        }
+
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.SEND_RAW_TRANSACTION)
             .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
@@ -144,6 +132,10 @@ public final class RPC {
     }
 
     private RpcResult<BigInteger> callGetBalance(byte[] address, boolean verbose) throws InterruptedException {
+        if (address == null) {
+            throw new IllegalArgumentException("Cannot get balance of a null address.");
+        }
+
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_BALANCE)
             .params(Hex.encodeHexString(address))
@@ -167,6 +159,10 @@ public final class RPC {
     }
 
     private RpcResult<BigInteger> callGetNonce(byte[] address, boolean verbose) throws InterruptedException {
+        if (address == null) {
+            throw new IllegalArgumentException("Cannot get nonce of a null address.");
+        }
+
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_NONCE)
             .params(Hex.encodeHexString(address))
