@@ -44,7 +44,7 @@ public final class PrivateKey {
 
     @Override
     public String toString() {
-        return "PrivateKey { " + Hex.encodeHexString(this.privateKeyBytes) + " }";
+        return "PrivateKey { 0x" + Hex.encodeHexString(this.privateKeyBytes) + " }";
     }
 
     @Override

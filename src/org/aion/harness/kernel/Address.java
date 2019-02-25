@@ -48,7 +48,7 @@ public final class Address {
 
     @Override
     public String toString() {
-        return "Address { " + Hex.encodeHexString(this.addressBytes) + " }";
+        return "Address { 0x" + Hex.encodeHexString(this.addressBytes) + " }";
     }
 
     @Override
