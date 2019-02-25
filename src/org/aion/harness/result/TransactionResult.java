@@ -1,6 +1,5 @@
 package org.aion.harness.result;
 
-import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
 
 /**
@@ -41,8 +40,8 @@ public final class TransactionResult {
         return new TransactionResult(false, error, null);
     }
 
-    public Optional<Transaction> getTransaction() {
-        return (this.transaction == null) ? Optional.empty() : Optional.of(this.transaction);
+    public Transaction getTransaction() {
+        return this.transaction;
     }
 
     @Override

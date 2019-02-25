@@ -74,7 +74,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -122,7 +122,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -150,7 +150,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -178,7 +178,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -206,7 +206,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.success);
 
         transactionResult = constructTransaction(
@@ -216,7 +216,7 @@ public class RpcTest {
             BigInteger.ONE);
 
         assertTrue(transactionResult.success);
-        rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -238,7 +238,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.success);
     }
@@ -260,7 +260,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -291,7 +291,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.success);
         assertTrue(rpcResult.error.contains("Transaction dropped"));
@@ -423,7 +423,7 @@ public class RpcTest {
                 transferValue,
                 BigInteger.ZERO);
 
-        Transaction transaction = transactionResult.getTransaction().get();
+        Transaction transaction = transactionResult.getTransaction();
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);

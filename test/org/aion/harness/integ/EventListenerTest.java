@@ -107,7 +107,7 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        Transaction transaction = transactionResult.getTransaction().get();
+        Transaction transaction = transactionResult.getTransaction();
 
         this.rpc.sendTransaction(transaction);
 
@@ -148,7 +148,7 @@ public class EventListenerTest {
 
         listener = new NodeListener();
 
-        transaction = transactionResult.getTransaction().get();
+        transaction = transactionResult.getTransaction();
 
         this.rpc.sendTransaction(transaction);
 
@@ -195,7 +195,7 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        Transaction transaction = transactionResult.getTransaction().get();
+        Transaction transaction = transactionResult.getTransaction();
 
         this.rpc.sendTransaction(transaction);
 
