@@ -42,7 +42,10 @@ public final class RpcCaller {
 
             RpcOutputParser outputParser = new RpcOutputParser(output);
 
-            if ((status == 0) && (!outputParser.hasAttribute("error"))) {
+            // This is only successful if the RPC Process exited successfully, and the RPC output
+            // contained no 'error' content and it does contain 'result' content.
+
+            if ((status == 0) && (!outputParser.hasAttribute("error")) && (outputParser.attributeToString("result") != null)) {
                 return InternalRpcResult.successful(output, timeOfCall);
             } else {
                 String error = outputParser.attributeToString("error");
