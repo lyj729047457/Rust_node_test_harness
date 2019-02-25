@@ -58,7 +58,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueViaRPC() {
+    public void testSendValueViaRPC() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -106,7 +106,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueWithIncorrectNonceViaRPC() {
+    public void testSendValueWithIncorrectNonceViaRPC() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -134,7 +134,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendNegativeValueViaRPC() {
+    public void testSendNegativeValueViaRPC() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -162,7 +162,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendZeroValueViaRPC() {
+    public void testSendZeroValueViaRPC() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -190,7 +190,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendMultipleValueTransfersViaRPC() {
+    public void testSendMultipleValueTransfersViaRPC() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -228,7 +228,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendTransactionWhenNoNodeIsAlive() {
+    public void testSendTransactionWhenNoNodeIsAlive() throws InterruptedException {
         assertFalse(this.node.isAlive());
         TransactionResult transactionResult = constructTransaction(
             preminedPrivateKey,
@@ -244,7 +244,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueToInvalidAddress() {
+    public void testSendValueToInvalidAddress() throws InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -416,7 +416,7 @@ public class RpcTest {
         assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
     }
 
-    private void doBalanceTransfer(BigInteger transferValue) {
+    private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
                 preminedPrivateKey,
                 destination,

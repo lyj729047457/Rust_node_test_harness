@@ -171,7 +171,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForTransactionToBeRejected() throws DecoderException {
+    public void testWaitForTransactionToBeRejected() throws DecoderException, InterruptedException {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
         PrivateKey privateKeyWithNoBalance = new PrivateKey(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 

@@ -1,20 +1,16 @@
 package org.aion.harness.main;
 
 import java.math.BigInteger;
-import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
+import org.aion.harness.main.tools.InternalRpcResult;
+import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
 import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.binary.Hex;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 /**
  * A class that facilitates communication with the node via the kernel's RPC server.
@@ -25,6 +21,7 @@ import java.io.InputStreamReader;
  * This class is not thread-safe.
  */
 public final class RPC {
+    private final RpcCaller rpc = new RpcCaller();
 
     /**
      * Sends the specified transaction to the node.
@@ -37,8 +34,8 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransaction(Transaction transaction) {
-        return sendTransactionInternal(transaction, false);
+    public RpcResult<ReceiptHash> sendTransaction(Transaction transaction) throws InterruptedException {
+        return sendTransactionOverRPC(transaction, false);
     }
 
     /**
@@ -54,8 +51,8 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) {
-        return sendTransactionInternal(transaction, true);
+    public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) throws InterruptedException {
+        return sendTransactionOverRPC(transaction, true);
     }
 
     /**
@@ -64,7 +61,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RpcResult<BigInteger> getBalance(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getBalance(byte[] address) throws InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -80,7 +77,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RpcResult<BigInteger> getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getBalanceVerbose(byte[] address) throws InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -94,7 +91,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RpcResult<BigInteger> getNonce(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getNonce(byte[] address) throws InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -110,7 +107,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RpcResult<BigInteger> getNonceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getNonceVerbose(byte[] address) throws InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -118,146 +115,52 @@ public final class RPC {
         return getNonceOverRPC(address, true);
     }
 
-    private RpcResult<ReceiptHash> sendTransactionInternal(Transaction transaction, boolean verbose) {
-        if (transaction == null) {
-            throw new IllegalArgumentException("transaction cannot be null.");
-        }
-
-        try {
-            System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
-            RpcResult result = sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
-
-            if (result.success) {
-                RpcOutputParser outputParser = new RpcOutputParser(result.output);
-                return RpcResult.successful(result.output, new ReceiptHash(outputParser.resultAsByteArray().get()), result.timeOfCallInMillis);
-            } else {
-                return RpcResult.unsuccessful(result.error);
-            }
-
-        } catch (Exception e) {
-            return RpcResult.unsuccessful(((e.getMessage() == null) ? e.toString() : e.getMessage()));
-        }
-    }
-
-    private RpcResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
+    private RpcResult<ReceiptHash> sendTransactionOverRPC(Transaction transaction, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.SEND_RAW_TRANSACTION)
-            .params(Hex.encodeHexString(signedTransaction))
+            .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
             .build();
 
-        return getRPCresult(payload, verbose);
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+
+        if (internalResult.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            return RpcResult.successful(internalResult.output, new ReceiptHash(outputParser.resultAsByteArray().get()), internalResult.timeOfCall);
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
     }
 
-    private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
+    private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_BALANCE)
             .params(Hex.encodeHexString(address))
             .build();
 
-        RpcResult result = getRPCresult(payload, verbose);
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
-        if (result.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(result.output);
-            return RpcResult.successful(result.output, outputParser.resultAsBigInteger().get(), result.timeOfCallInMillis);
+        if (internalResult.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            return RpcResult.successful(internalResult.output, outputParser.resultAsBigInteger().get(), internalResult.timeOfCall);
         } else {
-            return RpcResult.unsuccessful(result.error);
+            return RpcResult.unsuccessful(internalResult.error);
         }
     }
 
-    private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
+    private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_NONCE)
             .params(Hex.encodeHexString(address))
             .build();
 
-        RpcResult result = getRPCresult(payload, verbose);
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
-        if (result.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(result.output);
-            return RpcResult.successful(result.output, outputParser.resultAsBigInteger().get(), result.timeOfCallInMillis);
+        if (internalResult.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            return RpcResult.successful(internalResult.output, outputParser.resultAsBigInteger().get(), internalResult.timeOfCall);
         } else {
-            return RpcResult.unsuccessful(result.error);
+            return RpcResult.unsuccessful(internalResult.error);
         }
     }
 
-    private RpcResult getRPCresult(RpcPayload payload, boolean verbose) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder()
-            .command("curl", "-X", "POST", "--data", payload.payload, Assumptions.IP + ":" + Assumptions.PORT);
-
-        if (verbose) {
-            processBuilder.inheritIO();
-        }
-
-        return callRPC(processBuilder.start(), System.currentTimeMillis());
-    }
-
-    private RpcResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {
-        int status = process.waitFor();
-
-        String line;
-        StringBuilder stringBuilder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-        }
-
-        String response = stringBuilder.toString();
-
-        RpcResult errorResult;
-        if (status == 0) {
-
-            // There could still be a kernel-side error. If there is, this method will produce it.
-            // Otherwise, this method returns null.
-            errorResult = extractKernelError(response);
-            return (errorResult == null) ? RpcResult.successful(response, "", timestamp) : errorResult;
-
-        } else {
-
-            errorResult = extractKernelError(response);
-            return (errorResult == null) ? RpcResult.unsuccessful("RPC exit code: " + status) : errorResult;
-        }
-
-    }
-
-    /**
-     * Extracts any error returned by the kernel in the provided rpc output and returns that error
-     * as an unsuccessful rpc result object.
-     *
-     * Otherwise, if no kernel error was reported, this method returns null.
-     *
-     * @param output The rpc output.
-     * @return null if no error, otherwise an unsuccessful rpc result.
-     */
-    private RpcResult extractKernelError(String output) {
-        RpcOutputParser outputParser = (output.isEmpty()) ? null : new RpcOutputParser(output);
-
-        // If output was empty or there is no 'error' attribute we can return now.
-        if ((outputParser == null) || (!outputParser.hasErrorAttribute())) {
-            return null;
-        }
-
-        Optional<String> kernelError = outputParser.errorAsString();
-
-        if (kernelError.isPresent()) {
-            String kernelErrorString = kernelError.get();
-            RpcOutputParser errorParser = new RpcOutputParser(kernelErrorString);
-            Optional<String> kernelErrorData = errorParser.dataAsString();
-
-            if (kernelErrorData.isPresent()) {
-                return RpcResult.unsuccessful("RPC call failed due to: " + kernelErrorData.get());
-            } else {
-                // There may still be a 'message' attribute with error information.
-                Optional<String> kernelMessageString = errorParser.messageAsString();
-                if (kernelMessageString.isPresent()) {
-                    return RpcResult.unsuccessful("RPC call failed due to: " + kernelMessageString.get());
-                } else {
-                    return RpcResult.unsuccessful("RPC call failued due to: unknown cause.");
-                }
-            }
-
-        }
-
-        return null;
-    }
 }
