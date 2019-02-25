@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
@@ -8,6 +9,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.types.ReceiptHash;
+import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
@@ -34,6 +36,8 @@ public class RpcTest {
     private static Address destination;
     private static Address preminedAddress;
     private static PrivateKey preminedPrivateKey;
+    private static long energyLimit = 2_000_000;
+    private static long energyPrice = 10_000_000_000L;
 
     private RPC rpc;
     private Node node;
@@ -416,6 +420,143 @@ public class RpcTest {
         assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
     }
 
+    @Test
+    public void testGetTransactionReceipt() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        TransactionResult transactionResult = constructTransaction(
+            preminedPrivateKey,
+            destination,
+            BigInteger.ONE,
+            BigInteger.ZERO);
+
+        assertTrue(transactionResult.success);
+
+        NodeListener listener = new NodeListener();
+        Transaction transaction = transactionResult.getTransaction();
+
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        LogEventResult waitResult = listener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        System.out.println("Listener result = " + waitResult);
+        assertTrue(waitResult.eventWasObserved());
+
+        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(rpcResult.getResult());
+        System.out.println("Receipt result = " + receiptResult);
+        assertTrue(receiptResult.success);
+
+        // Assert the fields in the receipt are as expected.
+        TransactionReceipt receipt = receiptResult.getResult();
+
+        assertEquals(energyLimit, receipt.getTransactionEnergyLimit());
+        assertEquals(energyPrice, receipt.getTransactionEnergyPrice());
+        assertEquals(21_000L, receipt.getTransactionEnergyConsumed());
+        assertEquals(21_000L, receipt.getCumulativeEnergyConsumed());
+        assertEquals(0, receipt.getTransactionIndex());
+        assertArrayEquals(transaction.getTransactionHash(), receipt.getTransactionHash());
+        assertEquals(BigInteger.ONE, receipt.getBlockNumber());
+        assertFalse(receipt.getAddressOfDeployedContract().isPresent());
+        assertEquals(preminedAddress, receipt.getTransactionSender());
+
+        Optional<Address> transactionDestination = receipt.getTransactionDestination();
+        assertTrue(transactionDestination.isPresent());
+        assertEquals(destination, transactionDestination.get());
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testGetTransactionReceiptFromContractDeploy() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        TransactionResult transactionResult = constructTransaction(
+            preminedPrivateKey,
+            null,
+            BigInteger.ONE,
+            BigInteger.ZERO);
+
+        assertTrue(transactionResult.success);
+
+        NodeListener listener = new NodeListener();
+        Transaction transaction = transactionResult.getTransaction();
+
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        System.out.println("Rpc result = " + rpcResult);
+        assertTrue(rpcResult.success);
+
+        LogEventResult waitResult = listener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        System.out.println("Listener result = " + waitResult);
+        assertTrue(waitResult.eventWasObserved());
+
+        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(rpcResult.getResult());
+        System.out.println("Receipt result = " + receiptResult);
+        assertTrue(receiptResult.success);
+
+        // Assert the fields in the receipt are as expected.
+        TransactionReceipt receipt = receiptResult.getResult();
+
+        assertEquals(energyLimit, receipt.getTransactionEnergyLimit());
+        assertEquals(energyPrice, receipt.getTransactionEnergyPrice());
+        assertEquals(0, receipt.getTransactionIndex());
+        assertArrayEquals(transaction.getTransactionHash(), receipt.getTransactionHash());
+        assertEquals(BigInteger.ONE, receipt.getBlockNumber());
+        assertTrue(receipt.getAddressOfDeployedContract().isPresent());
+        assertEquals(preminedAddress, receipt.getTransactionSender());
+        assertFalse(receipt.getTransactionDestination().isPresent());
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testGetTransactionReceiptFromNonExistentReceiptHash() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        TransactionResult transactionResult = constructTransaction(
+            preminedPrivateKey,
+            destination,
+            BigInteger.ONE,
+            BigInteger.ZERO);
+
+        assertTrue(transactionResult.success);
+
+        ReceiptHash receiptHash = new ReceiptHash(new byte[32]);
+
+        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(receiptHash);
+        System.out.println("Receipt result = " + receiptResult);
+        assertFalse(receiptResult.success);
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
     private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
                 preminedPrivateKey,
@@ -438,7 +579,7 @@ public class RpcTest {
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return Transaction
-            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
     private Result initializeNode() {
