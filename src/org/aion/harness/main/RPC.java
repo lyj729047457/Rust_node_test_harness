@@ -174,7 +174,7 @@ public final class RPC {
             // There could still be a kernel-side error. If there is, this method will produce it.
             // Otherwise, this method returns null.
             errorResult = extractKernelError(response);
-            return (errorResult == null) ? RpcResult.successful(response, timestamp) : errorResult;
+            return (errorResult == null) ? RpcResult.successful(response, "", timestamp) : errorResult;
 
         } else {
 
