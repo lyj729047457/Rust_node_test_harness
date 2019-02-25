@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.RpcMethod;
 import org.aion.harness.main.tools.RpcOutputParser;
+import org.aion.harness.main.tools.RpcPayload;
+import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RpcResult;
@@ -138,29 +140,21 @@ public final class RPC {
     }
 
     private RpcResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.SEND_RAW_TRANSACTION.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(signedTransaction) + "\"],\"id\":1}";
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.SEND_RAW_TRANSACTION)
+            .params(Hex.encodeHexString(signedTransaction))
+            .build();
 
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
-
-        if (verbose) {
-            processBuilder.inheritIO();
-        }
-
-        return callRPC(processBuilder.start(), System.currentTimeMillis());
+        return getRPCresult(payload, verbose);
     }
 
     private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.GET_BALANCE.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.GET_BALANCE)
+            .params(Hex.encodeHexString(address))
+            .build();
 
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
-
-        if (verbose) {
-            processBuilder.inheritIO();
-        }
-
-        RpcResult result = callRPC(processBuilder.start(), System.currentTimeMillis());
+        RpcResult result = getRPCresult(payload, verbose);
 
         if (result.success) {
             RpcOutputParser outputParser = new RpcOutputParser(result.output);
@@ -171,16 +165,12 @@ public final class RPC {
     }
 
     private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.GET_NONCE.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.GET_NONCE)
+            .params(Hex.encodeHexString(address))
+            .build();
 
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
-
-        if (verbose) {
-            processBuilder.inheritIO();
-        }
-
-        RpcResult result = callRPC(processBuilder.start(), System.currentTimeMillis());
+        RpcResult result = getRPCresult(payload, verbose);
 
         if (result.success) {
             RpcOutputParser outputParser = new RpcOutputParser(result.output);
@@ -188,6 +178,17 @@ public final class RPC {
         } else {
             return RpcResult.unsuccessful(result.error);
         }
+    }
+
+    private RpcResult getRPCresult(RpcPayload payload, boolean verbose) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder()
+            .command("curl", "-X", "POST", "--data", payload.payload, Assumptions.IP + ":" + Assumptions.PORT);
+
+        if (verbose) {
+            processBuilder.inheritIO();
+        }
+
+        return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
     private RpcResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {
