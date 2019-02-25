@@ -80,7 +80,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RpcResult getNonce(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getNonce(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -96,7 +96,7 @@ public final class RPC {
      * @param address The address whose nonce is to be queried.
      * @return the result of the call.
      */
-    public RpcResult getNonceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getNonceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -150,7 +150,7 @@ public final class RPC {
         }
     }
 
-    private RpcResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
+    private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -160,7 +160,14 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        return callRPC(processBuilder.start(), System.currentTimeMillis());
+        RpcResult result = callRPC(processBuilder.start(), System.currentTimeMillis());
+
+        if (result.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(result.output);
+            return RpcResult.successful(result.output, outputParser.resultAsBigInteger().get(), result.timeOfCallInMillis);
+        } else {
+            return RpcResult.unsuccessful(result.error);
+        }
     }
 
     private RpcResult callRPC(Process process, long timestamp) throws IOException, InterruptedException {

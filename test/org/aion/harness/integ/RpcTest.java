@@ -398,14 +398,10 @@ public class RpcTest {
         assertTrue(this.node.isAlive());
 
         // check nonce before
-        RpcResult rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
 
-        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
-        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        BigInteger nonceBefore = bigIntegerResult.get();
+        BigInteger nonceBefore = rpcResult.getResult();
         System.out.println("nonce is: " + nonceBefore);
 
         // do a transfer and wait
@@ -415,14 +411,10 @@ public class RpcTest {
         rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
 
-        outputParser = new RpcOutputParser(rpcResult.output);
-        bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        BigInteger nonceAfter = bigIntegerResult.get();
+        BigInteger nonceAfter = rpcResult.getResult();
         System.out.println("nonce is: " + nonceAfter);
 
-        Assert.assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
+        assertEquals(nonceBefore.add(BigInteger.ONE), nonceAfter);
     }
 
     private void doBalanceTransfer(BigInteger transferValue) {
