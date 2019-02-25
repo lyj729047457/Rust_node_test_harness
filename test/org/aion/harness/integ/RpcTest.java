@@ -95,7 +95,7 @@ public class RpcTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -316,15 +316,10 @@ public class RpcTest {
         BigInteger transferValue = BigInteger.valueOf(50);
 
         // check balance before
-        RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
-        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        assertEquals(BigInteger.ZERO, bigIntegerResult.get());
+        assertEquals(BigInteger.ZERO, rpcResult.getResult());
 
         // transfer and wait
         doBalanceTransfer(transferValue);
@@ -333,13 +328,7 @@ public class RpcTest {
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        outputParser = new RpcOutputParser(rpcResult.output);
-        bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        BigInteger balanceAfter = bigIntegerResult.get();
-        Assert.assertEquals(transferValue, balanceAfter);
+        assertEquals(transferValue, rpcResult.getResult());
     }
 
     @Test
@@ -354,15 +343,10 @@ public class RpcTest {
         BigInteger transferValue = BigInteger.ZERO;
 
         // check balance before
-        RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
-        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        Assert.assertEquals(BigInteger.ZERO, bigIntegerResult.get());
+        assertEquals(BigInteger.ZERO, rpcResult.getResult());
 
         // transfer and wait
         doBalanceTransfer(transferValue);
@@ -371,13 +355,7 @@ public class RpcTest {
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        outputParser = new RpcOutputParser(rpcResult.output);
-        bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        BigInteger balanceAfter = bigIntegerResult.get();
-        Assert.assertEquals(BigInteger.ZERO, balanceAfter);
+        assertEquals(BigInteger.ZERO, rpcResult.getResult());
     }
 
     @Test
@@ -395,15 +373,10 @@ public class RpcTest {
         BigInteger positiveRepresentation = new BigInteger(1, negativeTransferValue.toByteArray());
 
         // check balance before
-        RpcResult rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        RpcOutputParser outputParser = new RpcOutputParser(rpcResult.output);
-        Optional<BigInteger> bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        Assert.assertEquals(BigInteger.ZERO, bigIntegerResult.get());
+        assertEquals(BigInteger.ZERO, rpcResult.getResult());
 
         // transfer and wait
         doBalanceTransfer(negativeTransferValue);
@@ -412,13 +385,7 @@ public class RpcTest {
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
-
-        outputParser = new RpcOutputParser(rpcResult.output);
-        bigIntegerResult = outputParser.resultAsBigInteger();
-
-        assertTrue(bigIntegerResult.isPresent());
-        BigInteger balanceAfter = bigIntegerResult.get();
-        Assert.assertEquals(positiveRepresentation, balanceAfter);
+        assertEquals(positiveRepresentation, rpcResult.getResult());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.aion.harness.main;
 
+import java.math.BigInteger;
 import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.RpcOutputParser;
@@ -49,7 +50,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RpcResult getBalance(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getBalance(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -65,7 +66,7 @@ public final class RPC {
      * @param address The address whose balance is to be queried.
      * @return the result of the call.
      */
-    public RpcResult getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
+    public RpcResult<BigInteger> getBalanceVerbose(byte[] address) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address cannot be null.");
         }
@@ -129,7 +130,7 @@ public final class RPC {
         return callRPC(processBuilder.start(), System.currentTimeMillis());
     }
 
-    private RpcResult getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
+    private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
         String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
@@ -139,7 +140,14 @@ public final class RPC {
             processBuilder.inheritIO();
         }
 
-        return callRPC(processBuilder.start(), System.currentTimeMillis());
+        RpcResult result = callRPC(processBuilder.start(), System.currentTimeMillis());
+
+        if (result.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(result.output);
+            return RpcResult.successful(result.output, outputParser.resultAsBigInteger().get(), result.timeOfCallInMillis);
+        } else {
+            return RpcResult.unsuccessful(result.error);
+        }
     }
 
     private RpcResult getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
