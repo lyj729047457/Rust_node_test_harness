@@ -35,7 +35,7 @@ public final class RPC {
      * @return the result of this attempt to send the transaction.
      */
     public RpcResult<ReceiptHash> sendTransaction(Transaction transaction) throws InterruptedException {
-        return sendTransactionOverRPC(transaction, false);
+        return callSendTransaction(transaction, false);
     }
 
     /**
@@ -52,7 +52,7 @@ public final class RPC {
      * @return the result of this attempt to send the transaction.
      */
     public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) throws InterruptedException {
-        return sendTransactionOverRPC(transaction, true);
+        return callSendTransaction(transaction, true);
     }
 
     /**
@@ -66,7 +66,7 @@ public final class RPC {
             throw new IllegalArgumentException("address cannot be null.");
         }
 
-        return getBalanceOverRPC(address, false);
+        return callGetBalance(address, false);
     }
 
     /**
@@ -82,7 +82,7 @@ public final class RPC {
             throw new IllegalArgumentException("address cannot be null.");
         }
 
-        return getBalanceOverRPC(address, true);
+        return callGetBalance(address, true);
     }
 
     /**
@@ -96,7 +96,7 @@ public final class RPC {
             throw new IllegalArgumentException("address cannot be null.");
         }
 
-        return getNonceOverRPC(address, false);
+        return callGetNonce(address, false);
     }
 
     /**
@@ -112,10 +112,10 @@ public final class RPC {
             throw new IllegalArgumentException("address cannot be null.");
         }
 
-        return getNonceOverRPC(address, true);
+        return callGetNonce(address, true);
     }
 
-    private RpcResult<ReceiptHash> sendTransactionOverRPC(Transaction transaction, boolean verbose) throws InterruptedException {
+    private RpcResult<ReceiptHash> callSendTransaction(Transaction transaction, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.SEND_RAW_TRANSACTION)
             .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
@@ -131,7 +131,7 @@ public final class RPC {
         }
     }
 
-    private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws InterruptedException {
+    private RpcResult<BigInteger> callGetBalance(byte[] address, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_BALANCE)
             .params(Hex.encodeHexString(address))
@@ -147,7 +147,7 @@ public final class RPC {
         }
     }
 
-    private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws InterruptedException {
+    private RpcResult<BigInteger> callGetNonce(byte[] address, boolean verbose) throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_NONCE)
             .params(Hex.encodeHexString(address))
