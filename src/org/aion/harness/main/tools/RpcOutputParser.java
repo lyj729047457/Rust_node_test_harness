@@ -30,6 +30,54 @@ public final class RpcOutputParser {
     }
 
     /**
+     * Returns {@code true} only if the output string being parsed contains the specified attribute.
+     *
+     * @param attribute The attribute whose existence is to be determined.
+     * @return whether or not the attribute exists.
+     */
+    public boolean hasAttribute(String attribute) {
+        return this.outputAsJson.has(attribute);
+    }
+
+    /**
+     * Returns the content corresponding to the specified attribute as a string.
+     *
+     * If the specified attribute does not exist, or if its content is the string 'null' or the
+     * empty string, then this method returns null.
+     *
+     * Otherwise, this method returns the corresponding content.
+     *
+     * Note, the returned string will be stripped of any leading or trailing quotation marks and
+     * if the '0x' hexadecimal identifier was present it will also be removed.
+     *
+     * @param attribute The attribute whose content is to be fetched.
+     * @return the corresponding content as a string.
+     */
+    public String attributeToString(String attribute) {
+        if (!hasAttribute(attribute)) {
+            return null;
+        }
+
+        String element = cleanElement(this.outputAsJson.get(attribute).toString());
+
+        if ((element.isEmpty()) || (element.equals("null"))) {
+            return null;
+        }
+
+        return element;
+    }
+
+    /**
+     * Returns rawElement with no leading or trailing quotation marks and with no '0x' hex
+     * identifier.
+     */
+    private String cleanElement(String rawElement) {
+        rawElement = (rawElement.startsWith("\"")) ? rawElement.substring(1) : rawElement;
+        rawElement = (rawElement.endsWith("\"")) ? rawElement.substring(0, rawElement.length() - 1) : rawElement;
+        return (rawElement.startsWith("0x")) ? rawElement.substring(2) : rawElement;
+    }
+
+    /**
      * Returns {@code true} if, and only if, the rpc output string has an 'error' attribute.
      *
      * @return if the rpc output has an error attribute.
