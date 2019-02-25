@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.RpcOutputParser;
+import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.binary.Hex;
@@ -25,10 +26,15 @@ public final class RPC {
     /**
      * Sends the specified transaction to the node.
      *
+     * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
+     * receipt until the transaction has been fully processed.
+     *
+     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
+     *
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult sendTransaction(Transaction transaction) {
+    public RpcResult<ReceiptHash> sendTransaction(Transaction transaction) {
         return sendTransactionInternal(transaction, false);
     }
 
@@ -37,10 +43,15 @@ public final class RPC {
      *
      * Displays the I/O of the attempt to hit the RPC endpoint.
      *
+     * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
+     * receipt until the transaction has been fully processed.
+     *
+     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
+     *
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult sendTransactionVerbose(Transaction transaction) {
+    public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) {
         return sendTransactionInternal(transaction, true);
     }
 
@@ -104,14 +115,22 @@ public final class RPC {
         return getNonceOverRPC(address, true);
     }
 
-    private RpcResult sendTransactionInternal(Transaction transaction, boolean verbose) {
+    private RpcResult<ReceiptHash> sendTransactionInternal(Transaction transaction, boolean verbose) {
         if (transaction == null) {
             throw new IllegalArgumentException("transaction cannot be null.");
         }
 
         try {
             System.out.println(Assumptions.LOGGER_BANNER + "Sending transaction to the node...");
-            return sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
+            RpcResult result = sendTransactionOverRPC(transaction.getSignedTransactionBytes(), verbose);
+
+            if (result.success) {
+                RpcOutputParser outputParser = new RpcOutputParser(result.output);
+                return RpcResult.successful(result.output, new ReceiptHash(outputParser.resultAsByteArray().get()), result.timeOfCallInMillis);
+            } else {
+                return RpcResult.unsuccessful(result.error);
+            }
+
         } catch (Exception e) {
             return RpcResult.unsuccessful(((e.getMessage() == null) ? e.toString() : e.getMessage()));
         }

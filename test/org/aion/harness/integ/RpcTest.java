@@ -1,6 +1,5 @@
 package org.aion.harness.integ;
 
-import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
@@ -8,9 +7,9 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -75,7 +74,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -123,7 +122,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -151,7 +150,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -179,7 +178,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -207,7 +206,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         assertTrue(rpcResult.success);
 
         transactionResult = constructTransaction(
@@ -239,7 +238,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.success);
     }
@@ -261,7 +260,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
@@ -292,7 +291,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.success);
 
-        RpcResult rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction().get());
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.success);
         assertTrue(rpcResult.error.contains("Transaction dropped"));
@@ -426,7 +425,7 @@ public class RpcTest {
 
         Transaction transaction = transactionResult.getTransaction().get();
 
-        RpcResult result = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);
         assertTrue(result.success);
 
