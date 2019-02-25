@@ -3,6 +3,7 @@ package org.aion.harness.main;
 import java.math.BigInteger;
 import java.util.Optional;
 import org.aion.harness.kernel.Transaction;
+import org.aion.harness.main.tools.RpcMethod;
 import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
@@ -137,7 +138,7 @@ public final class RPC {
     }
 
     private RpcResult sendTransactionOverRPC(byte[] signedTransaction, boolean verbose) throws IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_sendRawTransaction\",\"params\":[\"0x" + Hex.encodeHexString(signedTransaction) + "\"],\"id\":1}";
+        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.SEND_RAW_TRANSACTION.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(signedTransaction) + "\"],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
                 .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
@@ -150,7 +151,7 @@ public final class RPC {
     }
 
     private RpcResult<BigInteger> getBalanceOverRPC(byte[] address, boolean verbose) throws  IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.GET_BALANCE.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
                 .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
@@ -170,7 +171,7 @@ public final class RPC {
     }
 
     private RpcResult<BigInteger> getNonceOverRPC(byte[] address, boolean verbose) throws IOException, InterruptedException {
-        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
+        String data = "{\"jsonrpc\":\"2.0\",\"method\":\"" + RpcMethod.GET_NONCE.getMethod() + "\",\"params\":[\"0x" + Hex.encodeHexString(address) + "\", \"latest\"" + "],\"id\":1}";
 
         ProcessBuilder processBuilder = new ProcessBuilder()
                 .command("curl", "-X", "POST", "--data", data, Assumptions.IP + ":" + Assumptions.PORT);
