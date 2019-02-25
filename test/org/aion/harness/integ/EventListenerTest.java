@@ -2,7 +2,6 @@ package org.aion.harness.integ;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
@@ -12,6 +11,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.impl.JavaNode;
+import org.aion.harness.main.types.Network;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
@@ -50,6 +50,7 @@ public class EventListenerTest {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.rpc = new RPC();
+        NodeFileManager.setNetwork(Network.MASTERY);
     }
 
     @After
@@ -59,6 +60,7 @@ public class EventListenerTest {
         deleteLogs();
         this.node = null;
         this.rpc = null;
+        NodeFileManager.setNetwork(Network.MASTERY);
     }
 
     @Test
@@ -210,6 +212,36 @@ public class EventListenerTest {
         List<String> observed = requestResult.getAllObservedEvents();
         assertEquals(1, observed.size());
         assertTrue(observed.get(0).contains("rejected"));
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    /**
+     * This test does not assert anything about the syncing process because there's not really
+     * anything meaningful to latch on to. It is here so that we can visually monitor this output.
+     */
+    @Test
+    public void testSyncingToNetwork() {
+        NodeFileManager.setNetwork(Network.MAINNET);
+
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        NodeListener listener = new NodeListener();
+
+        long delay = TimeUnit.SECONDS.toMillis(10);
+        long timeout = TimeUnit.SECONDS.toMillis(40);
+
+        result = listener.waitForSyncToComplete(delay, timeout);
+        System.out.println("Sync result: " + result);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);

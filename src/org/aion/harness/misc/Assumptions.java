@@ -13,6 +13,7 @@ public final class Assumptions {
     // AionBlockchainImpl broadcasts all transactions, by hash, when successfully sealed into block
     // aion project is in same directory as this project
     // aion project must be using node_test_harness branch
+    // mainnet rpc channel is set active (used by tests)
 
     public static final Pattern KERNEL_TAR_PATTERN = Pattern.compile("^aion-v(.|\\s)+\\.tar\\.bz2$");
 
