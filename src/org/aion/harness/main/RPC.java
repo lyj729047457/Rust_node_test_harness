@@ -10,6 +10,7 @@ import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.result.RpcResult;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -125,7 +126,18 @@ public final class RPC {
 
         if (internalResult.success) {
             RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
-            return RpcResult.successful(internalResult.output, new ReceiptHash(outputParser.resultAsByteArray().get()), internalResult.timeOfCall);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+            
+            try {
+                return RpcResult.successful(internalResult.output, new ReceiptHash(Hex.decodeHex(result)), internalResult.timeOfCall);
+            } catch (DecoderException e) {
+                return RpcResult.unsuccessful(e.toString());
+            }
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
@@ -141,7 +153,14 @@ public final class RPC {
 
         if (internalResult.success) {
             RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
-            return RpcResult.successful(internalResult.output, outputParser.resultAsBigInteger().get(), internalResult.timeOfCall);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+
+            return RpcResult.successful(internalResult.output, new BigInteger(result, 16), internalResult.timeOfCall);
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
@@ -157,7 +176,14 @@ public final class RPC {
 
         if (internalResult.success) {
             RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
-            return RpcResult.successful(internalResult.output, outputParser.resultAsBigInteger().get(), internalResult.timeOfCall);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+
+            return RpcResult.successful(internalResult.output, new BigInteger(result, 16), internalResult.timeOfCall);
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
