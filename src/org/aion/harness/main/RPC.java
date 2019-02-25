@@ -9,6 +9,8 @@ import org.aion.harness.main.tools.RpcOutputParser;
 import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
+import org.aion.harness.main.types.TransactionReceipt;
+import org.aion.harness.main.types.TransactionReceiptBuilder;
 import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -54,6 +56,38 @@ public final class RPC {
      */
     public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) throws InterruptedException {
         return callSendTransaction(transaction, true);
+    }
+
+    /**
+     * Returns the transaction receipt whose hash is the specified receipt hash.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * Note that a receipt will not become available until a transaction has been sealed into a
+     * block.
+     *
+     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
+     *
+     * @param receiptHash The receipt hash of the receipt to get.
+     * @return the result of this attempt to get the transaction receipt.
+     */
+    public RpcResult<TransactionReceipt> getTransactionReceiptVerbose(ReceiptHash receiptHash) throws InterruptedException {
+        return callGetTransactionReceipt(receiptHash, true);
+    }
+
+    /**
+     * Returns the transaction receipt whose hash is the specified receipt hash.
+     *
+     * Note that a receipt will not become available until a transaction has been sealed into a
+     * block.
+     *
+     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
+     *
+     * @param receiptHash The receipt hash of the receipt to get.
+     * @return the result of this attempt to get the transaction receipt.
+     */
+    public RpcResult<TransactionReceipt> getTransactionReceipt(ReceiptHash receiptHash) throws InterruptedException {
+        return callGetTransactionReceipt(receiptHash, false);
     }
 
     /**
@@ -180,6 +214,39 @@ public final class RPC {
             }
 
             return RpcResult.successful(new BigInteger(result, 16), internalResult.timeOfCall);
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
+    }
+
+    private RpcResult<TransactionReceipt> callGetTransactionReceipt(ReceiptHash receiptHash, boolean verbose) throws InterruptedException {
+        if (receiptHash == null) {
+            throw new NullPointerException("Cannot get a receipt from a null receipt hash.");
+        }
+
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.GET_TRANSACTION_RECEIPT)
+            .params(Hex.encodeHexString(receiptHash.getHash()))
+            .build();
+
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+
+        if (internalResult.success) {
+            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+
+            try {
+                TransactionReceipt receipt = new TransactionReceiptBuilder().buildFromJsonString(result);
+                return RpcResult.successful(receipt, internalResult.timeOfCall);
+            } catch (DecoderException e) {
+                return RpcResult.unsuccessful(e.toString());
+            }
+
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
