@@ -134,7 +134,7 @@ public final class RPC {
             }
             
             try {
-                return RpcResult.successful(internalResult.output, new ReceiptHash(Hex.decodeHex(result)), internalResult.timeOfCall);
+                return RpcResult.successful(new ReceiptHash(Hex.decodeHex(result)), internalResult.timeOfCall);
             } catch (DecoderException e) {
                 return RpcResult.unsuccessful(e.toString());
             }
@@ -160,7 +160,7 @@ public final class RPC {
                 throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
             }
 
-            return RpcResult.successful(internalResult.output, new BigInteger(result, 16), internalResult.timeOfCall);
+            return RpcResult.successful(new BigInteger(result, 16), internalResult.timeOfCall);
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
@@ -183,7 +183,7 @@ public final class RPC {
                 throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
             }
 
-            return RpcResult.successful(internalResult.output, new BigInteger(result, 16), internalResult.timeOfCall);
+            return RpcResult.successful(new BigInteger(result, 16), internalResult.timeOfCall);
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
