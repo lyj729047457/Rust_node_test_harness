@@ -1,4 +1,4 @@
-package org.aion.harness.main.tools;
+package org.aion.harness.main.types;
 
 /**
  * An enum that serves as a mapping between an enum type and a String. Namely, the String that
