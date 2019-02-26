@@ -8,7 +8,6 @@ import java.io.IOException;
  * An Aion node.
  */
 public interface Node {
-
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
      * preparation is necessary so that the kernel is ready to be used after this method returns.
@@ -36,6 +35,40 @@ public interface Node {
      * @return a result indicating the success or failure of this method.
      */
     public Result initializeKernel();
+
+    /**
+     * Grabs a built kernel and brings it into the working directory, doing whatever other
+     * preparation is necessary so that the kernel is ready to be used after this method returns.
+     *
+     * If there is an original node directory, and it contains a database for the specified network, then that database
+     * is reused.
+     *
+     * If this method is successful, then {@code start()} can be called.
+     *
+     * If there is no built kernel or the kernel source code has been updated, a call to
+     * {@code buildKernel()} should be made prior to this method.
+     *
+     * Displays the I/O of any external processed launched as well as additional information.
+     *
+     * @return a result indicating the success or failure of this method.
+     */
+    Result initializeKernelAndPreserveDatabaseVerbose();
+
+    /**
+     * Grabs a built kernel and brings it into the working directory, doing whatever other
+     * preparation is necessary so that the kernel is ready to be used after this method returns.
+     *
+     * If there is an original node directory, and it contains a database for the specified network, then that database
+     * is reused.
+     *
+     * If this method is successful, then {@code start()} can be called.
+     *
+     * If there is no built kernel or the kernel source code has been updated, a call to
+     * {@code buildKernel()} should be made prior to this method.
+     *
+     * @return a result indicating the success or failure of this method.
+     */
+    Result initializeKernelAndPreserveDatabase();
 
     /**
      * Builds the kernel from source.

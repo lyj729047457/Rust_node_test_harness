@@ -22,6 +22,7 @@ public class NodeFileManager {
     private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
+    private static final File TEMPORARY_DATABASE = new File(WORKING_DIR + File.separator + "database");
 
     public static File getKernelRepositoryDirectory() {
         return KERNEL_REPO;
@@ -53,6 +54,10 @@ public class NodeFileManager {
 
     public static File getLogArchiveDirectory() {
         return LOG_ARCHIVE_DIR;
+    }
+
+    public static File getTemporaryDatabase() {
+        return TEMPORARY_DATABASE;
     }
 
     public static String getNetwork() {

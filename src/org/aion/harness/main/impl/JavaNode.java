@@ -49,6 +49,16 @@ public final class JavaNode implements Node {
     }
 
     @Override
+    public Result initializeKernelAndPreserveDatabaseVerbose() {
+        return initializePreserveDatabase(true);
+    }
+
+    @Override
+    public Result initializeKernelAndPreserveDatabase() {
+        return initializePreserveDatabase(false);
+    }
+
+    @Override
     public Result initializeKernelVerbose() {
         return initialize(true);
     }
@@ -177,6 +187,46 @@ public final class JavaNode implements Node {
         }
     }
 
+    public Result initializePreserveDatabase(boolean verbose) {
+        File nodeDirectory = NodeFileManager.getNodeDirectory();
+        File kernelDatabaseDirectory = NodeFileManager.getKernelDatabase();
+        File temporaryDatabaseDirectory = NodeFileManager.getTemporaryDatabase();
+
+        try {
+            if (nodeDirectory.exists()) {
+                if (kernelDatabaseDirectory.exists()) {
+
+                    // if preserved database directory already exist, delete it
+                    if (temporaryDatabaseDirectory.exists()) {
+                        throw new IllegalStateException("there is already a database at " + temporaryDatabaseDirectory);
+                    }
+
+                    // move the kernel database
+                    FileUtils.moveDirectory(kernelDatabaseDirectory, temporaryDatabaseDirectory);
+
+                    // delete node directory
+                    FileUtils.deleteDirectory(nodeDirectory);
+
+                    if (!nodeDirectory.mkdir()) {
+                        throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
+                    }
+
+                    // move the preserved database back to the node directory
+                    FileUtils.moveDirectory(temporaryDatabaseDirectory, kernelDatabaseDirectory);
+                }
+
+            } else {
+                if (!nodeDirectory.mkdir()) {
+                    throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
+                }
+            }
+        } catch (Exception e) {
+            return Result.unsuccessfulDueToException(e);
+        }
+
+        return untarAndSetupKernel(verbose);
+    }
+
     public Result initialize(boolean verbose) {
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
@@ -192,6 +242,17 @@ public final class JavaNode implements Node {
         if (verbose) {
             System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
                 + NodeFileManager.getKernelTarSourceDirectory());
+        }
+
+        return untarAndSetupKernel(verbose);
+    }
+
+    private Result untarAndSetupKernel(boolean verbose) {
+        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
+
+        if (verbose) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
+                    + NodeFileManager.getKernelTarSourceDirectory());
         }
 
         File tarSourceDirectory = NodeFileManager.getKernelTarSourceDirectory();
@@ -223,7 +284,7 @@ public final class JavaNode implements Node {
 
 
             File tarDestination = new File(
-                nodeDestination.getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
+                    NodeFileManager.getNodeDirectory().getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
             Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
 
             if (verbose) {
@@ -306,5 +367,4 @@ public final class JavaNode implements Node {
             ? Result.successful()
             : Result.unsuccessfulDueTo("Node failed to start!");
     }
-
 }
