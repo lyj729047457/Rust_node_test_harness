@@ -12,14 +12,26 @@ package org.aion.harness.main.tools;
 public final class RpcPayload {
     public final String payload;
 
-    public RpcPayload(RpcMethod method, String params) {
+    public RpcPayload(RpcMethod method, String params, String defaultBlock) {
         if (method == null) {
             throw new NullPointerException("Cannot construct rpc payload with null method.");
         }
         if (params == null) {
             throw new NullPointerException("Cannot construct rpc payload with null params.");
         }
+        if (defaultBlock == null) {
+            throw new NullPointerException("Cannot construct rpc payload with null default block.");
+        }
 
-        this.payload = "{\"jsonrpc\":\"2.0\",\"method\":\"" + method.getMethod() + "\",\"params\":[\"0x" + params + "\", \"latest\"" + "],\"id\":1}";
+        String parameters;
+        if ((!params.isEmpty()) && (!defaultBlock.isEmpty())) {
+            parameters = "\"" + params + "\",\"" + defaultBlock + "\"";
+        } else if ((!params.isEmpty()) && (defaultBlock.isEmpty())) {
+            parameters = params;
+        } else {
+            parameters = "";
+        }
+
+        this.payload = "{\"jsonrpc\":\"2.0\",\"method\":\"" + method.getMethod() + "\",\"params\":[" + parameters + "],\"id\":1}";
     }
 }

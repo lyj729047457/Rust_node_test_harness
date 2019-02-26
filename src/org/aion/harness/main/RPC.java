@@ -142,6 +142,7 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.SEND_RAW_TRANSACTION)
             .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
+            .useLatestBlock()
             .build();
 
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
@@ -173,6 +174,7 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_BALANCE)
             .params(Hex.encodeHexString(address))
+            .useLatestBlock()
             .build();
 
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
@@ -200,6 +202,7 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_NONCE)
             .params(Hex.encodeHexString(address))
+            .useLatestBlock()
             .build();
 
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
@@ -227,6 +230,7 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_TRANSACTION_RECEIPT)
             .params(Hex.encodeHexString(receiptHash.getHash()))
+            .useLatestBlock()
             .build();
 
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
