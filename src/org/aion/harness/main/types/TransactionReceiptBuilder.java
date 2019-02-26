@@ -307,11 +307,11 @@ public final class TransactionReceiptBuilder {
         String destination = jsonParser.attributeToString("to");
 
         return new TransactionReceiptBuilder()
-            .transactionEnergyPrice((energyPrice == null) ? -1 : new BigInteger(energyPrice, 16).longValueExact())
-            .transactionEnergyLimit((energyLimit == null) ? -1 : new BigInteger(energyLimit, 16).longValueExact())
-            .energyConsumedByTransaction((energyUsed == null) ? -1 : new BigInteger(energyUsed, 16).longValueExact())
-            .totalEnergyConsumedByBlock((totalEnergyUsed == null) ? -1 : new BigInteger(totalEnergyUsed, 16).longValueExact())
-            .indexOfTransactionInBlock((index == null) ? -1 : new BigInteger(index, 16).intValueExact())
+            .transactionEnergyPrice((energyPrice == null) ? -1 : Long.parseLong(energyPrice, 16))
+            .transactionEnergyLimit((energyLimit == null) ? -1 : Long.parseLong(energyLimit, 16))
+            .energyConsumedByTransaction((energyUsed == null) ? -1 : Long.parseLong(energyUsed, 16))
+            .totalEnergyConsumedByBlock((totalEnergyUsed == null) ? -1 : Long.parseLong(totalEnergyUsed, 16))
+            .indexOfTransactionInBlock((index == null) ? -1 : Integer.parseInt(index, 16))
             .blockHash((blockHash == null) ? null : Hex.decodeHex(blockHash))
             .bloomFilter((bloomFilter == null) ? null : Hex.decodeHex(bloomFilter))
             .transactionHash((transactionHash == null) ? null : Hex.decodeHex(transactionHash))
