@@ -14,7 +14,6 @@ import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -49,7 +48,7 @@ public class MultipleListenerThreadsTest {
     @Test
     public void testMultipleThreadsRequestingHeartbeatEvents() throws InterruptedException {
         // Start the node.
-        ((JavaNode) this.node).initialize(false);
+        this.node.initializeKernel();
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);

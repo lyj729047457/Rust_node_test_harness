@@ -10,7 +10,6 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
-import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.main.types.Network;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
@@ -100,7 +99,7 @@ public class EventListenerTest {
             return;
         }
 
-        ((JavaNode) this.node).initialize(false);
+        this.node.initializeKernel();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -188,7 +187,7 @@ public class EventListenerTest {
             return;
         }
 
-        ((JavaNode) this.node).initialize(false);
+        this.node.initializeKernel();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 

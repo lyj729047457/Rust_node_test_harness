@@ -187,7 +187,7 @@ public final class JavaNode implements Node {
         }
     }
 
-    public Result initializePreserveDatabase(boolean verbose) {
+    private Result initializePreserveDatabase(boolean verbose) {
         File nodeDirectory = NodeFileManager.getNodeDirectory();
         File kernelDatabaseDirectory = NodeFileManager.getKernelDatabase();
         File temporaryDatabaseDirectory = NodeFileManager.getTemporaryDatabase();
@@ -227,7 +227,7 @@ public final class JavaNode implements Node {
         return untarAndSetupKernel(verbose);
     }
 
-    public Result initialize(boolean verbose) {
+    private Result initialize(boolean verbose) {
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
             throw new IllegalStateException("node directory already exists.");
