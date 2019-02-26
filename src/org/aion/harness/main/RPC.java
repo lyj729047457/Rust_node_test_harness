@@ -9,6 +9,7 @@ import org.aion.harness.main.tools.JsonStringParser;
 import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
+import org.aion.harness.main.types.SyncStatus;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.main.types.TransactionReceiptBuilder;
 import org.aion.harness.result.RpcResult;
@@ -134,6 +135,36 @@ public final class RPC {
         return callGetNonce(address, true);
     }
 
+    /**
+     * Returns the syncing status of the node.
+     *
+     * Note that the node will be considered as attempting to connect to the network if it has zero
+     * peers. In the case of a private network, this means that this method will always time out.
+     * Therefore, this method should only be called on nodes that are connected to / attempting to
+     * connect to public networks.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @return the result of the call.
+     */
+    public RpcResult<SyncStatus> getSyncingStatusVerbose() throws InterruptedException {
+        return callSyncing(true);
+    }
+
+    /**
+     * Returns the syncing status of the node.
+     *
+     * Note that the node will be considered as attempting to connect to the network if it has zero
+     * peers. In the case of a private network, this means that this method will always time out.
+     * Therefore, this method should only be called on nodes that are connected to / attempting to
+     * connect to public networks.
+     *
+     * @return the result of the call.
+     */
+    public RpcResult<SyncStatus> getSyncingStatus() throws InterruptedException {
+        return callSyncing(false);
+    }
+
     private RpcResult<ReceiptHash> callSendTransaction(Transaction transaction, boolean verbose) throws InterruptedException {
         if (transaction == null) {
             throw new IllegalArgumentException("Cannot send a null transaction.");
@@ -249,6 +280,45 @@ public final class RPC {
                 return RpcResult.successful(receipt, internalResult.timeOfCall);
             } catch (DecoderException e) {
                 return RpcResult.unsuccessful(e.toString());
+            }
+
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
+    }
+
+    private RpcResult<SyncStatus> callSyncing(boolean verbose) throws InterruptedException {
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.IS_SYNCED)
+            .build();
+
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+
+            if (result.equals("false")) {
+                return RpcResult.successful(SyncStatus.notSyncing(), internalResult.timeOfCall);
+            } else {
+                JsonStringParser statusParser = new JsonStringParser(result);
+                String startBlock = statusParser.attributeToString("startingBlock");
+                String currBlock = statusParser.attributeToString("currentBlock");
+                String highBlock = statusParser.attributeToString("highestBlock");
+
+                BigInteger startingBlock = (startBlock == null) ? null : new BigInteger(startBlock, 16);
+                BigInteger currentBlock = (currBlock == null) ? null : new BigInteger(currBlock, 16);
+                BigInteger highestBlock = (highBlock == null) ? null : new BigInteger(highBlock, 16);
+
+                // We can tell that we haven't connected to the network yet if its highest block number is zero.
+                boolean waitingToConnect = (highestBlock != null) && (highestBlock.equals(BigInteger.ZERO));
+
+                return RpcResult.successful(SyncStatus.syncing(waitingToConnect, startingBlock, currentBlock, highestBlock), internalResult.timeOfCall);
             }
 
         } else {

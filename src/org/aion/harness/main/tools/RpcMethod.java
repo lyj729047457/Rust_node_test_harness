@@ -12,6 +12,8 @@ public enum RpcMethod {
 
     GET_BALANCE("eth_getBalance"),
 
+    IS_SYNCED("eth_syncing"),
+
     GET_NONCE("eth_getTransactionCount");
 
     private String method;
