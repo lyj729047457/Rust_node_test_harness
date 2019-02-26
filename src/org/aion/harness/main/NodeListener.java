@@ -199,7 +199,7 @@ public final class NodeListener {
 
     private void broadcastSyncUpdate(boolean waitingToConnect, BigInteger currentBlock, BigInteger highestBlock) {
         if (waitingToConnect) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Sync Process = { waiting to connect to peers }");
+            System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
         } else {
             System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
                 + NumberFormat.getIntegerInstance().format(currentBlock)
