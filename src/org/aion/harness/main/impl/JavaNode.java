@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A node that wraps the Java kernel.
  *
- * A JavaNode is thread-safe.
+ * A JavaNode is not thread-safe.
  */
 public final class JavaNode implements Node {
 
@@ -64,7 +64,7 @@ public final class JavaNode implements Node {
      * @throws IllegalStateException if the node is already started or the kernel does not exist.
      */
     @Override
-    public synchronized Result start() {
+    public Result start() {
         if (isAlive()) {
             throw new IllegalStateException("there is already a kernel running.");
         }
@@ -103,7 +103,7 @@ public final class JavaNode implements Node {
      * Stops the node if it is currently running.
      */
     @Override
-    public synchronized Result stop() {
+    public Result stop() {
         Result result;
 
         if (isAlive()) {
@@ -143,7 +143,7 @@ public final class JavaNode implements Node {
      * Returns true if the node is currently running.
      */
     @Override
-    public synchronized boolean isAlive() {
+    public boolean isAlive() {
         return ((this.runningKernel != null) && (this.runningKernel.isAlive()));
     }
 
@@ -153,7 +153,7 @@ public final class JavaNode implements Node {
      * @throws IllegalStateException if the node is currently running or there is no kernel.
      */
     @Override
-    public synchronized Result resetState() {
+    public Result resetState() {
         if (isAlive()){
             throw new IllegalStateException("Cannot reset state while the node is running.");
         }
@@ -177,7 +177,7 @@ public final class JavaNode implements Node {
         }
     }
 
-    public synchronized Result initialize(boolean verbose) {
+    public Result initialize(boolean verbose) {
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
             throw new IllegalStateException("node directory already exists.");
