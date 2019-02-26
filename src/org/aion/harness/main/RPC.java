@@ -5,7 +5,7 @@ import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
-import org.aion.harness.main.tools.RpcOutputParser;
+import org.aion.harness.main.tools.JsonStringParser;
 import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
@@ -147,7 +147,7 @@ public final class RPC {
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
         if (internalResult.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
             // This should never happen.
@@ -178,7 +178,7 @@ public final class RPC {
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
         if (internalResult.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
             // This should never happen.
@@ -205,7 +205,7 @@ public final class RPC {
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
         if (internalResult.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
             // This should never happen.
@@ -232,7 +232,7 @@ public final class RPC {
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
 
         if (internalResult.success) {
-            RpcOutputParser outputParser = new RpcOutputParser(internalResult.output);
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
             // This should never happen.

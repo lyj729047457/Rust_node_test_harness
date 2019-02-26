@@ -40,7 +40,7 @@ public final class RpcCaller {
                 return InternalRpcResult.unsuccessful("unknown error");
             }
 
-            RpcOutputParser outputParser = new RpcOutputParser(output);
+            JsonStringParser outputParser = new JsonStringParser(output);
 
             // This is only successful if the RPC Process exited successfully, and the RPC output
             // contained no 'error' content and it does contain 'result' content.
@@ -55,7 +55,7 @@ public final class RpcCaller {
                 if (error == null) {
                     return InternalRpcResult.unsuccessful("unknown error");
                 } else {
-                    RpcOutputParser errorParser = new RpcOutputParser(error);
+                    JsonStringParser errorParser = new JsonStringParser(error);
 
                     // The 'data' attribute should capture the error.
                     error = errorParser.attributeToString("data");

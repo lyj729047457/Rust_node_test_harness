@@ -2,37 +2,34 @@ package org.aion.harness.main.tools;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.aion.harness.result.RpcResult;
 
 /**
- * A tool for parsing the output of a <b>successful</b> {@link RpcResult} object.
+ * A tool for parsing Json strings.
  *
- * This is the preferred way of extracting information from the returned output.
- *
- * An rpc output parser is immutable.
+ * A json string parser is immutable.
  */
-public final class RpcOutputParser {
-    private final JsonObject outputAsJson;
+public final class JsonStringParser {
+    private final JsonObject stringAsJson;
 
-    public RpcOutputParser(String rpcOutput) {
-        if (rpcOutput == null) {
-            throw new NullPointerException("Cannot construct rpc output parser with null output.");
+    public JsonStringParser(String jsonString) {
+        if (jsonString == null) {
+            throw new NullPointerException("Cannot construct JsonStringParser with null jsonString.");
         }
-        if (rpcOutput.isEmpty()) {
-            throw new IllegalArgumentException("Cannot construct rpc output parser with empty output.");
+        if (jsonString.isEmpty()) {
+            throw new IllegalArgumentException("Cannot construct JsonStringParser with empty jsonString.");
         }
 
-        this.outputAsJson = (JsonObject) new JsonParser().parse(rpcOutput);
+        this.stringAsJson = (JsonObject) new JsonParser().parse(jsonString);
     }
 
     /**
-     * Returns {@code true} only if the output string being parsed contains the specified attribute.
+     * Returns {@code true} only if the json string being parsed contains the specified attribute.
      *
      * @param attribute The attribute whose existence is to be determined.
      * @return whether or not the attribute exists.
      */
     public boolean hasAttribute(String attribute) {
-        return this.outputAsJson.has(attribute);
+        return this.stringAsJson.has(attribute);
     }
 
     /**
@@ -54,7 +51,7 @@ public final class RpcOutputParser {
             return null;
         }
 
-        String element = cleanElement(this.outputAsJson.get(attribute).toString());
+        String element = cleanElement(this.stringAsJson.get(attribute).toString());
 
         if ((element.isEmpty()) || (element.equals("null"))) {
             return null;

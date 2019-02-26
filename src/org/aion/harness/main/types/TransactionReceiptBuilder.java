@@ -2,7 +2,7 @@ package org.aion.harness.main.types;
 
 import java.math.BigInteger;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.main.tools.RpcOutputParser;
+import org.aion.harness.main.tools.JsonStringParser;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
@@ -290,7 +290,7 @@ public final class TransactionReceiptBuilder {
      * @return the transaction receipt.
      */
     public TransactionReceipt buildFromJsonString(String jsonString) throws DecoderException {
-        RpcOutputParser jsonParser = new RpcOutputParser(jsonString);
+        JsonStringParser jsonParser = new JsonStringParser(jsonString);
 
         String energyPrice = jsonParser.attributeToString("nrgPrice");
         String energyLimit = jsonParser.attributeToString("gasLimit");
