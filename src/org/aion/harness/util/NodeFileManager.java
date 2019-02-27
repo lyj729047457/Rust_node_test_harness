@@ -48,18 +48,4 @@ public class NodeFileManager {
         return TEMPORARY_DATABASE;
     }
 
-    public static String getNetworkAsString() {
-        return network.string();
-    }
-
-    public static Network getNetwork() {
-        return network;
-    }
-
-    public static void setNetwork(Network newNetwork) {
-        if (newNetwork == null) {
-            throw new NullPointerException("Cannot set a null network.");
-        }
-        network = newNetwork;
-    }
 }
