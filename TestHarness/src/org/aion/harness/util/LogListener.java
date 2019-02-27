@@ -1,5 +1,7 @@
 package org.aion.harness.util;
 
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.StatusResult;
@@ -38,6 +40,8 @@ import java.util.*;
  */
 public final class LogListener implements TailerListener {
     private static final int CAPACITY = 10;
+    private static final Object STATE_MONITOR = new Object();
+    private static final Semaphore REQUEST_POOL_GATE = new Semaphore(CAPACITY, true);
 
     // The tailer is responsible for reading each line and updating us. We are its "observer".
     private Tailer tailer;
@@ -45,7 +49,6 @@ public final class LogListener implements TailerListener {
     private enum ListenerState { ALIVE_AND_LISTENING, ALIVE_AND_NOT_LISTENING, DEAD }
 
     // We begin as alive but not listening to any log file.
-    private static final Object STATE_MONITOR = new Object();
     private ListenerState currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
 
     private List<IEventRequest> requestPool = new ArrayList<>(CAPACITY);
@@ -67,9 +70,7 @@ public final class LogListener implements TailerListener {
      * @return total number of events being listened for.
      */
     public int numberOfPendingEventRequests() {
-        synchronized (this) {
-            return this.requestPool.size();
-        }
+        return CAPACITY - REQUEST_POOL_GATE.availablePermits();
     }
 
     /**
@@ -146,13 +147,7 @@ public final class LogListener implements TailerListener {
             }
         }
 
-        synchronized (this) {
-            for (IEventRequest request : this.requestPool) {
-                request.markAsUnobserved();
-                request.notifyRequestIsResolved();
-            }
-            this.requestPool.clear();
-        }
+        clearPool(false, null);
     }
 
     /**
@@ -173,52 +168,36 @@ public final class LogListener implements TailerListener {
      *    -> request is marked rejected.
      */
     private void addRequest(IEventRequest request) {
-        long currentTimeInMillis = System.currentTimeMillis();
 
-        // If the pool is full and we are not expired and listener is listening then wait until space frees up.
-        int poolSize;
-        ListenerState state;
+        try {
+            long timeout = request.deadline() - System.currentTimeMillis();
 
-        synchronized (STATE_MONITOR) {
-            state = this.currentState;
+            // Try to acquire a permit to add the request to the pool.
+            if (!REQUEST_POOL_GATE.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
+                request.markAsExpired();
+                return;
+            }
+        } catch (InterruptedException e) {
+            request.markAsRejected("Interrupted while waiting to submit request!");
         }
 
-        synchronized (this) {
-            poolSize = this.requestPool.size();
-        }
-
-        boolean expired = request.isExpiredAtTime(currentTimeInMillis);
-
-        while ((state == ListenerState.ALIVE_AND_LISTENING) && (!expired) && (poolSize == CAPACITY)) {
-
-            try {
-                Thread.sleep(request.deadline() - currentTimeInMillis);
-            } catch (InterruptedException e) {
-                request.markAsRejected("Interrupted while waiting on request!");
-            }
-
-            currentTimeInMillis = System.currentTimeMillis();
-            expired = request.isExpiredAtTime(currentTimeInMillis);
-
-            synchronized (STATE_MONITOR) {
-                state = this.currentState;
-            }
-            synchronized (this) {
-                poolSize = this.requestPool.size();
-            }
-        }
-
-        // Check which of the above conditions changed and handle it.
+        // If the listener is no longer listening, reject the request and return the pool permit.
         synchronized (STATE_MONITOR) {
             if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
                 request.markAsRejected("Listener is no longer listening to a log file.");
+                REQUEST_POOL_GATE.release();
+                return;
             }
         }
 
-        if (request.isExpiredAtTime(currentTimeInMillis)) {
+        // If the request has expired, mark it as so and return the pool permit.
+        if (request.isExpiredAtTime(System.currentTimeMillis())) {
             request.markAsExpired();
+            REQUEST_POOL_GATE.release();
+            return;
         }
 
+        // Otherwise, we are free to add the request since we took the permit.
         synchronized (this) {
             this.requestPool.add(request);
         }
@@ -248,17 +227,23 @@ public final class LogListener implements TailerListener {
             // Iterate over each of the requests in the pool.
             Iterator<IEventRequest> requestIterator = this.requestPool.iterator();
 
+            int numRequestsRemoved = 0;
             while (requestIterator.hasNext()) {
                 IEventRequest request = requestIterator.next();
 
                 if (!request.isPending()) {
                     requestIterator.remove();
                     request.notifyRequestIsResolved();
+                    numRequestsRemoved++;
                 } else if (request.isSatisfiedBy(nextLine, currentTimeInMillis)) {
                     request.notifyRequestIsResolved();
                     requestIterator.remove();
+                    numRequestsRemoved++;
                 }
             }
+
+            // Return the same number of permits as the number of requests removed from the pool.
+            REQUEST_POOL_GATE.release(numRequestsRemoved);
         }
     }
 
@@ -320,13 +305,36 @@ public final class LogListener implements TailerListener {
             this.currentState = ListenerState.DEAD;
         }
 
-        synchronized (this) {
-            for (IEventRequest request : this.requestPool) {
-                request.markAsRejected(causeOfPanic);
-                request.notifyRequestIsResolved();
+        clearPool(true, causeOfPanic);
+    }
+
+    /**
+     * Rejects every request currently in the pool with the specified cause if reject is true,
+     * otherwise marks all requests as unobserved.
+     *
+     * Clears the pool, notifies all waiting threads, and returns the number of permits equal to
+     * the number of requests removed from the pool.
+     *
+     * @param reject Whether or not to reject the request.
+     * @param rejectionCause The cause of rejection.
+     */
+    private synchronized void clearPool(boolean reject, String rejectionCause) {
+        int numRequestsRemoved = this.requestPool.size();
+
+        for (IEventRequest request : this.requestPool) {
+
+            if (reject) {
+                request.markAsRejected(rejectionCause);
+            } else {
+                request.markAsUnobserved();
             }
-            this.requestPool.clear();
+
+            request.notifyRequestIsResolved();
         }
+
+        this.requestPool.clear();
+
+        REQUEST_POOL_GATE.release(numRequestsRemoved);
     }
 
 }
