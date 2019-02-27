@@ -1,6 +1,8 @@
 package org.aion.harness.util;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
 
 /**
@@ -21,6 +23,8 @@ public final class EventRequest implements IEventRequest {
     private String causeOfRejection;
     private long timeOfObservation = -1;
 
+    private CountDownLatch pendingLatch = new CountDownLatch(1);
+
     /**
      * Constructs a new event request for the specified event.
      *
@@ -35,7 +39,7 @@ public final class EventRequest implements IEventRequest {
      * {@inheritDoc}
      */
     @Override
-    public boolean isSatisfiedBy(String line, long currentTimeInMillis) {
+    public synchronized boolean isSatisfiedBy(String line, long currentTimeInMillis) {
         markAsExpiredIfPastDeadline(currentTimeInMillis);
 
         if (this.currentState != RequestState.PENDING) {
@@ -68,22 +72,19 @@ public final class EventRequest implements IEventRequest {
      * Not thread safe.
      */
     @Override
-    public synchronized void waitForOutcome() {
-        long currentTime = System.currentTimeMillis();
+    public void waitForOutcome() {
+        long timeout = this.deadline - System.currentTimeMillis();
 
-        while ((this.currentState == RequestState.PENDING) && (!isExpiredAtTime(currentTime))) {
-            try {
-                this.wait(this.deadline - currentTime);
-            } catch (InterruptedException e) {
-                markAsRejected("Interrupted while waiting for request outcome!");
+        try {
+
+            if (!this.pendingLatch.await(timeout, TimeUnit.MILLISECONDS)) {
+                markAsExpired();
             }
 
-            currentTime = System.currentTimeMillis();
+        } catch (InterruptedException e) {
+            markAsRejected("Interrupted while waiting for request outcome!");
         }
 
-        if (isExpiredAtTime(currentTime)) {
-            markAsExpired();
-        }
     }
 
     /**
@@ -92,8 +93,8 @@ public final class EventRequest implements IEventRequest {
      * Thread safe.
      */
     @Override
-    public synchronized void notifyRequestIsResolved() {
-        this.notifyAll();
+    public void notifyRequestIsResolved() {
+        this.pendingLatch.countDown();
     }
 
     /**
