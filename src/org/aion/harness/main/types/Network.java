@@ -22,12 +22,17 @@ public enum Network {
         this.network = network;
     }
 
-    public String getNetwork() {
+    /**
+     * The name of the network.
+     *
+     * @return the network name.
+     */
+    public String string() {
         return this.network;
     }
 
     @Override
     public String toString() {
-        return "PublicNetwork { " + this.network + " }";
+        return "Network { " + this.network + " }";
     }
 }

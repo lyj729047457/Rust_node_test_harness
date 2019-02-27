@@ -16,7 +16,7 @@ public class NodeFileManager {
     private static final File TAR_SOURCE = new File(KERNEL_REPO + File.separator + "pack");
     private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
     private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
-    private static final File DATABASE = new File(KERNEL_DIR + File.separator + network.getNetwork() + File.separator + "database");
+    private static final File DATABASE = new File(KERNEL_DIR + File.separator + network.string() + File.separator + "database");
     private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
@@ -59,7 +59,7 @@ public class NodeFileManager {
     }
 
     public static String getNetworkAsString() {
-        return network.getNetwork();
+        return network.string();
     }
 
     public static Network getNetwork() {
