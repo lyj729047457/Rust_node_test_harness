@@ -64,14 +64,14 @@ public final class NodeConfigurationBuilder {
      * Builds the {@link NodeConfigurations} object.
      *
      * The following default values are supplied if the fields are not set:
-     *   - network = {@link NodeFileManager#network}
+     *   - network = {@link Network#MASTERY}
      *   - kernel source directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
      *   - kernel build directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_BUILD_DIR}
      *
      * @return the built configuration object.
      */
     public NodeConfigurations build() {
-        Network network = (this.network == null) ? NodeFileManager.getNetwork() : this.network;
+        Network network = (this.network == null) ? Network.MASTERY : this.network;
 
         String kernelSource = (this.kernelSourceDirectory == null)
             ? DEFAULT_KERNEL_SOURCE_DIR

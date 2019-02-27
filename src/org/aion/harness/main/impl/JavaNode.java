@@ -5,6 +5,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
+import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
@@ -111,7 +112,7 @@ public final class JavaNode implements Node {
         System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
 
         try {
-            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.getNetworkAsString())
+            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
                 .directory(NodeFileManager.getKernelDirectory());
 
             LogManager logManager = SingletonFactory.singleton().logManager();
@@ -217,6 +218,19 @@ public final class JavaNode implements Node {
         } catch (Exception e) {
             return Result.unsuccessfulDueToException(e);
         }
+    }
+
+    /**
+     * Returns the network that this node will attempt to connect to when {@code start()} is invoked,
+     * or, if the node is running, then the network it has connected to.
+     *
+     * Returns null if no network has been configured yet.
+     *
+     * @return the network the node is on.
+     */
+    @Override
+    public Network getNetwork() {
+        return (this.configurations == null) ? null : this.configurations.getNetwork();
     }
 
     private Result initializePreserveDatabase(boolean verbose) {

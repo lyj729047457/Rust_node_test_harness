@@ -1,9 +1,8 @@
 package org.aion.harness.main;
 
+import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
-import java.io.IOException;
 
 /**
  * An Aion node.
@@ -18,6 +17,16 @@ public interface Node {
      * @param configurations the configuration settings.
      */
     public void configure(NodeConfigurations configurations);
+
+    /**
+     * Returns the network that this node will attempt to connect to when {@code start()} is invoked,
+     * or, if the node is running, then the network it has connected to.
+     *
+     * Returns null if no network has been configured yet.
+     *
+     * @return the network the node is on.
+     */
+    public Network getNetwork();
 
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
