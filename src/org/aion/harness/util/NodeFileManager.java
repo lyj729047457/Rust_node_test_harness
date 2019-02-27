@@ -1,6 +1,5 @@
 package org.aion.harness.util;
 
-import org.aion.harness.main.types.Network;
 import java.io.File;
 
 /**
@@ -10,11 +9,8 @@ import java.io.File;
 public class NodeFileManager {
     public static final String WORKING_DIR = System.getProperty("user.dir");
 
-    private static Network network = Network.MASTERY;
-
     private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
     private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
-    private static final File DATABASE = new File(KERNEL_DIR + File.separator + network.string() + File.separator + "database");
     private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
@@ -26,10 +22,6 @@ public class NodeFileManager {
 
     public static File getKernelDirectory() {
         return KERNEL_DIR;
-    }
-
-    public static File getKernelDatabase() {
-        return DATABASE;
     }
 
     public static File getDirectoryOfExecutableKernel() {

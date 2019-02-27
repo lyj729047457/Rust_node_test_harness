@@ -1,6 +1,7 @@
 package org.aion.harness.main.types;
 
 import java.io.File;
+import org.aion.harness.util.NodeFileManager;
 
 /**
  * A class that holds configuration details related to a node.
@@ -16,7 +17,7 @@ public final class NodeConfigurations {
     /**
      * Constructs an instance of this class using the specified parameters.
      */
-    public NodeConfigurations(Network network, String kernelSourceDirectory, String kernelBuildDirectory, String database) {
+    public NodeConfigurations(Network network, String kernelSourceDirectory, String kernelBuildDirectory) {
         if (network == null) {
             throw new NullPointerException("Cannot construct NodeConfigurations with null network.");
         }
@@ -26,14 +27,13 @@ public final class NodeConfigurations {
         if (kernelBuildDirectory == null) {
             throw new NullPointerException("Cannot construct NodeConfigurations with null kernelBuildDirectory.");
         }
-        if (database == null) {
-            throw new NullPointerException("Cannot construct NodeConfigurations with null database.");
-        }
 
         this.network = network;
         this.kernelSourceDirectory = kernelSourceDirectory;
         this.kernelBuildDirectory = kernelBuildDirectory;
-        this.database = database;
+
+        // This is an internal detail and should not be customizable.
+        this.database = NodeFileManager.getKernelDirectory().getAbsolutePath() + File.separator + this.network.string() + File.separator + "database";
     }
 
     /**

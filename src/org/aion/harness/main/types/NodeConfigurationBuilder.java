@@ -12,6 +12,7 @@ import org.aion.harness.util.NodeFileManager;
  * This builder can be reused after calling {@code build()}.
  */
 public final class NodeConfigurationBuilder {
+    public static final Network DEFAULT_NETWORK = Network.MASTERY;
     public static final String DEFAULT_KERNEL_SOURCE_DIR = NodeFileManager.WORKING_DIR + File.separator + ".." + File.separator + "aion";
     public static final String DEFAULT_KERNEL_BUILD_DIR = DEFAULT_KERNEL_SOURCE_DIR + File.separator + "pack";
 
@@ -71,7 +72,7 @@ public final class NodeConfigurationBuilder {
      * @return the built configuration object.
      */
     public NodeConfigurations build() {
-        Network network = (this.network == null) ? Network.MASTERY : this.network;
+        Network network = (this.network == null) ? DEFAULT_NETWORK : this.network;
 
         String kernelSource = (this.kernelSourceDirectory == null)
             ? DEFAULT_KERNEL_SOURCE_DIR
@@ -81,7 +82,7 @@ public final class NodeConfigurationBuilder {
             ? DEFAULT_KERNEL_BUILD_DIR
             : this.kernelBuildDirectory;
 
-        return new NodeConfigurations(network, kernelSource, kernelBuild, NodeFileManager.getKernelDatabase().getAbsolutePath());
+        return new NodeConfigurations(network, kernelSource, kernelBuild);
     }
 
     /**
@@ -91,9 +92,7 @@ public final class NodeConfigurationBuilder {
      * @return a default configurations object.
      */
     public static NodeConfigurations defaultConfigurations() {
-        Network network = NodeFileManager.getNetwork();
-        
-        return new NodeConfigurations(network, DEFAULT_KERNEL_SOURCE_DIR, DEFAULT_KERNEL_BUILD_DIR, NodeFileManager.getKernelDatabase().getAbsolutePath());
+        return new NodeConfigurations(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, DEFAULT_KERNEL_BUILD_DIR);
     }
 
 }

@@ -3,6 +3,7 @@ package org.aion.harness.integ;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -22,6 +23,7 @@ public class NodeLifecycleTest {
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private Node node;
+    private NodeConfigurations configurations;
 
     /**
      * Set to false for testing convenience, tune to true if starting from scratch.
@@ -38,7 +40,8 @@ public class NodeLifecycleTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
+        this.configurations = NodeConfigurationBuilder.defaultConfigurations();
+        this.node.configure(this.configurations);
     }
 
     @After
@@ -170,7 +173,7 @@ public class NodeLifecycleTest {
         System.out.println("Reset result = " + result);
         assertTrue(result.success);
 
-        assertFalse(NodeFileManager.getKernelDatabase().exists());
+        assertFalse(this.configurations.getDatabase().exists());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -213,7 +216,7 @@ public class NodeLifecycleTest {
     @Test
     public void testResetWhenNoDatabaseExists() throws IOException, InterruptedException{
         setupDatabase();
-        File database = NodeFileManager.getKernelDatabase();
+        File database = this.configurations.getDatabase();
         FileUtils.deleteDirectory(database);
 
         assertTrue(!database.exists());
@@ -232,7 +235,7 @@ public class NodeLifecycleTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        File database = NodeFileManager.getKernelDatabase();
+        File database = this.configurations.getDatabase();
 
         int timeoutInSeconds = 30;
         int sleepTime = 2;
