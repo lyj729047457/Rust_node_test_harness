@@ -45,6 +45,7 @@ public final class LogListener implements TailerListener {
     private enum ListenerState { ALIVE_AND_LISTENING, ALIVE_AND_NOT_LISTENING, DEAD }
 
     // We begin as alive but not listening to any log file.
+    private static final Object STATE_MONITOR = new Object();
     private ListenerState currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
 
     private List<IEventRequest> requestPool = new ArrayList<>(CAPACITY);
@@ -52,8 +53,10 @@ public final class LogListener implements TailerListener {
     /**
      * Returns true only if the listener is not dead.
      */
-    synchronized boolean isAlive() {
-        return this.currentState != ListenerState.DEAD;
+    boolean isAlive() {
+        synchronized (STATE_MONITOR) {
+            return this.currentState != ListenerState.DEAD;
+        }
     }
 
     /**
@@ -63,8 +66,10 @@ public final class LogListener implements TailerListener {
      *
      * @return total number of events being listened for.
      */
-    public synchronized int numberOfPendingEventRequests() {
-        return this.requestPool.size();
+    public int numberOfPendingEventRequests() {
+        synchronized (this) {
+            return this.requestPool.size();
+        }
     }
 
     /**
@@ -90,15 +95,14 @@ public final class LogListener implements TailerListener {
             throw new NullPointerException("Cannot submit a null event request.");
         }
 
-        synchronized (this) {
-
+        synchronized (STATE_MONITOR) {
             if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
                 eventRequest.markAsRejected("Listener is not currently listening to a log file.");
             }
-
-            // Attempt to add the request to the pool.
-            addRequest(eventRequest);
         }
+
+        // Attempt to add the request to the pool.
+        addRequest(eventRequest);
 
         // If the request is pending then it was added to the pool and hasn't been satisfied yet,
         // so we wait for the outcome.
@@ -114,15 +118,17 @@ public final class LogListener implements TailerListener {
      * If the listener is currently dead or is already listening then an appropriate unsuccessful
      * result is returned.
      */
-    synchronized StatusResult startListening() {
-        if (this.currentState == ListenerState.DEAD) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
-        } else if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
-            // awkward for this to be "unsuccessful"
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is already listening!");
-        } else {
-            this.currentState = ListenerState.ALIVE_AND_LISTENING;
-            return StatusResult.successful();
+    StatusResult startListening() {
+        synchronized (STATE_MONITOR) {
+            if (this.currentState == ListenerState.DEAD) {
+                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
+            } else if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+                // awkward for this to be "unsuccessful"
+                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is already listening!");
+            } else {
+                this.currentState = ListenerState.ALIVE_AND_LISTENING;
+                return StatusResult.successful();
+            }
         }
     }
 
@@ -133,16 +139,19 @@ public final class LogListener implements TailerListener {
      *
      * Otherwise, if the listener is not listening when this method is invoked, nothing happens.
      */
-    synchronized void stopListening() {
-        if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
-            this.currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
+    void stopListening() {
+        synchronized (STATE_MONITOR) {
+            if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+                this.currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
+            }
+        }
 
+        synchronized (this) {
             for (IEventRequest request : this.requestPool) {
                 request.markAsUnobserved();
                 request.notifyRequestIsResolved();
             }
             this.requestPool.clear();
-
         }
     }
 
@@ -163,14 +172,24 @@ public final class LogListener implements TailerListener {
      * 3. An interrupt exception occurs before adding the request to the pool.
      *    -> request is marked rejected.
      */
-    private synchronized void addRequest(IEventRequest request) {
+    private void addRequest(IEventRequest request) {
         long currentTimeInMillis = System.currentTimeMillis();
 
         // If the pool is full and we are not expired and listener is listening then wait until space frees up.
-        ListenerState state = this.currentState;
+        int poolSize;
+        ListenerState state;
+
+        synchronized (STATE_MONITOR) {
+            state = this.currentState;
+        }
+
+        synchronized (this) {
+            poolSize = this.requestPool.size();
+        }
+
         boolean expired = request.isExpiredAtTime(currentTimeInMillis);
 
-        while ((state == ListenerState.ALIVE_AND_LISTENING) && (!expired) && (this.requestPool.size() == CAPACITY)) {
+        while ((state == ListenerState.ALIVE_AND_LISTENING) && (!expired) && (poolSize == CAPACITY)) {
 
             try {
                 Thread.sleep(request.deadline() - currentTimeInMillis);
@@ -180,15 +199,27 @@ public final class LogListener implements TailerListener {
 
             currentTimeInMillis = System.currentTimeMillis();
             expired = request.isExpiredAtTime(currentTimeInMillis);
-            state = this.currentState;
+
+            synchronized (STATE_MONITOR) {
+                state = this.currentState;
+            }
+            synchronized (this) {
+                poolSize = this.requestPool.size();
+            }
         }
 
         // Check which of the above conditions changed and handle it.
-        if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-            request.markAsRejected("Listener is no longer listening to a log file.");
-        } else if (request.isExpiredAtTime(currentTimeInMillis)) {
+        synchronized (STATE_MONITOR) {
+            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
+                request.markAsRejected("Listener is no longer listening to a log file.");
+            }
+        }
+
+        if (request.isExpiredAtTime(currentTimeInMillis)) {
             request.markAsExpired();
-        } else {
+        }
+
+        synchronized (this) {
             this.requestPool.add(request);
         }
     }
@@ -204,9 +235,14 @@ public final class LogListener implements TailerListener {
      * @param nextLine The next line in the log file.
      */
     @Override
-    public synchronized void handle(String nextLine) {
-        if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
+    public void handle(String nextLine) {
+        synchronized (STATE_MONITOR) {
+            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
+                return;
+            }
+        }
 
+        synchronized (this) {
             long currentTimeInMillis = System.currentTimeMillis();
 
             // Iterate over each of the requests in the pool.
@@ -279,14 +315,18 @@ public final class LogListener implements TailerListener {
      *
      * @param causeOfPanic The reason for why the request pool is being killed.
      */
-    private synchronized void killRequestPool(String causeOfPanic) {
-        this.currentState = ListenerState.DEAD;
-
-        for (IEventRequest request : this.requestPool) {
-            request.markAsRejected(causeOfPanic);
-            request.notifyRequestIsResolved();
+    private void killRequestPool(String causeOfPanic) {
+        synchronized (STATE_MONITOR) {
+            this.currentState = ListenerState.DEAD;
         }
-        this.requestPool.clear();
+
+        synchronized (this) {
+            for (IEventRequest request : this.requestPool) {
+                request.markAsRejected(causeOfPanic);
+                request.notifyRequestIsResolved();
+            }
+            this.requestPool.clear();
+        }
     }
 
 }
