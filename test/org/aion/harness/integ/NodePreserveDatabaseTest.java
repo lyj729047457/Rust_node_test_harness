@@ -61,7 +61,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @Test
-    public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
+    public void testPreserveDatabaseCheckTransaction() throws InterruptedException {
         // initialize and run node to generate a database, then shutdown the node
         Result result = this.node.initializeKernelAndPreserveDatabase();
         assertTrue(result.success);
@@ -111,7 +111,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @Test
-    public void testInitializeWHenNewNetworkDirectoryNotCreated() throws IOException, InterruptedException {
+    public void testInitializeWhenNewNetworkDirectoryNotCreated() {
         // initialize and run node to create the node folder
         Result result = this.node.initializeKernelAndPreserveDatabase();
         assertTrue(result.success);
