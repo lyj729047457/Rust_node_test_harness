@@ -2,7 +2,6 @@ package org.aion.harness.main.types;
 
 import java.io.File;
 import org.aion.harness.main.Node;
-import org.aion.harness.util.NodeFileManager;
 
 /**
  * A builder class used to construct instances of {@link NodeConfigurations}.
@@ -12,8 +11,10 @@ import org.aion.harness.util.NodeFileManager;
  * This builder can be reused after calling {@code build()}.
  */
 public final class NodeConfigurationBuilder {
+    private static final String PROJECT_DIR = System.getProperty("user.dir") + File.separator + "..";
+    
     public static final Network DEFAULT_NETWORK = Network.MASTERY;
-    public static final String DEFAULT_KERNEL_SOURCE_DIR = NodeFileManager.WORKING_DIR + File.separator + ".." + File.separator + "aion";
+    public static final String DEFAULT_KERNEL_SOURCE_DIR = PROJECT_DIR + File.separator + ".." + File.separator + "aion";
     public static final String DEFAULT_KERNEL_BUILD_DIR = DEFAULT_KERNEL_SOURCE_DIR + File.separator + "pack";
 
     private Network network;
@@ -68,6 +69,8 @@ public final class NodeConfigurationBuilder {
      *   - network = {@link Network#MASTERY}
      *   - kernel source directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
      *   - kernel build directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_BUILD_DIR}
+     *
+     * The database
      *
      * @return the built configuration object.
      */
