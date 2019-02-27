@@ -86,7 +86,7 @@ public final class JavaNode implements Node {
         System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
 
         try {
-            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.getNetwork())
+            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", NodeFileManager.getNetworkAsString())
                 .directory(NodeFileManager.getKernelDirectory());
 
             LogManager logManager = SingletonFactory.singleton().logManager();
