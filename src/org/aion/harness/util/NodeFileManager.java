@@ -13,7 +13,6 @@ public class NodeFileManager {
     private static Network network = Network.MASTERY;
 
     private static final File KERNEL_REPO = new File(WORKING_DIR + File.separator + ".." + File.separator + "aion");
-    private static final File TAR_SOURCE = new File(KERNEL_REPO + File.separator + "pack");
     private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
     private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
     private static final File DATABASE = new File(KERNEL_DIR + File.separator + network.string() + File.separator + "database");
@@ -24,10 +23,6 @@ public class NodeFileManager {
 
     public static File getKernelRepositoryDirectory() {
         return KERNEL_REPO;
-    }
-
-    public static File getKernelTarSourceDirectory() {
-        return TAR_SOURCE;
     }
 
     public static File getNodeDirectory() {

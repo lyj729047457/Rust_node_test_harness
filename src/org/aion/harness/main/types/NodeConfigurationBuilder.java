@@ -1,5 +1,6 @@
 package org.aion.harness.main.types;
 
+import java.io.File;
 import org.aion.harness.main.Node;
 import org.aion.harness.util.NodeFileManager;
 
@@ -11,6 +12,8 @@ import org.aion.harness.util.NodeFileManager;
  * This builder can be reused after calling {@code build()}.
  */
 public final class NodeConfigurationBuilder {
+    public static final String DEFAULT_KERNEL_BUILD_DIR = NodeFileManager.getKernelRepositoryDirectory() + File.separator + "pack";
+
     private Network network;
     private String kernelSourceDirectory;
     private String kernelBuildDirectory;
@@ -62,7 +65,7 @@ public final class NodeConfigurationBuilder {
      * The following default values are supplied if the fields are not set:
      *   - network = {@link NodeFileManager#network}
      *   - kernel source directory = {@link NodeFileManager#KERNEL_REPO}
-     *   - kernel build directory = {@link NodeFileManager#TAR_SOURCE}
+     *   - kernel build directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_BUILD_DIR}
      *
      * @return the built configuration object.
      */
@@ -74,7 +77,7 @@ public final class NodeConfigurationBuilder {
             : this.kernelSourceDirectory;
 
         String kernelBuild = (this.kernelBuildDirectory == null)
-            ? NodeFileManager.getKernelTarSourceDirectory().getAbsolutePath()
+            ? DEFAULT_KERNEL_BUILD_DIR
             : this.kernelBuildDirectory;
 
         return new NodeConfigurations(network, kernelSource, kernelBuild, NodeFileManager.getKernelDatabase().getAbsolutePath());
@@ -89,9 +92,8 @@ public final class NodeConfigurationBuilder {
     public static NodeConfigurations defaultConfigurations() {
         Network network = NodeFileManager.getNetwork();
         String kernelSource = NodeFileManager.getKernelRepositoryDirectory().getAbsolutePath();
-        String kernelBuild = NodeFileManager.getKernelTarSourceDirectory().getAbsolutePath();
         
-        return new NodeConfigurations(network, kernelSource, kernelBuild, NodeFileManager.getKernelDatabase().getAbsolutePath());
+        return new NodeConfigurations(network, kernelSource, DEFAULT_KERNEL_BUILD_DIR, NodeFileManager.getKernelDatabase().getAbsolutePath());
     }
 
 }
