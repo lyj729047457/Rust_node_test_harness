@@ -12,7 +12,6 @@ public class NodeFileManager {
 
     private static Network network = Network.MASTERY;
 
-    private static final File KERNEL_REPO = new File(WORKING_DIR + File.separator + ".." + File.separator + "aion");
     private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
     private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
     private static final File DATABASE = new File(KERNEL_DIR + File.separator + network.string() + File.separator + "database");
@@ -20,10 +19,6 @@ public class NodeFileManager {
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
     private static final File TEMPORARY_DATABASE = new File(WORKING_DIR + File.separator + "database");
-
-    public static File getKernelRepositoryDirectory() {
-        return KERNEL_REPO;
-    }
 
     public static File getNodeDirectory() {
         return NODE_DIR;
