@@ -11,6 +11,8 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.types.Network;
+import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
@@ -48,8 +50,8 @@ public class EventListenerTest {
         preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC();
-        NodeFileManager.setNetwork(Network.MASTERY);
     }
 
     @After
@@ -59,7 +61,6 @@ public class EventListenerTest {
         deleteLogs();
         this.node = null;
         this.rpc = null;
-        NodeFileManager.setNetwork(Network.MASTERY);
     }
 
     @Test
@@ -225,7 +226,11 @@ public class EventListenerTest {
      */
     @Test
     public void testSyncingToNetwork() {
-        NodeFileManager.setNetwork(Network.MAINNET);
+        NodeConfigurations configurations = new NodeConfigurationBuilder()
+            .network(Network.MAINNET)
+            .build();
+
+        this.node.configure(configurations);
 
         initializeNodeWithChecks();
         Result result = this.node.start();

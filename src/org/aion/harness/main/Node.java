@@ -1,5 +1,6 @@
 package org.aion.harness.main;
 
+import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
 import java.io.IOException;
@@ -8,6 +9,16 @@ import java.io.IOException;
  * An Aion node.
  */
 public interface Node {
+
+    /**
+     * Configures the node with the specified settings.
+     *
+     * This method must be called prior to any other actionable method in this class.
+     *
+     * @param configurations the configuration settings.
+     */
+    public void configure(NodeConfigurations configurations);
+
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
      * preparation is necessary so that the kernel is ready to be used after this method returns.
@@ -20,6 +31,7 @@ public interface Node {
      * Displays the I/O of any external processed launched as well as additional information.
      *
      * @return a result indicating the success or failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result initializeKernelVerbose();
 
@@ -33,6 +45,7 @@ public interface Node {
      * {@code buildKernel()} should be made prior to this method.
      *
      * @return a result indicating the success or failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result initializeKernel();
 
@@ -51,6 +64,7 @@ public interface Node {
      * Displays the I/O of any external processed launched as well as additional information.
      *
      * @return a result indicating the success or failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     Result initializeKernelAndPreserveDatabaseVerbose();
 
@@ -67,6 +81,7 @@ public interface Node {
      * {@code buildKernel()} should be made prior to this method.
      *
      * @return a result indicating the success or failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     Result initializeKernelAndPreserveDatabase();
 
@@ -76,6 +91,7 @@ public interface Node {
      * Displays the I/O of the build process.
      *
      * @return a result indicating the success of failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result buildKernelVerbose();
 
@@ -83,6 +99,7 @@ public interface Node {
      * Builds the kernel from source.
      *
      * @return a result indicating the success of failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result buildKernel();
 
@@ -90,6 +107,7 @@ public interface Node {
      * Starts running the node.
      *
      * @return a result indicating the success of failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result start();
 
@@ -97,6 +115,7 @@ public interface Node {
      * Shuts the node down.
      *
      * @return a result indicating the success of failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result stop();
 
@@ -113,6 +132,7 @@ public interface Node {
      * Typically this method is only safe to call if {@code isAlive() == false}.
      *
      * @return a result indicating the success of failure of this method.
+     * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result resetState();
 }

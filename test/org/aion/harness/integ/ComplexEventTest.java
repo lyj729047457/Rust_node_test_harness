@@ -15,6 +15,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -56,6 +57,7 @@ public class ComplexEventTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
     }
 
     @After

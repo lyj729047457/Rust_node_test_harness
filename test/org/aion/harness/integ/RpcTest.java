@@ -8,6 +8,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.misc.Assumptions;
@@ -49,6 +50,7 @@ public class RpcTest {
         preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC();
     }
 

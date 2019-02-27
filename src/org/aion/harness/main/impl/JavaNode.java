@@ -5,6 +5,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
+import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.StatusResult;
@@ -22,9 +23,30 @@ import java.util.concurrent.TimeUnit;
  * A JavaNode is not thread-safe.
  */
 public final class JavaNode implements Node {
+    private NodeConfigurations configurations = null;
 
     // The running instance of the kernel.
     private Process runningKernel = null;
+
+    /**
+     * Configures the node with the specified settings.
+     *
+     * This method must be called prior to any other actionable method in this class.
+     *
+     * @param configurations the configuration settings.
+     */
+    @Override
+    public void configure(NodeConfigurations configurations) {
+        if (isAlive()) {
+            throw new IllegalStateException("Cannot set a node's configurations while it is running.");
+        }
+
+        if (configurations == null) {
+            throw new NullPointerException("Cannot configure node with null configurations.");
+        }
+
+        this.configurations = configurations;
+    }
 
     /**
      * Builds the kernel from source.
@@ -75,6 +97,9 @@ public final class JavaNode implements Node {
      */
     @Override
     public Result start() {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot start kernel.");
+        }
         if (isAlive()) {
             throw new IllegalStateException("there is already a kernel running.");
         }
@@ -114,6 +139,10 @@ public final class JavaNode implements Node {
      */
     @Override
     public Result stop() {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot stop kernel.");
+        }
+
         Result result;
 
         if (isAlive()) {
@@ -164,6 +193,9 @@ public final class JavaNode implements Node {
      */
     @Override
     public Result resetState() {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot reset kernel state.");
+        }
         if (isAlive()){
             throw new IllegalStateException("Cannot reset state while the node is running.");
         }
@@ -176,7 +208,7 @@ public final class JavaNode implements Node {
 
         try {
 
-            File database = NodeFileManager.getKernelDatabase();
+            File database = this.configurations.getDatabase();
             if (database.exists()) {
                 FileUtils.deleteDirectory(database);
             }
@@ -188,8 +220,12 @@ public final class JavaNode implements Node {
     }
 
     private Result initializePreserveDatabase(boolean verbose) {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
+        }
+
         File nodeDirectory = NodeFileManager.getNodeDirectory();
-        File kernelDatabaseDirectory = NodeFileManager.getKernelDatabase();
+        File kernelDatabaseDirectory = this.configurations.getDatabase();
         File temporaryDatabaseDirectory = NodeFileManager.getTemporaryDatabase();
 
         try {
@@ -228,6 +264,10 @@ public final class JavaNode implements Node {
     }
 
     private Result initialize(boolean verbose) {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
+        }
+
         File nodeDestination = NodeFileManager.getNodeDirectory();
         if (nodeDestination.exists()) {
             throw new IllegalStateException("node directory already exists.");
@@ -241,7 +281,7 @@ public final class JavaNode implements Node {
 
         if (verbose) {
             System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
-                + NodeFileManager.getKernelTarSourceDirectory());
+                + this.configurations.getKernelBuildDirectory());
         }
 
         return untarAndSetupKernel(verbose);
@@ -252,18 +292,18 @@ public final class JavaNode implements Node {
 
         if (verbose) {
             System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
-                    + NodeFileManager.getKernelTarSourceDirectory());
+                    + this.configurations.getKernelBuildDirectory());
         }
 
-        File tarSourceDirectory = NodeFileManager.getKernelTarSourceDirectory();
-        if (!tarSourceDirectory.isDirectory()) {
+        File kernelBuildDirectory = this.configurations.getKernelBuildDirectory();
+        if (!kernelBuildDirectory.isDirectory()) {
             throw new IllegalStateException(
-                "Unable to find kernel tar source directory at: " + tarSourceDirectory);
+                "Unable to find kernel build directory at: " + kernelBuildDirectory);
         }
 
         try {
             File kernelTarFile = null;
-            File[] entries = tarSourceDirectory.listFiles();
+            File[] entries = kernelBuildDirectory.listFiles();
             if (entries == null) {
                 throw new NoSuchFileException("Could not find kernel tar file.");
             }
@@ -315,6 +355,10 @@ public final class JavaNode implements Node {
     }
 
     private Result buildJavaKernel(boolean verbose) {
+        if (this.configurations == null) {
+            throw new IllegalStateException("Node has not been configured yet! Cannot build kernel.");
+        }
+
         System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
         try {
@@ -322,11 +366,11 @@ public final class JavaNode implements Node {
             if (verbose) {
                 System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
                 System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: "
-                    + NodeFileManager.getKernelRepositoryDirectory());
+                    + this.configurations.getKernelSourceDirectory());
             }
 
             ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
-                .directory(NodeFileManager.getKernelRepositoryDirectory());
+                .directory(this.configurations.getKernelSourceDirectory());
 
             if (verbose) {
                 builder.inheritIO();

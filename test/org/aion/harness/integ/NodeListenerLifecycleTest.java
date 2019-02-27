@@ -16,6 +16,7 @@ import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -39,6 +40,7 @@ public class NodeListenerLifecycleTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
     }
 
     @After

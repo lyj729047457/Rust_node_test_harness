@@ -7,6 +7,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
@@ -38,6 +39,7 @@ public class NodePreserveDatabaseTest {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC();
     }
 
