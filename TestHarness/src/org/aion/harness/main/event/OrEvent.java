@@ -48,7 +48,7 @@ public final class OrEvent implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public boolean isSatisfiedBy(String line) {
+    public synchronized boolean isSatisfiedBy(String line) {
         // Prevent this event from being 're-satisfied' if it is already.
         if (this.event1isSatisfied || this.event2isSatisfied) {
             return true;

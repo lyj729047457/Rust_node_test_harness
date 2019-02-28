@@ -87,7 +87,7 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public boolean isSatisfiedBy(String line) {
+    public synchronized boolean isSatisfiedBy(String line) {
         // Once satisfied, this value can never change.
         if (!this.isSatisfied) {
             if (line.contains(this.eventString)) {
@@ -102,7 +102,7 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public List<String> getAllObservedEvents() {
+    public synchronized List<String> getAllObservedEvents() {
         return (this.isSatisfied) ? Collections.singletonList(this.eventString) : Collections.emptyList();
     }
 
@@ -110,7 +110,7 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public List<String> getAllObservedLogs() {
+    public synchronized List<String> getAllObservedLogs() {
         return (this.isSatisfied) ? Collections.singletonList(this.log) : Collections.emptyList();
     }
 

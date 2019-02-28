@@ -47,7 +47,7 @@ public final class AndEvent implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public boolean isSatisfiedBy(String line) {
+    public synchronized boolean isSatisfiedBy(String line) {
         // Once satisfied this boolean never changes.
         if (!this.event1isSatisfied) {
             this.event1isSatisfied = this.event1.isSatisfiedBy(line);
