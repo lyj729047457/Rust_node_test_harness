@@ -59,7 +59,7 @@ public final class Eavesdropper implements Runnable {
                 }
 
                 if (result.eventWasObserved()) {
-                    long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservationInMilliseconds() - startTime);
+                    long time = TimeUnit.MILLISECONDS.toSeconds(result.timeOfObservationInMilliseconds() - startTime);
                     System.out.println("Thread #" + this.ID + ": event observed | time: " + time + " second(s)");
                 } else if (result.eventWasRejected()) {
                     System.out.println("Thread #" + this.ID + ": event request rejected due to: " + result.causeOfRejection());
