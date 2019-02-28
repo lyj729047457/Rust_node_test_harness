@@ -6,29 +6,30 @@ import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 public class PrivateKeyTest {
     private String testingPrivateKey = "32ee00c327f522f0c8d300921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
 
     @Test (expected = IllegalArgumentException.class)
-    public void testInstantiatingAddressWithInvalidPrivateKey() {
-        new PrivateKey(new byte[0]);
+    public void testInstantiatingAddressWithInvalidPrivateKey() throws InvalidKeySpecException {
+        PrivateKey.fromBytes(new byte[0]);
     }
 
     @Test
-    public void testPrivateKeyEquality() throws DecoderException {
-        PrivateKey privateKey = new PrivateKey(Hex.decodeHex(testingPrivateKey));
-        PrivateKey privateKey2 = new PrivateKey(Hex.decodeHex(testingPrivateKey));
+    public void testPrivateKeyEquality() throws DecoderException, InvalidKeySpecException {
+        PrivateKey privateKey = PrivateKey.fromBytes(Hex.decodeHex(testingPrivateKey));
+        PrivateKey privateKey2 = PrivateKey.fromBytes(Hex.decodeHex(testingPrivateKey));
 
         Assert.assertTrue(privateKey.equals(privateKey2));
         Assert.assertEquals(privateKey.hashCode(), privateKey2.hashCode());
     }
 
     @Test
-    public void testImmutabilityByModifyingOriginalPrivateKeyBytes() throws DecoderException {
+    public void testImmutabilityByModifyingOriginalPrivateKeyBytes() throws DecoderException, InvalidKeySpecException {
         byte[] randomPrivateKeyCopy = Hex.decodeHex(testingPrivateKey);
-        PrivateKey privateKey = new PrivateKey(randomPrivateKeyCopy);
+        PrivateKey privateKey = PrivateKey.fromBytes(randomPrivateKeyCopy);
 
         // modify PrivateKeyString
         randomPrivateKeyCopy[0] = (byte)((int) randomPrivateKeyCopy[0] + 1);
@@ -39,9 +40,9 @@ public class PrivateKeyTest {
     }
 
     @Test
-    public void testImmutabilityByModifyingReturnedPrivateKeyBytes() throws DecoderException {
+    public void testImmutabilityByModifyingReturnedPrivateKeyBytes() throws DecoderException, InvalidKeySpecException {
         byte[] randomPrivateKeyCopy = Hex.decodeHex(testingPrivateKey);
-        PrivateKey privateKey = new PrivateKey(randomPrivateKeyCopy);
+        PrivateKey privateKey = PrivateKey.fromBytes(randomPrivateKeyCopy);
 
         // retrieve the PrivateKey bytes from the object and modify
         byte[] retrievedPrivateKey = privateKey.getPrivateKeyBytes();

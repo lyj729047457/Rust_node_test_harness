@@ -21,8 +21,6 @@ public final class Assumptions {
 
     public static final String NEW_KERNEL_TAR_NAME = "kernel.tar.bz2";
 
-    public static final String PREMINED_ADDRESS = "a0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5";
-
     public static final String PREMINED_PRIVATE_KEY = "223f19377d95582055bd8972cf3ffd635d2712a7171e4888091a066b9f4f63d5";
 
     public static final String IP = "127.0.0.1";

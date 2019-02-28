@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
@@ -44,10 +45,10 @@ public class RpcTest {
     private Node node;
 
     @Before
-    public void setup() throws IOException, DecoderException {
-        preminedAddress = new Address(Hex.decodeHex(Assumptions.PREMINED_ADDRESS));
+    public void setup() throws IOException, DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
-        preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedAddress = preminedPrivateKey.getAddress();
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
@@ -280,7 +281,7 @@ public class RpcTest {
     @Test
     public void testSendValueWithInsufficientBalance() throws Exception {
         byte[] badKey = Hex.decodeHex("223f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5");
-        PrivateKey badPrivateKey = new PrivateKey(badKey);
+        PrivateKey badPrivateKey = PrivateKey.fromBytes(badKey);
 
         initializeNodeWithChecks();
         Result result = this.node.start();

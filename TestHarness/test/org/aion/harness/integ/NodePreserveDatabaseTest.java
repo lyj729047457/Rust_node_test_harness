@@ -22,6 +22,7 @@ import org.junit.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
@@ -35,9 +36,9 @@ public class NodePreserveDatabaseTest {
     private Node node;
 
     @Before
-    public void setup() throws DecoderException {
+    public void setup() throws DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
-        preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC();

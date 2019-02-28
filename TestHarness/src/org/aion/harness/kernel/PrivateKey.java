@@ -1,7 +1,9 @@
 package org.aion.harness.kernel;
 
+import org.aion.harness.kernel.utils.CryptoUtils;
 import org.apache.commons.codec.binary.Hex;
 
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 /**
@@ -13,13 +15,14 @@ public final class PrivateKey {
     public static final int SIZE = 32;
 
     private final byte[] privateKeyBytes;
+    private final Address address;
 
     /**
      * Constructs a new private key consisting of the provided bytes.
      *
      * @param privateKeyBytes The bytes of the private key.
      */
-    public PrivateKey(byte[] privateKeyBytes) {
+    private PrivateKey(byte[] privateKeyBytes) throws InvalidKeySpecException {
         if (privateKeyBytes == null) {
             throw new NullPointerException("private key bytes cannot be null");
         }
@@ -27,6 +30,19 @@ public final class PrivateKey {
             throw new IllegalArgumentException("bytes of a private key must have a length of " + SIZE);
         }
         this.privateKeyBytes = copyByteArray(privateKeyBytes);
+        this.address = new Address(CryptoUtils.deriveAddress(this.privateKeyBytes));
+    }
+
+    public static PrivateKey fromBytes(byte[] privateKeyBytes) throws InvalidKeySpecException {
+        return new PrivateKey(privateKeyBytes);
+    }
+
+    public static PrivateKey random() throws InvalidKeySpecException {
+        return new PrivateKey(CryptoUtils.generatePrivateKey());
+    }
+
+    public Address getAddress() {
+        return this.address;
     }
 
     /**

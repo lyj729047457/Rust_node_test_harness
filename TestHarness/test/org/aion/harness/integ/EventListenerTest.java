@@ -1,6 +1,7 @@
 package org.aion.harness.integ;
 
 import java.io.File;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
@@ -45,9 +46,9 @@ public class EventListenerTest {
     private Node node;
 
     @Before
-    public void setup() throws IOException, DecoderException {
+    public void setup() throws IOException, DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
-        preminedPrivateKey = new PrivateKey(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
+        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
@@ -173,9 +174,9 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForTransactionToBeRejected() throws DecoderException, InterruptedException {
+    public void testWaitForTransactionToBeRejected() throws DecoderException, InterruptedException, InvalidKeySpecException {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
-        PrivateKey privateKeyWithNoBalance = new PrivateKey(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
+        PrivateKey privateKeyWithNoBalance = PrivateKey.fromBytes(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
         TransactionResult transactionResult = constructTransaction(
                 privateKeyWithNoBalance,
