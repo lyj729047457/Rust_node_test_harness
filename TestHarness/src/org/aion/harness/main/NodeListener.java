@@ -12,7 +12,6 @@ import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.util.EventRequest;
-import org.aion.harness.util.IEventRequest;
 import org.aion.harness.util.LogListener;
 import org.apache.commons.codec.binary.Hex;
 
@@ -45,7 +44,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        IEventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
+        EventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -74,7 +73,7 @@ public final class NodeListener {
         IEvent transactionRejectedEvent = getTransactionRejectedEvent(transactionHash);
         IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
 
-        IEventRequest request = new EventRequest(transactionProcessedEvent, deadline);
+        EventRequest request = new EventRequest(transactionProcessedEvent, deadline);
 
         this.logListener.submitEventRequest(request);
         return extractResult(request);
@@ -97,7 +96,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        IEventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
+        EventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -120,7 +119,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        IEventRequest request = new EventRequest(event, deadline);
+        EventRequest request = new EventRequest(event, deadline);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -207,7 +206,7 @@ public final class NodeListener {
         }
     }
 
-    private LogEventResult extractResult(IEventRequest request) {
+    private LogEventResult extractResult(EventRequest request) {
         if (request.isUnobserved()) {
             return LogEventResult.unobservedEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isSatisfied()) {

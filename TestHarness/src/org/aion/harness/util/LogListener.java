@@ -51,7 +51,7 @@ public final class LogListener implements TailerListener {
     // We begin as alive but not listening to any log file.
     private ListenerState currentState = ListenerState.ALIVE_AND_NOT_LISTENING;
 
-    private List<IEventRequest> requestPool = new ArrayList<>(CAPACITY);
+    private List<EventRequest> requestPool = new ArrayList<>(CAPACITY);
 
     /**
      * Returns true only if the listener is not dead.
@@ -91,7 +91,7 @@ public final class LogListener implements TailerListener {
      * 5. The request is observed.
      *    -> request is marked satisfied.
      */
-    public void submitEventRequest(IEventRequest eventRequest) {
+    public void submitEventRequest(EventRequest eventRequest) {
         if (eventRequest == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
@@ -167,7 +167,7 @@ public final class LogListener implements TailerListener {
      * 3. An interrupt exception occurs before adding the request to the pool.
      *    -> request is marked rejected.
      */
-    private void addRequest(IEventRequest request) {
+    private void addRequest(EventRequest request) {
 
         try {
             long timeout = request.deadline() - System.currentTimeMillis();
@@ -225,11 +225,11 @@ public final class LogListener implements TailerListener {
             long currentTimeInMillis = System.currentTimeMillis();
 
             // Iterate over each of the requests in the pool.
-            Iterator<IEventRequest> requestIterator = this.requestPool.iterator();
+            Iterator<EventRequest> requestIterator = this.requestPool.iterator();
 
             int numRequestsRemoved = 0;
             while (requestIterator.hasNext()) {
-                IEventRequest request = requestIterator.next();
+                EventRequest request = requestIterator.next();
 
                 if (!request.isPending()) {
                     requestIterator.remove();
@@ -321,7 +321,7 @@ public final class LogListener implements TailerListener {
     private synchronized void clearPool(boolean reject, String rejectionCause) {
         int numRequestsRemoved = this.requestPool.size();
 
-        for (IEventRequest request : this.requestPool) {
+        for (EventRequest request : this.requestPool) {
 
             if (reject) {
                 request.markAsRejected(rejectionCause);
