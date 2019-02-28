@@ -291,13 +291,6 @@ public final class JavaNode implements Node {
             throw new IllegalStateException("Failed to make directory: " + nodeDestination);
         }
 
-        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
-
-        if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Fetching Java Kernel tar file at location: "
-                + this.configurations.getKernelBuildDirectory());
-        }
-
         return untarAndSetupKernel(verbose);
     }
 
