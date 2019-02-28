@@ -1,29 +1,35 @@
 package org.aion.harness.util;
 
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.result.LogEventResult;
 
+/**
+ * An event request is an internal object maintained by the {@link LogListener} so that it can
+ * essentially hold onto the event it is listening for, the state of that event, and its future.
+ *
+ * This class should not be exposed to any other classes.
+ *
+ * An event request is mutable while its current state is PENDING. It is called "finalized" when it
+ * moves into any non-PENDING state. Once it is moved into a non-PENDING state, the object becomes
+ * entirely immutable.
+ *
+ * This class is partially thread-safe. Read method documentation carefully.
+ */
 public final class EventRequest {
     private static long instanceCount = 0;
     private final long ID;
 
+    public final FutureResult<LogEventResult> future = new FutureResult<>();
     private final IEvent requestedEvent;
     private final long deadlineInMilliseconds;
 
     private enum RequestState { PENDING, SATISFIED, UNOBSERVED, REJECTED, EXPIRED }
 
     private RequestState currentState = RequestState.PENDING;
-
     private String causeOfRejection;
     private long timeOfObservationInMilliseconds = -1;
-
-    private CountDownLatch pendingLatch = new CountDownLatch(1);
-
-    public final FutureResult<LogEventResult> future = new FutureResult<>();
 
     /**
      * Constructs a new event request for the specified event.
@@ -51,7 +57,23 @@ public final class EventRequest {
         this.future.finish(extractResultFromRequest());
     }
 
-    public synchronized boolean isSatisfiedBy(String line, long currentTime, TimeUnit unit) {
+    /**
+     * Only to be used by {@link LogListener} to determine whether or not the request is satisfied
+     * by a log line.
+     *
+     * Once this method returns {@code true} once, it will always return {@code true} after that.
+     *
+     * If the request is already finalized, this method will return {@code true} without doing any
+     * work.
+     *
+     * Not thread-safe.
+     *
+     * @param line The log line to test.
+     * @param currentTime The current time.
+     * @param unit The unit of time of the currentTime.
+     * @return whether or not this request is satisfied.
+     */
+    public boolean isSatisfiedBy(String line, long currentTime, TimeUnit unit) {
         markAsExpiredIfPastDeadline(currentTime, unit);
 
         if (this.currentState != RequestState.PENDING) {
@@ -69,62 +91,27 @@ public final class EventRequest {
         return isSatisfied;
     }
 
+    /**
+     * Returns {@code true} only if this request is expired at the given time.
+     *
+     * Thread safe.
+     *
+     * @param time The time to test.
+     * @param unit The unit of time that 'time' is in.
+     * @return whether or not this request is expired.
+     */
     public boolean isExpiredAtTime(long time, TimeUnit unit) {
         return unit.toMillis(time) > this.deadlineInMilliseconds;
     }
 
-    public void waitForOutcome() {
-        long timeout = this.deadlineInMilliseconds - System.currentTimeMillis();
-
-        try {
-
-            if (!this.pendingLatch.await(timeout, TimeUnit.MILLISECONDS)) {
-                markAsExpired();
-            }
-
-        } catch (InterruptedException e) {
-            markAsRejected("Interrupted while waiting for request outcome!");
-        }
-
-    }
-
-    public void notifyRequestIsResolved() {
-        this.pendingLatch.countDown();
-    }
-
-    public synchronized List<String> getAllObservedEvents() {
-        return this.requestedEvent.getAllObservedEvents();
-    }
-
-    public synchronized List<String> getAllObservedLogs() {
-        return this.requestedEvent.getAllObservedLogs();
-    }
-
     /**
-     * Returns the time at which the event was observed. The resulting number will be given in terms
-     * of the specified time units.
+     * Finalizes this request by moving it into the REJECTED state only if it is not already
+     * finalized.
      *
-     * Returns a negative number if it has not yet been observed or was not observed.
+     * Thread safe.
      *
-     * @param unit The unit of time to return the observation time in.
-     * @return the time the event was observed or a negative number if it was not.
+     * @param cause The reason for rejecting the event.
      */
-    public long timeOfObservation(TimeUnit unit) {
-        return (this.currentState == RequestState.SATISFIED)
-            ? unit.convert(this.timeOfObservationInMilliseconds, TimeUnit.MILLISECONDS)
-            : -1;
-    }
-
-    /**
-     * Returns the time at which this request expires in the specified time units.
-     *
-     * @param unit The unit of time to return the deadline in.
-     * @return the deadline for this request.
-     */
-    public long deadline(TimeUnit unit) {
-        return unit.convert(this.deadlineInMilliseconds, TimeUnit.MILLISECONDS);
-    }
-
     public synchronized void markAsRejected(String cause) {
         if (this.currentState == RequestState.PENDING) {
             this.causeOfRejection = cause;
@@ -133,6 +120,12 @@ public final class EventRequest {
         }
     }
 
+    /**
+     * Finalizes this request by moving it into the UNOBSERVED state only if it is not already
+     * finalized.
+     *
+     * Thread safe.
+     */
     public synchronized void markAsUnobserved() {
         if (this.currentState == RequestState.PENDING) {
             this.currentState = RequestState.UNOBSERVED;
@@ -140,6 +133,12 @@ public final class EventRequest {
         }
     }
 
+    /**
+     * Finalizes this request by moving it into the EXPIRED state only if it is not already
+     * finalized.
+     *
+     * Thread safe.
+     */
     public synchronized void markAsExpired() {
         if (this.currentState == RequestState.PENDING) {
             this.currentState = RequestState.EXPIRED;
@@ -147,31 +146,27 @@ public final class EventRequest {
         }
     }
 
-    public synchronized String getCauseOfRejection() {
-        return this.causeOfRejection;
-    }
-
+    /**
+     * Returns {@code true} only if this request is still pending and therefore not finalized.
+     *
+     * Thread safe.
+     *
+     * @return whether or not it is still pending.
+     */
     public synchronized boolean isPending() {
         return this.currentState == RequestState.PENDING;
     }
 
-    public synchronized boolean isRejected() {
-        return this.currentState == RequestState.REJECTED;
-    }
-
-    public synchronized boolean isUnobserved() {
-        return this.currentState == RequestState.UNOBSERVED;
-    }
-
-    public synchronized boolean isSatisfied() {
-        return this.currentState == RequestState.SATISFIED;
-    }
-
-    public synchronized boolean isExpired() {
-        return this.currentState == RequestState.EXPIRED;
-    }
-
-    private synchronized void markAsExpiredIfPastDeadline(long time, TimeUnit unit) {
+    /**
+     * Finalizes this request and moves it into the EXPIRED state only if the following conditions
+     * are all true:
+     *   1. The request is expired at the specified time.
+     *   2. The request is not already finalized.
+     *
+     * @param time The time to test.
+     * @param unit The unit of time that 'time' is in.
+     */
+    private void markAsExpiredIfPastDeadline(long time, TimeUnit unit) {
         if (isExpiredAtTime(time, unit)) {
             markAsExpired();
         }
@@ -193,11 +188,6 @@ public final class EventRequest {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * Thread safe.
-     */
     @Override
     public synchronized String toString() {
         return "EventRequest { event request = " + this.requestedEvent + ", event state = " + this.currentState + " }";
