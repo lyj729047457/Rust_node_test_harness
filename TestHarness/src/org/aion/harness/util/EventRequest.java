@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.types.FutureResult;
+import org.aion.harness.result.LogEventResult;
 
 public final class EventRequest {
     private final IEvent requestedEvent;
@@ -18,6 +20,8 @@ public final class EventRequest {
 
     private CountDownLatch pendingLatch = new CountDownLatch(1);
 
+    public final FutureResult<LogEventResult> future = new FutureResult<>();
+
     /**
      * Constructs a new event request for the specified event.
      *
@@ -26,6 +30,19 @@ public final class EventRequest {
     public EventRequest(IEvent eventToRequest, long deadline) {
         this.requestedEvent = eventToRequest;
         this.deadline = deadline;
+    }
+
+    /**
+     * This must be called by the {@link LogListener} thread <b>after</b> moving this request into
+     * a finalized state.
+     *
+     * Once this method is called, the future (which is handed off to the event submitting thread)
+     * will be consumable.
+     *
+     * Not thread-safe.
+     */
+    public void finishFuture() {
+        this.future.finish(extractResultFromRequest());
     }
 
     public synchronized boolean isSatisfiedBy(String line, long currentTimeInMillis) {
@@ -130,6 +147,22 @@ public final class EventRequest {
     private synchronized void markAsExpiredIfPastDeadline(long currentTimeInMillis) {
         if (isExpiredAtTime(currentTimeInMillis)) {
             markAsExpired();
+        }
+    }
+
+    private LogEventResult extractResultFromRequest() {
+        if (isPending()) {
+            throw new IllegalStateException("Cannot extract result from a still-pending request.");
+        }
+
+        if (this.currentState == RequestState.SATISFIED) {
+            return LogEventResult.observedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents(), this.timeOfObservation);
+        } else if (this.currentState == RequestState.REJECTED) {
+            return LogEventResult.rejectedEvent(this.causeOfRejection, this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
+        } else if (this.currentState == RequestState.EXPIRED) {
+            return LogEventResult.expiredEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
+        } else {
+            return LogEventResult.unobservedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
         }
     }
 
