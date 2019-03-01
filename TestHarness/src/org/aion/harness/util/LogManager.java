@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
-import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.StatusResult;
+import org.aion.harness.result.Result;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -27,14 +26,14 @@ public final class LogManager {
      *
      * @return A result indicating the successfulness of this call.
      */
-    public StatusResult setupLogFiles() {
+    public Result setupLogFiles() {
 
         // Set the logs to null so we can trust these variables after multiple calls.
         this.currentOutputLog = null;
         this.currentErrorLog = null;
 
         if (!createLogsDirectoryIfDoesNotExist()) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "failed to create log directory");
+            return Result.unsuccessfulDueTo("failed to create log directory");
         }
 
         try {
@@ -44,18 +43,18 @@ public final class LogManager {
             // create the new log files.
             this.currentOutputLog = createNewStdoutLog();
             if (this.currentOutputLog == null) {
-                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "failed to create stdout log");
+                return Result.unsuccessfulDueTo("failed to create stdout log");
             }
 
             this.currentErrorLog = createNewStderrLog();
             if (this.currentErrorLog == null) {
-                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "failed to create stderr log");
+                return Result.unsuccessfulDueTo("failed to create stderr log");
             }
         } catch (IOException e) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, (e.getMessage() == null) ? e.toString() : e.getMessage());
+            return Result.unsuccessfulDueToException(e);
         }
 
-        return StatusResult.successful();
+        return Result.successful();
     }
 
     /**

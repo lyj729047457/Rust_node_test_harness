@@ -1,7 +1,7 @@
 package org.aion.harness.util;
 
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.StatusResult;
+import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;
 
 import java.io.File;
@@ -21,18 +21,18 @@ public final class LogReader {
         this.listener = new LogListener();
     }
 
-    public StatusResult startReading(File log) {
+    public Result startReading(File log) {
         // If the listener moved into a dead state then we need a new listener.
         if (!this.listener.isAlive()) {
             this.listener = new LogListener();
         }
 
         if (log == null) {
-            return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Output log file does not exist!");
+            return Result.unsuccessfulDueTo("Output log file does not exist!");
         }
 
         // Attempt to turn the listener on. If it is already on then pass this "warning/error" to the caller.
-        StatusResult result = this.listener.startListening();
+        Result result = this.listener.startListening();
         if (!result.success) {
             return result;
         }
@@ -41,7 +41,7 @@ public final class LogReader {
         this.logTailer = new Tailer(log, this.listener, TimeUnit.SECONDS.toMillis(2), true);
         this.threadExecutor.execute(this.logTailer);
 
-        return StatusResult.successful();
+        return Result.successful();
     }
 
     public void stopReading() throws InterruptedException {

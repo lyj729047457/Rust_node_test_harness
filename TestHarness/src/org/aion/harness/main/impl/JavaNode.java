@@ -9,7 +9,6 @@ import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.StatusResult;
 import org.aion.harness.util.*;
 import org.apache.commons.io.FileUtils;
 
@@ -406,9 +405,9 @@ public final class JavaNode implements Node {
             // We wait for the Rpc event or else 20 seconds, in case we come too late and never see it.
             IEvent rpcEvent = new Event("rpc-server - (UNDERTOW) started");
 
-            StatusResult result = SingletonFactory.singleton().logReader().startReading(outputLog);
+            Result result = SingletonFactory.singleton().logReader().startReading(outputLog);
             if (!result.success) {
-                return Result.unsuccessfulDueTo(result.error);
+                return result;
             }
 
             new NodeListener().listenForEvent(rpcEvent, 20, TimeUnit.SECONDS).get();

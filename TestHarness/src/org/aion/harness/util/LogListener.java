@@ -4,9 +4,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.types.FutureResult;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.StatusResult;
+import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 
@@ -116,16 +115,16 @@ public final class LogListener implements TailerListener {
      * If the listener is currently dead or is already listening then an appropriate unsuccessful
      * result is returned.
      */
-    StatusResult startListening() {
+    Result startListening() {
         synchronized (STATE_MONITOR) {
             if (this.currentState == ListenerState.DEAD) {
-                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is dead!");
+                return Result.unsuccessfulDueTo("Listener is dead!");
             } else if (this.currentState == ListenerState.ALIVE_AND_LISTENING) {
                 // awkward for this to be "unsuccessful"
-                return StatusResult.unsuccessful(Assumptions.PRODUCTION_ERROR_STATUS, "Listener is already listening!");
+                return Result.unsuccessfulDueTo("Listener is already listening!");
             } else {
                 this.currentState = ListenerState.ALIVE_AND_LISTENING;
-                return StatusResult.successful();
+                return Result.successful();
             }
         }
     }
