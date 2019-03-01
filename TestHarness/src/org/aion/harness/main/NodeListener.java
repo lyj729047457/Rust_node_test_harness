@@ -2,6 +2,7 @@ package org.aion.harness.main;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.OrEvent;
@@ -44,7 +45,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(getStartedMiningEvent(), deadline);
+        EventRequest request = new EventRequest(getStartedMiningEvent(), deadline, TimeUnit.MILLISECONDS);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -73,7 +74,7 @@ public final class NodeListener {
         IEvent transactionRejectedEvent = getTransactionRejectedEvent(transactionHash);
         IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
 
-        EventRequest request = new EventRequest(transactionProcessedEvent, deadline);
+        EventRequest request = new EventRequest(transactionProcessedEvent, deadline, TimeUnit.MILLISECONDS);
 
         this.logListener.submitEventRequest(request);
         return extractResult(request);
@@ -96,7 +97,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(getHeartbeatEvent(), deadline);
+        EventRequest request = new EventRequest(getHeartbeatEvent(), deadline, TimeUnit.MILLISECONDS);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -119,7 +120,7 @@ public final class NodeListener {
         }
 
         long deadline = System.currentTimeMillis() + timeoutInMillis;
-        EventRequest request = new EventRequest(event, deadline);
+        EventRequest request = new EventRequest(event, deadline, TimeUnit.MILLISECONDS);
         this.logListener.submitEventRequest(request);
         return extractResult(request);
     }
@@ -210,7 +211,7 @@ public final class NodeListener {
         if (request.isUnobserved()) {
             return LogEventResult.unobservedEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isSatisfied()) {
-            return LogEventResult.observedEvent(request.getAllObservedEvents(), request.getAllObservedEvents(), request.timeOfObservation());
+            return LogEventResult.observedEvent(request.getAllObservedEvents(), request.getAllObservedEvents(), request.timeOfObservation(TimeUnit.MILLISECONDS));
         } else if (request.isExpired()) {
             return LogEventResult.expiredEvent(request.getAllObservedEvents(), request.getAllObservedEvents());
         } else if (request.isRejected()) {

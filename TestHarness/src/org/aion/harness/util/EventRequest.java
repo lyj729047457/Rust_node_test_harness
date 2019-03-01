@@ -9,14 +9,14 @@ import org.aion.harness.result.LogEventResult;
 
 public final class EventRequest {
     private final IEvent requestedEvent;
-    private final long deadline;
+    private final long deadlineInMilliseconds;
 
     private enum RequestState { PENDING, SATISFIED, UNOBSERVED, REJECTED, EXPIRED }
 
     private RequestState currentState = RequestState.PENDING;
 
     private String causeOfRejection;
-    private long timeOfObservation = -1;
+    private long timeOfObservationInMilliseconds = -1;
 
     private CountDownLatch pendingLatch = new CountDownLatch(1);
 
@@ -26,10 +26,12 @@ public final class EventRequest {
      * Constructs a new event request for the specified event.
      *
      * @param eventToRequest The event to request to be listened for.
+     * @param deadline The time at which this request expires.
+     * @param unit The unit of time of the deadline.
      */
-    public EventRequest(IEvent eventToRequest, long deadline) {
+    public EventRequest(IEvent eventToRequest, long deadline, TimeUnit unit) {
         this.requestedEvent = eventToRequest;
-        this.deadline = deadline;
+        this.deadlineInMilliseconds = unit.toMillis(deadline);
     }
 
     /**
@@ -45,8 +47,8 @@ public final class EventRequest {
         this.future.finish(extractResultFromRequest());
     }
 
-    public synchronized boolean isSatisfiedBy(String line, long currentTimeInMillis) {
-        markAsExpiredIfPastDeadline(currentTimeInMillis);
+    public synchronized boolean isSatisfiedBy(String line, long currentTime, TimeUnit unit) {
+        markAsExpiredIfPastDeadline(currentTime, unit);
 
         if (this.currentState != RequestState.PENDING) {
             return true;
@@ -56,18 +58,18 @@ public final class EventRequest {
 
         if (isSatisfied) {
             this.currentState = RequestState.SATISFIED;
-            this.timeOfObservation = currentTimeInMillis;
+            this.timeOfObservationInMilliseconds = unit.toMillis(currentTime);
         }
 
         return isSatisfied;
     }
 
-    public boolean isExpiredAtTime(long currentTimeInMillis) {
-        return currentTimeInMillis > this.deadline;
+    public boolean isExpiredAtTime(long time, TimeUnit unit) {
+        return unit.toMillis(time) > this.deadlineInMilliseconds;
     }
 
     public void waitForOutcome() {
-        long timeout = this.deadline - System.currentTimeMillis();
+        long timeout = this.deadlineInMilliseconds - System.currentTimeMillis();
 
         try {
 
@@ -93,12 +95,29 @@ public final class EventRequest {
         return this.requestedEvent.getAllObservedLogs();
     }
 
-    public long timeOfObservation() {
-        return (this.currentState == RequestState.SATISFIED) ? this.timeOfObservation : -1;
+    /**
+     * Returns the time at which the event was observed. The resulting number will be given in terms
+     * of the specified time units.
+     *
+     * Returns a negative number if it has not yet been observed or was not observed.
+     *
+     * @param unit The unit of time to return the observation time in.
+     * @return the time the event was observed or a negative number if it was not.
+     */
+    public long timeOfObservation(TimeUnit unit) {
+        return (this.currentState == RequestState.SATISFIED)
+            ? unit.convert(this.timeOfObservationInMilliseconds, TimeUnit.MILLISECONDS)
+            : -1;
     }
 
-    public long deadline() {
-        return this.deadline;
+    /**
+     * Returns the time at which this request expires in the specified time units.
+     *
+     * @param unit The unit of time to return the deadline in.
+     * @return the deadline for this request.
+     */
+    public long deadline(TimeUnit unit) {
+        return unit.convert(this.deadlineInMilliseconds, TimeUnit.MILLISECONDS);
     }
 
     public synchronized void markAsRejected(String cause) {
@@ -144,8 +163,8 @@ public final class EventRequest {
         return this.currentState == RequestState.EXPIRED;
     }
 
-    private synchronized void markAsExpiredIfPastDeadline(long currentTimeInMillis) {
-        if (isExpiredAtTime(currentTimeInMillis)) {
+    private synchronized void markAsExpiredIfPastDeadline(long time, TimeUnit unit) {
+        if (isExpiredAtTime(time, unit)) {
             markAsExpired();
         }
     }
@@ -156,7 +175,7 @@ public final class EventRequest {
         }
 
         if (this.currentState == RequestState.SATISFIED) {
-            return LogEventResult.observedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents(), this.timeOfObservation);
+            return LogEventResult.observedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents(), this.timeOfObservationInMilliseconds);
         } else if (this.currentState == RequestState.REJECTED) {
             return LogEventResult.rejectedEvent(this.causeOfRejection, this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
         } else if (this.currentState == RequestState.EXPIRED) {

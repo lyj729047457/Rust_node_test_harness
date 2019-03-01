@@ -170,7 +170,7 @@ public final class LogListener implements TailerListener {
     private void addRequest(EventRequest request) {
 
         try {
-            long timeout = request.deadline() - System.currentTimeMillis();
+            long timeout = request.deadline(TimeUnit.MILLISECONDS) - System.currentTimeMillis();
 
             // Try to acquire a permit to add the request to the pool.
             if (!REQUEST_POOL_GATE.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
@@ -191,7 +191,7 @@ public final class LogListener implements TailerListener {
         }
 
         // If the request has expired, mark it as so and return the pool permit.
-        if (request.isExpiredAtTime(System.currentTimeMillis())) {
+        if (request.isExpiredAtTime(System.currentTimeMillis(), TimeUnit.MILLISECONDS)) {
             request.markAsExpired();
             REQUEST_POOL_GATE.release();
             return;
@@ -222,7 +222,7 @@ public final class LogListener implements TailerListener {
         }
 
         synchronized (this) {
-            long currentTimeInMillis = System.currentTimeMillis();
+            long currentTime = System.currentTimeMillis();
 
             // Iterate over each of the requests in the pool.
             Iterator<EventRequest> requestIterator = this.requestPool.iterator();
@@ -235,7 +235,7 @@ public final class LogListener implements TailerListener {
                     requestIterator.remove();
                     request.notifyRequestIsResolved();
                     numRequestsRemoved++;
-                } else if (request.isSatisfiedBy(nextLine, currentTimeInMillis)) {
+                } else if (request.isSatisfiedBy(nextLine, currentTime, TimeUnit.MILLISECONDS)) {
                     request.notifyRequestIsResolved();
                     requestIterator.remove();
                     numRequestsRemoved++;
