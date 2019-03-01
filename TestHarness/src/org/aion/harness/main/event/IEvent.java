@@ -1,6 +1,7 @@
 package org.aion.harness.main.event;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An event is fundamentally a String (called the "event string", and
@@ -92,9 +93,11 @@ public interface IEvent {
      * requires no additional actions in order to determine its outcome.
      *
      * @param line The incoming String that may satisfy the event.
+     * @param observedAt The time of observation.
+     * @param unit The unit of time of observedAt.
      * @return whether or not the event is now satisfied.
      */
-    boolean isSatisfiedBy(String line);
+    boolean isSatisfiedBy(String line, long observedAt, TimeUnit unit);
 
     /**
      * Returns a list of all the event strings that have been observed so far.
@@ -118,4 +121,14 @@ public interface IEvent {
      * @return all logs that are recorded
      */
     List<String> getAllObservedLogs();
+
+    /**
+     * Returns the time at which this event was observed in the desired time units.
+     *
+     * Returns a negative time if the event has not yet been observed.
+     *
+     * @param unit The time units of the returned time.
+     * @return the time the event was observed or a negative time if not yet observed.
+     */
+    long observedAt(TimeUnit unit);
 }

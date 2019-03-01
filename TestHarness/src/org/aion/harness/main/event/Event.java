@@ -2,6 +2,7 @@ package org.aion.harness.main.event;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A "base" or "leaf" event in the sense that this event is represented solely as a single String
@@ -13,6 +14,7 @@ import java.util.List;
 public final class Event implements IEvent {
     private final String eventString;
     private boolean isSatisfied = false;
+    private long timeOfObservationInNanos = -1;
     private String log = null;
 
     /**
@@ -87,12 +89,23 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public synchronized boolean isSatisfiedBy(String line) {
+    public synchronized boolean isSatisfiedBy(String line, long observedAt, TimeUnit unit) {
+        if (line == null) {
+            throw new NullPointerException("Cannot check satisfaction on null line.");
+        }
+        if (observedAt < 0) {
+            throw new IllegalArgumentException("Cannot check satisfaction given negative timestamp.");
+        }
+        if (unit == null) {
+            throw new NullPointerException("Cannot check satisfaction given null time unit.");
+        }
+
         // Once satisfied, this value can never change.
         if (!this.isSatisfied) {
             if (line.contains(this.eventString)) {
                 this.log = line;
                 this.isSatisfied = true;
+                this.timeOfObservationInNanos = unit.toNanos(observedAt);
             }
         }
         return this.isSatisfied;
@@ -112,6 +125,13 @@ public final class Event implements IEvent {
     @Override
     public synchronized List<String> getAllObservedLogs() {
         return (this.isSatisfied) ? Collections.singletonList(this.log) : Collections.emptyList();
+    }
+
+    @Override
+    public synchronized long observedAt(TimeUnit unit) {
+        return (this.isSatisfied)
+            ? unit.convert(this.timeOfObservationInNanos, TimeUnit.NANOSECONDS)
+            : -1;
     }
 
     /**

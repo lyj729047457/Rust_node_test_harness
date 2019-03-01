@@ -2,6 +2,7 @@ package org.aion.harness.main.event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An AndEvent is the logical-and of two underlying events, each of which may
@@ -18,6 +19,7 @@ public final class AndEvent implements IEvent {
 
     private boolean event1isSatisfied = false;
     private boolean event2isSatisfied = false;
+    private long timeOfObservationInNanos = -1;
 
     public AndEvent(IEvent event1, IEvent event2) {
         if ((event1 == null) || (event2 == null)) {
@@ -47,16 +49,31 @@ public final class AndEvent implements IEvent {
      * {@inheritDoc}
      */
     @Override
-    public synchronized boolean isSatisfiedBy(String line) {
-        // Once satisfied this boolean never changes.
-        if (!this.event1isSatisfied) {
-            this.event1isSatisfied = this.event1.isSatisfiedBy(line);
+    public synchronized boolean isSatisfiedBy(String line, long observedAt, TimeUnit unit) {
+        if (line == null) {
+            throw new NullPointerException("Cannot check satisfaction on null line.");
         }
-        if (!this.event2isSatisfied) {
-            this.event2isSatisfied = this.event2.isSatisfiedBy(line);
+        if (observedAt < 0) {
+            throw new IllegalArgumentException("Cannot check satisfaction given negative timestamp.");
+        }
+        if (unit == null) {
+            throw new NullPointerException("Cannot check satisfaction given null time unit.");
         }
 
-        return this.event1isSatisfied && this.event2isSatisfied;
+        // Once satisfied this boolean never changes.
+        if (!this.event1isSatisfied) {
+            this.event1isSatisfied = this.event1.isSatisfiedBy(line, observedAt, unit);
+        }
+        if (!this.event2isSatisfied) {
+            this.event2isSatisfied = this.event2.isSatisfiedBy(line, observedAt, unit);
+        }
+
+        boolean isSatisfied = this.event1isSatisfied && this.event2isSatisfied;
+        if ((isSatisfied) && (this.timeOfObservationInNanos < 0)) {
+            this.timeOfObservationInNanos = unit.toNanos(observedAt);
+        }
+
+        return isSatisfied;
     }
 
     /**
@@ -79,6 +96,16 @@ public final class AndEvent implements IEvent {
         allEventLogs.addAll(this.event1.getAllObservedLogs());
         allEventLogs.addAll(this.event2.getAllObservedLogs());
         return allEventLogs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized long observedAt(TimeUnit unit) {
+        return (this.timeOfObservationInNanos < 0)
+            ? this.timeOfObservationInNanos
+            : unit.convert(this.timeOfObservationInNanos, TimeUnit.NANOSECONDS);
     }
 
     /**

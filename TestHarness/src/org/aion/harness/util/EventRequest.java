@@ -80,7 +80,7 @@ public final class EventRequest {
             return true;
         }
 
-        boolean isSatisfied = this.requestedEvent.isSatisfiedBy(line);
+        boolean isSatisfied = this.requestedEvent.isSatisfiedBy(line, currentTime, unit);
 
         if (isSatisfied) {
             this.currentState = RequestState.SATISFIED;
