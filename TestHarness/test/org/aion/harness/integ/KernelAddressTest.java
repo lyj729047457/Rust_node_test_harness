@@ -51,7 +51,7 @@ public class KernelAddressTest {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
-        this.rpc = new RPC();
+        this.rpc = new RPC("127.0.0.1", "8545");
     }
 
     @After

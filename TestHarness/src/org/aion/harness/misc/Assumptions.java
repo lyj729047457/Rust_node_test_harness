@@ -23,10 +23,6 @@ public final class Assumptions {
 
     public static final String PREMINED_PRIVATE_KEY = "223f19377d95582055bd8972cf3ffd635d2712a7171e4888091a066b9f4f63d5";
 
-    public static final String IP = "127.0.0.1";
-
-    public static final String PORT = "8545";
-
     public static final int PRODUCTION_ERROR_STATUS = -9999;
 
     public static final int TESTING_ERROR_STATUS = -7777;

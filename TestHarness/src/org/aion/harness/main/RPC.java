@@ -25,7 +25,11 @@ import org.apache.commons.codec.binary.Hex;
  * This class is not thread-safe.
  */
 public final class RPC {
-    private final RpcCaller rpc = new RpcCaller();
+    private final RpcCaller rpc;
+
+    public RPC(String ip, String port) {
+        this.rpc = new RpcCaller(ip, port);
+    }
 
     /**
      * Sends the specified transaction to the node.

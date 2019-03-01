@@ -44,6 +44,8 @@ public class EventListenerTest {
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
     private static PrivateKey preminedPrivateKey;
+    private static String ip = "127.0.0.1";
+    private static String port = "8545";
 
     private RPC rpc;
     private Node node;
@@ -55,7 +57,7 @@ public class EventListenerTest {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
-        this.rpc = new RPC();
+        this.rpc = new RPC(ip, port);
     }
 
     @After
@@ -257,7 +259,7 @@ public class EventListenerTest {
         long delay = TimeUnit.SECONDS.toMillis(10);
         long timeout = TimeUnit.SECONDS.toMillis(40);
 
-        result = listener.waitForSyncToComplete(delay, timeout);
+        result = listener.waitForSyncToComplete(delay, timeout, ip, port);
         System.out.println("Sync result: " + result);
 
         result = this.node.stop();

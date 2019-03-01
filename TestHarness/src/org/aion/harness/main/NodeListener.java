@@ -129,12 +129,12 @@ public final class NodeListener {
      * @param timeoutInMillis The total amount of time to wait for syncing.
      * @return  the result of this event.
      */
-    public Result waitForSyncToComplete(long delayInMillis, long timeoutInMillis) {
+    public Result waitForSyncToComplete(long delayInMillis, long timeoutInMillis, String ip, String port) {
         if (timeoutInMillis < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
         }
 
-        RPC rpc = new RPC();
+        RPC rpc = new RPC(ip, port);
 
         try {
             long currentTime = System.currentTimeMillis();

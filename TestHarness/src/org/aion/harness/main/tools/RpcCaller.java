@@ -3,16 +3,30 @@ package org.aion.harness.main.tools;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import org.aion.harness.misc.Assumptions;
 
 /**
  * A class responsible for calling an RPC endpoint using the provided payload.
  */
 public final class RpcCaller {
+    private final String ip;
+    private final String port;
+
+    public RpcCaller(String ip, String port) {
+        if (ip == null) {
+            throw new NullPointerException("IP cannot be null");
+        }
+
+        if (port == null) {
+            throw new NullPointerException("Port cannot be null");
+        }
+
+        this.ip = ip;
+        this.port = port;
+    }
 
     public InternalRpcResult call(RpcPayload payload, boolean verbose) throws InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder()
-            .command("curl", "-X", "POST", "--data", payload.payload, Assumptions.IP + ":" + Assumptions.PORT);
+            .command("curl", "-X", "POST", "--data", payload.payload, this.ip + ":" + this.port);
 
         if (verbose) {
             processBuilder.inheritIO();
