@@ -99,8 +99,8 @@ public final class LogListener implements TailerListener {
             throw new NullPointerException("Cannot submit a null event request.");
         }
 
-        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
-        EventRequest eventRequest = new EventRequest(event, deadline, TimeUnit.MILLISECONDS);
+        long deadlineInNanos = System.nanoTime() + unit.toNanos(timeout);
+        EventRequest eventRequest = new EventRequest(event, deadlineInNanos, TimeUnit.NANOSECONDS);
 
         // Attempt to add the request to the pool.
         addRequest(eventRequest, timeout, unit);
@@ -175,7 +175,7 @@ public final class LogListener implements TailerListener {
         }
 
         // If the request has expired, mark it as so and return the pool permit.
-        if (request.isExpiredAtTime(System.currentTimeMillis(), TimeUnit.MILLISECONDS)) {
+        if (request.isExpiredAtTime(System.nanoTime(), TimeUnit.NANOSECONDS)) {
             request.markAsExpired();
             REQUEST_POOL_GATE.release();
             return;
@@ -215,7 +215,7 @@ public final class LogListener implements TailerListener {
         }
 
         synchronized (this) {
-            long currentTime = System.currentTimeMillis();
+            long currentTimeInNanos = System.nanoTime();
 
             // Iterate over each of the requests in the pool.
             Iterator<EventRequest> requestIterator = this.requestPool.iterator();
@@ -227,7 +227,7 @@ public final class LogListener implements TailerListener {
                 if (!request.isPending()) {
                     requestIterator.remove();
                     numRequestsRemoved++;
-                } else if (request.isSatisfiedBy(nextLine, currentTime, TimeUnit.MILLISECONDS)) {
+                } else if (request.isSatisfiedBy(nextLine, currentTimeInNanos, TimeUnit.NANOSECONDS)) {
                     requestIterator.remove();
                     numRequestsRemoved++;
                 }

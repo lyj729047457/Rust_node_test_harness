@@ -3,6 +3,7 @@ package org.aion.harness.result;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The result of a request for some log event to be observed.
@@ -13,8 +14,8 @@ import java.util.List;
  *   - The event was rejected: indicates that observation at the time of the request was not possible.
  *   - The event was expired: indicates that the event timed out before being satisfied.
  *
- * In the case of an event being observed, it will also come with a timestamp (in milliseconds)
- * indicating when the listener observed the event.
+ * In the case of an event being observed, it will also come with a timestamp indicating when the
+ * listener observed the event.
  *
  * In the case of an event being rejected, it will also come with a reason for why the event request
  * was rejected.
@@ -28,12 +29,12 @@ public final class LogEventResult {
     private final List<String> observedEvents;
     private final List<String> observedLogs;
 
-    private final long timeOfObservationInMillis;
+    private final long timeOfObservationInNanos;
     private final String causeOfRejection;
 
     private enum RequestResultState { OBSERVED, UNOBSERVED, REJECTED, EXPIRED }
 
-    private LogEventResult(RequestResultState requestState, List<String> observedEvents, List<String> observedLogs, String rejectionCause, long observationTime) {
+    private LogEventResult(RequestResultState requestState, List<String> observedEvents, List<String> observedLogs, String rejectionCause, long observationTime, TimeUnit unit) {
         if (requestState == null) {
             throw new NullPointerException("Cannot construct result with null state.");
         }
@@ -42,7 +43,7 @@ public final class LogEventResult {
         this.observedEvents = (observedEvents == null) ? Collections.emptyList() : new ArrayList<>(observedEvents);
         this.observedLogs = (observedLogs == null) ? Collections.emptyList() : new ArrayList<>(observedLogs);
         this.causeOfRejection = rejectionCause;
-        this.timeOfObservationInMillis = observationTime;
+        this.timeOfObservationInNanos = (observationTime < 0) ? observationTime : unit.toNanos(observationTime);
     }
 
     /**
@@ -51,11 +52,16 @@ public final class LogEventResult {
      *
      * @param observedEvents The event strings that were observed.
      * @param observedLogs The log lines that satisfied the observed event strings.
-     * @param timeOfObservationInMillis Time at which event was observed in milliseconds.
+     * @param timeOfObservation Time at which event was observed.
+     * @param unit The time unit of the observation time.
      * @return a new observed event request result.
      */
-    public static LogEventResult observedEvent(List<String> observedEvents, List<String> observedLogs, long timeOfObservationInMillis) {
-        return new LogEventResult(RequestResultState.OBSERVED, observedEvents, observedLogs, null, timeOfObservationInMillis);
+    public static LogEventResult observedEvent(List<String> observedEvents, List<String> observedLogs, long timeOfObservation, TimeUnit unit) {
+        if (unit == null) {
+            throw new NullPointerException("Cannot construct result with null time unit.");
+        }
+
+        return new LogEventResult(RequestResultState.OBSERVED, observedEvents, observedLogs, null, timeOfObservation, unit);
     }
 
     /**
@@ -68,7 +74,7 @@ public final class LogEventResult {
      * @return a new unobserved event request result.
      */
     public static LogEventResult unobservedEvent(List<String> observedEvents, List<String> observedLogs) {
-        return new LogEventResult(RequestResultState.UNOBSERVED, observedEvents, observedLogs, null, -1);
+        return new LogEventResult(RequestResultState.UNOBSERVED, observedEvents, observedLogs, null, -1, null);
     }
 
     /**
@@ -82,7 +88,7 @@ public final class LogEventResult {
      * @return a new rejected event request result
      */
     public static LogEventResult rejectedEvent(String causeOfRejection, List<String> observedEvents, List<String> observedLogs) {
-        return new LogEventResult(RequestResultState.REJECTED, observedEvents, observedLogs, causeOfRejection, -1);
+        return new LogEventResult(RequestResultState.REJECTED, observedEvents, observedLogs, causeOfRejection, -1, null);
     }
 
     /**
@@ -94,7 +100,7 @@ public final class LogEventResult {
      * @return a new expired event request result.
      */
     public static LogEventResult expiredEvent(List<String> observedEvents, List<String> observedLogs) {
-        return new LogEventResult(RequestResultState.EXPIRED, observedEvents, observedLogs,null, -1);
+        return new LogEventResult(RequestResultState.EXPIRED, observedEvents, observedLogs,null, -1, null);
     }
 
     /**
@@ -145,13 +151,20 @@ public final class LogEventResult {
     }
 
     /**
-     * Returns the time that the event was observed (in milliseconds) only if it was observed.
+     * Returns the time that the event was observed in the desired units only if it was observed.
      * Otherwise, returns a negative number.
      *
+     * @param unit The time unit to return the observation time in.
      * @return The observation time or a negative number.
      */
-    public long timeOfObservationInMilliseconds() {
-        return this.timeOfObservationInMillis;
+    public long timeOfObservation(TimeUnit unit) {
+        if (unit == null) {
+            throw new NullPointerException("Cannot get the observation time with null time units.");
+        }
+
+        return (this.timeOfObservationInNanos < 0)
+            ? this.timeOfObservationInNanos
+            : unit.convert(this.timeOfObservationInNanos, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -177,7 +190,7 @@ public final class LogEventResult {
     @Override
     public String toString() {
         if (this.resultState == RequestResultState.OBSERVED) {
-            return "LogEventResult { Observed at time: " + this.timeOfObservationInMillis + " (millis) }";
+            return "LogEventResult { Observed at time: " + this.timeOfObservationInNanos + " (nanos) }";
         } else if (this.resultState == RequestResultState.UNOBSERVED) {
             return "LogEventResult { Unobserved }";
         } else if (this.resultState == RequestResultState.REJECTED) {

@@ -2,6 +2,7 @@ package org.aion.harness.main;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
@@ -174,32 +175,36 @@ public final class RPC {
      * this method considers a node in sync with the network if it is within 5 blocks of the top
      * of the chain.
      *
-     * @param delayInMillis The amount of time to wait between checking the current sync status.
-     * @param timeoutInMillis The total amount of time to wait for syncing.
+     * This method will periodically print out an update as to the current status of the sync.
+     *
+     * @param timeout The total amount of time to wait for syncing.
+     * @param timeoutUnit The time units of the timeout quantity.
      * @return  the result of this event.
      */
-    public Result waitForSyncToComplete(long delayInMillis, long timeoutInMillis) {
-        if (timeoutInMillis < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+    public Result waitForSyncToComplete(long timeout, TimeUnit timeoutUnit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
         try {
-            long currentTime = System.currentTimeMillis();
-            long deadline = currentTime + timeoutInMillis;
+            long currentTimeInNanos = System.nanoTime();
+            long deadlineInNanos = currentTimeInNanos + timeoutUnit.toNanos(timeout);
 
             RpcResult<SyncStatus> syncStatus = getSyncingStatus();
             if (!syncStatus.isSuccess()) {
                 return Result.unsuccessfulDueTo(syncStatus.getError());
             }
 
-            while ((currentTime < deadline) && (syncStatus.getResult().isSyncing())) {
+            while ((currentTimeInNanos < deadlineInNanos) && (syncStatus.getResult().isSyncing())) {
                 // Log the current status.
                 SyncStatus status = syncStatus.getResult();
                 broadcastSyncUpdate(status.isWaitingToConnect(), status.getSyncCurrentBlockNumber(), status.getHighestBlockNumber());
 
                 // Sleep for the specified delay, unless there is less time remaining until the
                 // deadline, then sleep only until the deadline.
-                Thread.sleep(Math.min(deadline - currentTime, delayInMillis));
+                long deadlineInMillis = TimeUnit.NANOSECONDS.toMillis(deadlineInNanos - currentTimeInNanos);
+                long timeoutInMillis = timeoutUnit.toNanos(timeout);
+                Thread.sleep(Math.min(deadlineInMillis, timeoutInMillis));
 
                 // Update the status.
                 syncStatus = getSyncingStatus();
@@ -207,11 +212,11 @@ public final class RPC {
                     return Result.unsuccessfulDueTo(syncStatus.getError());
                 }
 
-                currentTime = System.currentTimeMillis();
+                currentTimeInNanos = System.nanoTime();
             }
 
             // We either timed out or finished syncing.
-            if (currentTime >= deadline) {
+            if (currentTimeInNanos >= deadlineInNanos) {
                 return Result.unsuccessfulDueTo("Timed out waiting for sync to finish.");
             } else {
                 System.out.println(syncStatus);
@@ -256,7 +261,11 @@ public final class RPC {
             }
             
             try {
-                return RpcResult.successful(new ReceiptHash(Hex.decodeHex(result)), internalResult.timeOfCall);
+                return RpcResult.successful(
+                    new ReceiptHash(Hex.decodeHex(result)),
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
+
             } catch (DecoderException e) {
                 return RpcResult.unsuccessful(e.toString());
             }
@@ -287,7 +296,11 @@ public final class RPC {
                 throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
             }
 
-            return RpcResult.successful(new BigInteger(result, 16), internalResult.timeOfCall);
+            return RpcResult.successful(
+                new BigInteger(result, 16),
+                internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                TimeUnit.NANOSECONDS);
+
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
@@ -315,7 +328,11 @@ public final class RPC {
                 throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
             }
 
-            return RpcResult.successful(new BigInteger(result, 16), internalResult.timeOfCall);
+            return RpcResult.successful(
+                new BigInteger(result, 16),
+                internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                TimeUnit.NANOSECONDS);
+
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }
@@ -345,7 +362,11 @@ public final class RPC {
 
             try {
                 TransactionReceipt receipt = new TransactionReceiptBuilder().buildFromJsonString(result);
-                return RpcResult.successful(receipt, internalResult.timeOfCall);
+                return RpcResult.successful(
+                    receipt,
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
+
             } catch (DecoderException e) {
                 return RpcResult.unsuccessful(e.toString());
             }
@@ -372,7 +393,11 @@ public final class RPC {
             }
 
             if (result.equals("false")) {
-                return RpcResult.successful(SyncStatus.notSyncing(), internalResult.timeOfCall);
+                return RpcResult.successful(
+                    SyncStatus.notSyncing(),
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
+
             } else {
                 JsonStringParser statusParser = new JsonStringParser(result);
                 String startBlock = statusParser.attributeToString("startingBlock");
@@ -386,7 +411,10 @@ public final class RPC {
                 // We can tell that we haven't connected to the network yet if its highest block number is zero.
                 boolean waitingToConnect = (highestBlock != null) && (highestBlock.equals(BigInteger.ZERO));
 
-                return RpcResult.successful(SyncStatus.syncing(waitingToConnect, startingBlock, currentBlock, highestBlock), internalResult.timeOfCall);
+                return RpcResult.successful(
+                    SyncStatus.syncing(waitingToConnect, startingBlock, currentBlock, highestBlock),
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
             }
 
         } else {

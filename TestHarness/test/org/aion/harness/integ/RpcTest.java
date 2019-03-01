@@ -586,7 +586,7 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        Result syncResult = this.rpc.waitForSyncToComplete(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(40));
+        Result syncResult = this.rpc.waitForSyncToComplete(40, TimeUnit.SECONDS);
         System.out.println("Sync result: " + syncResult);
 
         result = this.node.stop();

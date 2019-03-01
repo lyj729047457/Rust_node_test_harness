@@ -23,13 +23,13 @@ public final class EventRequest {
 
     public final FutureResult<LogEventResult> future = new FutureResult<>();
     private final IEvent requestedEvent;
-    private final long deadlineInMilliseconds;
+    private final long deadlineInNanos;
 
     private enum RequestState { PENDING, SATISFIED, UNOBSERVED, REJECTED, EXPIRED }
 
     private RequestState currentState = RequestState.PENDING;
     private String causeOfRejection;
-    private long timeOfObservationInMilliseconds = -1;
+    private long timeOfObservationInNanos = -1;
 
     /**
      * Constructs a new event request for the specified event.
@@ -40,7 +40,7 @@ public final class EventRequest {
      */
     public EventRequest(IEvent eventToRequest, long deadline, TimeUnit unit) {
         this.requestedEvent = eventToRequest;
-        this.deadlineInMilliseconds = unit.toMillis(deadline);
+        this.deadlineInNanos = unit.toNanos(deadline);
         this.ID = instanceCount++;
     }
 
@@ -84,7 +84,7 @@ public final class EventRequest {
 
         if (isSatisfied) {
             this.currentState = RequestState.SATISFIED;
-            this.timeOfObservationInMilliseconds = unit.toMillis(currentTime);
+            this.timeOfObservationInNanos = unit.toNanos(currentTime);
             finishFuture();
         }
 
@@ -101,7 +101,7 @@ public final class EventRequest {
      * @return whether or not this request is expired.
      */
     public boolean isExpiredAtTime(long time, TimeUnit unit) {
-        return unit.toMillis(time) > this.deadlineInMilliseconds;
+        return unit.toNanos(time) > this.deadlineInNanos;
     }
 
     /**
@@ -178,13 +178,32 @@ public final class EventRequest {
         }
 
         if (this.currentState == RequestState.SATISFIED) {
-            return LogEventResult.observedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents(), this.timeOfObservationInMilliseconds);
+
+            return LogEventResult.observedEvent(
+                this.requestedEvent.getAllObservedEvents(),
+                this.requestedEvent.getAllObservedEvents(),
+                this.timeOfObservationInNanos,
+                TimeUnit.NANOSECONDS);
+
         } else if (this.currentState == RequestState.REJECTED) {
-            return LogEventResult.rejectedEvent(this.causeOfRejection, this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
+
+            return LogEventResult.rejectedEvent(
+                this.causeOfRejection,
+                this.requestedEvent.getAllObservedEvents(),
+                this.requestedEvent.getAllObservedEvents());
+
         } else if (this.currentState == RequestState.EXPIRED) {
-            return LogEventResult.expiredEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
+
+            return LogEventResult.expiredEvent(
+                this.requestedEvent.getAllObservedEvents(),
+                this.requestedEvent.getAllObservedEvents());
+
         } else {
-            return LogEventResult.unobservedEvent(this.requestedEvent.getAllObservedEvents(), this.requestedEvent.getAllObservedEvents());
+
+            return LogEventResult.unobservedEvent(
+                this.requestedEvent.getAllObservedEvents(),
+                this.requestedEvent.getAllObservedEvents());
+
         }
     }
 

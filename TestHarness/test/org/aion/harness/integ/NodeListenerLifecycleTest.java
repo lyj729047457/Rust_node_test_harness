@@ -82,7 +82,7 @@ public class NodeListenerLifecycleTest {
         assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
-        LogEventResult eventResult = listener.listenForHeartbeat(0, TimeUnit.NANOSECONDS).get();
+        LogEventResult eventResult = listener.listenForHeartbeat(10, TimeUnit.SECONDS).get();
         System.out.println("Result = " + eventResult);
         assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());

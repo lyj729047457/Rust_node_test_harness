@@ -42,13 +42,13 @@ public final class Eavesdropper implements Runnable {
 
         while (!this.dead.get()) {
 
-            long startTime;
+            long startTimeInNanos;
             LogEventResult result = null;
 
             if (this.gossip == Gossip.HEARTBEAT) {
 
                 // Listen for a regular heartbeat event.
-                startTime = System.currentTimeMillis();
+                startTimeInNanos = System.nanoTime();
 
                 try {
                     result = this.listener.listenForHeartbeat(2, TimeUnit.MINUTES).get();
@@ -64,7 +64,7 @@ public final class Eavesdropper implements Runnable {
                 }
 
                 if (result.eventWasObserved()) {
-                    long time = TimeUnit.MILLISECONDS.toSeconds(result.timeOfObservationInMilliseconds() - startTime);
+                    long time = TimeUnit.NANOSECONDS.toSeconds(result.timeOfObservation(TimeUnit.NANOSECONDS) - startTimeInNanos);
                     System.out.println("Thread #" + this.ID + ": event observed | time: " + time + " second(s)");
                 } else if (result.eventWasRejected()) {
                     System.out.println("Thread #" + this.ID + ": event request rejected due to: " + result.causeOfRejection());

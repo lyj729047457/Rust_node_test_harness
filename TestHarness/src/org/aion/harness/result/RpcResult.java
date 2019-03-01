@@ -1,16 +1,17 @@
 package org.aion.harness.result;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A result from an RPC call.
  *
  * An rpc result is either successful or not.
  *
- * If the rpc result is unsuccessful then {@code getResult()} and {@code timeOfCallInMillis} are
+ * If the rpc result is unsuccessful then {@code getResult()} and {@code timeOfCall} are
  * meaningless, but {@code error} will be meaningful.
  *
- * If the rpc result is successful then {@code timeOfCallInMillis} represents the time at which the
- * RPC call was made, in milliseconds, and {@code getResult()} will return the particular result of
- * the call.
+ * If the rpc result is successful then {@code timeOfCall} represents the time at which the
+ * RPC call was made, and {@code getResult()} will return the particular result of the call.
  *
  * There is not concept of equality defined for an rpc result.
  *
@@ -20,37 +21,41 @@ package org.aion.harness.result;
 public final class RpcResult<T> {
     private final boolean success;
     private final String error;
-    private final long timeOfCallInMillis;
+    private final long timeOfCallInNanos;
 
     private final T result;
 
-    private RpcResult(boolean success, T result, String error, long time) {
+    private RpcResult(boolean success, T result, String error, long time, TimeUnit unit) {
         if (error == null) {
             throw new NullPointerException("Cannot construct rpc result with null error.");
         }
 
         this.success = success;
         this.error = error;
-        this.timeOfCallInMillis = time;
+        this.timeOfCallInNanos = (time < 0) ? time : unit.toNanos(time);
         this.result = result;
     }
 
     /**
      * Constructs a successful rpc result, where output is the output returned by the rpc call and
-     * timeOfCallInMillis is the time at which the call was made, in milliseconds.
+     * timeOfCall is the time at which the call was made.
      *
      * @param result The result of the RPC call.
-     * @param timeOfCallInMillis The time of the RPC call.
+     * @param timeOfCall The time of the RPC call.
+     * @param unit The unit of time of the timeOfCall quantity.
      * @return a successful rpc result.
      */
-    public static <T> RpcResult<T> successful(T result, long timeOfCallInMillis) {
+    public static <T> RpcResult<T> successful(T result, long timeOfCall, TimeUnit unit) {
         if (result == null) {
             throw new NullPointerException("Cannot construct rpc result with null result.");
         }
-        if (timeOfCallInMillis < 0) {
+        if (timeOfCall < 0) {
             throw new IllegalArgumentException("cannot construct successful rpc result with negative-valued timestamp.");
         }
-        return new RpcResult<>(true, result, "", timeOfCallInMillis);
+        if (unit == null) {
+            throw new NullPointerException("Cannot construct rpc result with null time unit.");
+        }
+        return new RpcResult<>(true, result, "", timeOfCall, unit);
     }
 
     /**
@@ -61,7 +66,7 @@ public final class RpcResult<T> {
      * @return an unsuccessful rpc result.
      */
     public static <T> RpcResult<T> unsuccessful(String error) {
-        return new RpcResult<>(false, null, error, -1);
+        return new RpcResult<>(false, null, error, -1, null);
     }
 
     /**
@@ -74,12 +79,15 @@ public final class RpcResult<T> {
     }
 
     /**
-     * Returns the time at which the RPC call was issued in milliseconds.
+     * Returns the time at which the RPC call was issued in the desired time units.
      *
+     * @param unit The time units of the returned result.
      * @return the time of the RPC call.
      */
-    public long getTimeOfCall() {
-        return this.timeOfCallInMillis;
+    public long getTimeOfCall(TimeUnit unit) {
+        return (this.timeOfCallInNanos < 0)
+            ? this.timeOfCallInNanos
+            : unit.convert(this.timeOfCallInNanos, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -103,7 +111,7 @@ public final class RpcResult<T> {
     @Override
     public String toString() {
         if (this.success) {
-            return "RpcResult { successful | timestamp: " + this.timeOfCallInMillis + " (millis) | output: " + this.result + " }";
+            return "RpcResult { successful | timestamp: " + this.timeOfCallInNanos + " (nanos) | output: " + this.result + " }";
         } else {
             return "RpcResult { unsuccessful due to: " + this.error + " }";
         }

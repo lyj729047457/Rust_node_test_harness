@@ -2,7 +2,6 @@ package org.aion.harness.kernel;
 
 import java.util.Arrays;
 import main.SignedTransactionBuilder;
-import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.TransactionResult;
 
 import java.math.BigInteger;

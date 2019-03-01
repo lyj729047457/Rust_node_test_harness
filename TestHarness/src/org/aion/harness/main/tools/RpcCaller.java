@@ -3,6 +3,7 @@ package org.aion.harness.main.tools;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A class responsible for calling an RPC endpoint using the provided payload.
@@ -33,7 +34,7 @@ public final class RpcCaller {
         }
 
         try {
-            long timeOfCall = System.currentTimeMillis();
+            long timeOfCallInNanos = System.nanoTime();
             Process rpcProcess = processBuilder.start();
 
             int status = rpcProcess.waitFor();
@@ -60,7 +61,7 @@ public final class RpcCaller {
             // contained no 'error' content and it does contain 'result' content.
 
             if ((status == 0) && (!outputParser.hasAttribute("error")) && (outputParser.attributeToString("result") != null)) {
-                return InternalRpcResult.successful(output, timeOfCall);
+                return InternalRpcResult.successful(output, timeOfCallInNanos, TimeUnit.NANOSECONDS);
             } else {
                 String error = outputParser.attributeToString("error");
 
