@@ -10,7 +10,9 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.types.FutureResult;
+import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.misc.Assumptions;
@@ -557,6 +559,35 @@ public class RpcTest {
         RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(receiptHash);
         System.out.println("Receipt result = " + receiptResult);
         assertFalse(receiptResult.success);
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    /**
+     * This test does not assert anything about the syncing process because there's not really
+     * anything meaningful to latch on to. It is here so that we can visually monitor this output.
+     */
+    @Test
+    public void testSyncingToNetwork() {
+        NodeConfigurations configurations = new NodeConfigurationBuilder()
+            .network(Network.MAINNET)
+            .build();
+
+        this.node.configure(configurations);
+
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        Result syncResult = this.rpc.waitForSyncToComplete(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(40));
+        System.out.println("Sync result: " + syncResult);
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);

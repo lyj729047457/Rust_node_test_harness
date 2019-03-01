@@ -1,6 +1,7 @@
 package org.aion.harness.main;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
@@ -12,6 +13,8 @@ import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.SyncStatus;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.main.types.TransactionReceiptBuilder;
+import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -159,6 +162,75 @@ public final class RPC {
      */
     public RpcResult<SyncStatus> getSyncingStatus() throws InterruptedException {
         return callSyncing(false);
+    }
+
+    /**
+     * Blocks until the node has finished syncing with the rest of the network, or until the request
+     * times out.
+     *
+     * Technically speaking, a node never finishes syncing with the network unless it is always
+     * at the top block and always the first to mine the next block. However, once at the top of
+     * the chain, a node is in a relatively stable position with regards to the network. Therefore
+     * this method considers a node in sync with the network if it is within 5 blocks of the top
+     * of the chain.
+     *
+     * @param delayInMillis The amount of time to wait between checking the current sync status.
+     * @param timeoutInMillis The total amount of time to wait for syncing.
+     * @return  the result of this event.
+     */
+    public Result waitForSyncToComplete(long delayInMillis, long timeoutInMillis) {
+        if (timeoutInMillis < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        }
+
+        try {
+            long currentTime = System.currentTimeMillis();
+            long deadline = currentTime + timeoutInMillis;
+
+            RpcResult<SyncStatus> syncStatus = getSyncingStatus();
+            if (!syncStatus.success) {
+                return Result.unsuccessfulDueTo(syncStatus.error);
+            }
+
+            while ((currentTime < deadline) && (syncStatus.getResult().isSyncing())) {
+                // Log the current status.
+                SyncStatus status = syncStatus.getResult();
+                broadcastSyncUpdate(status.isWaitingToConnect(), status.getSyncCurrentBlockNumber(), status.getHighestBlockNumber());
+
+                // Sleep for the specified delay, unless there is less time remaining until the
+                // deadline, then sleep only until the deadline.
+                Thread.sleep(Math.min(deadline - currentTime, delayInMillis));
+
+                // Update the status.
+                syncStatus = getSyncingStatus();
+                if (!syncStatus.success) {
+                    return Result.unsuccessfulDueTo(syncStatus.error);
+                }
+
+                currentTime = System.currentTimeMillis();
+            }
+
+            // We either timed out or finished syncing.
+            if (currentTime >= deadline) {
+                return Result.unsuccessfulDueTo("Timed out waiting for sync to finish.");
+            } else {
+                System.out.println(syncStatus);
+                return Result.successful();
+            }
+
+        } catch (InterruptedException e) {
+            return Result.unsuccessfulDueToException(e);
+        }
+    }
+
+    private void broadcastSyncUpdate(boolean waitingToConnect, BigInteger currentBlock, BigInteger highestBlock) {
+        if (waitingToConnect) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
+        } else {
+            System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
+                + NumberFormat.getIntegerInstance().format(currentBlock)
+                + " of " + NumberFormat.getIntegerInstance().format(highestBlock) + " }");
+        }
     }
 
     private RpcResult<ReceiptHash> callSendTransaction(Transaction transaction, boolean verbose) throws InterruptedException {

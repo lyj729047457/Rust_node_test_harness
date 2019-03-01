@@ -235,40 +235,6 @@ public class EventListenerTest {
         assertFalse(this.node.isAlive());
     }
 
-    /**
-     * This test does not assert anything about the syncing process because there's not really
-     * anything meaningful to latch on to. It is here so that we can visually monitor this output.
-     */
-    @Test
-    public void testSyncingToNetwork() {
-        NodeConfigurations configurations = new NodeConfigurationBuilder()
-            .network(Network.MAINNET)
-            .build();
-
-        this.node.configure(configurations);
-
-        initializeNodeWithChecks();
-        Result result = this.node.start();
-        System.out.println("Start result = " + result);
-
-        assertTrue(result.success);
-        assertTrue(this.node.isAlive());
-
-        NodeListener listener = new NodeListener();
-
-        long delay = TimeUnit.SECONDS.toMillis(10);
-        long timeout = TimeUnit.SECONDS.toMillis(40);
-
-        result = listener.waitForSyncToComplete(delay, timeout, ip, port);
-        System.out.println("Sync result: " + result);
-
-        result = this.node.stop();
-        System.out.println("Stop result = " + result);
-
-        assertTrue(result.success);
-        assertFalse(this.node.isAlive());
-    }
-
     @Test
     public void testFutureResultBlocksOnGet() throws InterruptedException {
         initializeNodeWithChecks();
