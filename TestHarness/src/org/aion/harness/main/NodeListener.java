@@ -13,7 +13,6 @@ import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.util.EventRequest;
 import org.aion.harness.util.LogListener;
 import org.apache.commons.codec.binary.Hex;
 
@@ -33,103 +32,87 @@ public final class NodeListener {
     private final LogListener logListener = SingletonFactory.singleton().logReader().getLogListener();
 
     /**
-     * Blocks until the miners have been activated in the node, or until the request has timed out,
-     * was rejected or was not observed before the node's shut down.
+     * Listens for the miners to start up.
      *
-     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
+     * implementation.
+     *
+     * @param timeout The duration after which the event expires.
+     * @param unit The time unit of the duration.
      * @return the result of this event.
-     * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public LogEventResult waitForMinersToStart(long timeoutInMillis) throws InterruptedException {
-        if (timeoutInMillis < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+    public FutureResult<LogEventResult> listenForMinersToStart(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
-        FutureResult<LogEventResult> futureResult = this.logListener.submitEventToBeListenedFor(
-            getStartedMiningEvent(),
-            timeoutInMillis,
-            TimeUnit.MILLISECONDS);
-
-        return futureResult.get();
+        return this.logListener.submitEventToBeListenedFor(getStartedMiningEvent(), timeout, unit);
     }
 
     /**
-     * Blocks until a transaction with the specified hash has been sealed into a block, or until the
-     * request has timed out, was rejected or was not observed before the node's shut down.
+     * Listens for the transaction with the specified hash to be processed.
      *
-     * @param transactionHash The hash of the transaction to watch for.
-     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
+     * implementation.
+     *
+     * @param transactionHash The hash of the transaction.
+     * @param timeout The duration after which the event expires.
+     * @param unit The time unit of the duration.
      * @return the result of this event.
-     * @throws NullPointerException if transactionHash is null.
-     * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public LogEventResult waitForTransactionToBeProcessed(byte[] transactionHash, long timeoutInMillis) throws InterruptedException {
+    public FutureResult<LogEventResult> listenForTransactionToBeProcessed(byte[] transactionHash, long timeout, TimeUnit unit) {
         if (transactionHash == null) {
             throw new NullPointerException("Cannot wait for a null transaction hash.");
         }
-        if (timeoutInMillis < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
         IEvent transactionSealedEvent = getTransactionSealedEvent(transactionHash);
         IEvent transactionRejectedEvent = getTransactionRejectedEvent(transactionHash);
         IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
 
-        FutureResult<LogEventResult> futureResult = this.logListener.submitEventToBeListenedFor(
-            transactionProcessedEvent,
-            timeoutInMillis,
-            TimeUnit.MILLISECONDS);
-
-        return futureResult.get();
+        return this.logListener.submitEventToBeListenedFor(transactionProcessedEvent, timeout, unit);
     }
 
     /**
-     * Blocks until some "heartbeat" event has been observed, or until the request has timed out,
-     * was rejected or was not observed before the node's shut down.
+     * Listens for the heartbeat event to occur.
      *
-     * A heartbeat event is an internal detail, but is expected to be a consistently occurring event
-     * in the node's output log.
+     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
+     * implementation.
      *
-     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * @param timeout The duration after which the event expires.
+     * @param unit The time unit of the duration.
      * @return the result of this event.
-     * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public LogEventResult waitForHeartbeat(long timeoutInMillis) throws InterruptedException {
-        if (timeoutInMillis < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+    public FutureResult<LogEventResult> listenForHeartbeat(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
-        FutureResult<LogEventResult> futureResult = this.logListener.submitEventToBeListenedFor(
-            getHeartbeatEvent(),
-            timeoutInMillis,
-            TimeUnit.MILLISECONDS);
-
-        return futureResult.get();
+        return this.logListener.submitEventToBeListenedFor(getHeartbeatEvent(), timeout, unit);
     }
 
     /**
-     * Blocks until the specified event has occurred, or until the request has timed out,
-     * was rejected or was not observed before the node's shut down.
+     * Listens for the specified event to occur.
      *
-     * @param timeoutInMillis Maximum time to wait in milliseconds.
+     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
+     * implementation.
+     *
+     * @param event The event to listen for.
+     * @param timeout The duration after which the event expires.
+     * @param unit The time unit of the duration.
      * @return the result of this event.
-     * @throws NullPointerException If event is null.
-     * @throws IllegalArgumentException if timeoutInMillis is negative.
      */
-    public LogEventResult waitForEvent(IEvent event, long timeoutInMillis) throws InterruptedException {
+    public FutureResult<LogEventResult> listenForEvent(IEvent event, long timeout, TimeUnit unit) {
         if (event == null) {
             throw new NullPointerException("Cannot wait for a null event.");
         }
-        if (timeoutInMillis < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeoutInMillis);
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
-        FutureResult<LogEventResult> futureResult = this.logListener.submitEventToBeListenedFor(
-            event,
-            timeoutInMillis,
-            TimeUnit.MILLISECONDS);
-
-        return futureResult.get();
+        return this.logListener.submitEventToBeListenedFor(event, timeout, unit);
     }
 
     /**

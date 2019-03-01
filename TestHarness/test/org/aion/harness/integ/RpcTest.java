@@ -9,6 +9,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
@@ -443,11 +444,13 @@ public class RpcTest {
         NodeListener listener = new NodeListener();
         Transaction transaction = transactionResult.getTransaction();
 
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
+
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
-        LogEventResult waitResult = listener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        LogEventResult waitResult = futureResult.get();
         System.out.println("Listener result = " + waitResult);
         assertTrue(waitResult.eventWasObserved());
 
@@ -499,11 +502,13 @@ public class RpcTest {
         NodeListener listener = new NodeListener();
         Transaction transaction = transactionResult.getTransaction();
 
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
+
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
-        LogEventResult waitResult = listener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), TimeUnit.MINUTES.toMillis(2));
+        LogEventResult waitResult = futureResult.get();
         System.out.println("Listener result = " + waitResult);
         assertTrue(waitResult.eventWasObserved());
 
@@ -562,21 +567,23 @@ public class RpcTest {
 
     private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
-                preminedPrivateKey,
-                destination,
-                transferValue,
-                BigInteger.ZERO);
+            preminedPrivateKey,
+            destination,
+            transferValue,
+            BigInteger.ZERO);
 
         Transaction transaction = transactionResult.getTransaction();
+
+        FutureResult<LogEventResult> futureResult = new NodeListener().listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            1,
+            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);
         assertTrue(result.success);
 
-        byte[] transactionHash = transaction.getTransactionHash();
-        long timeout = TimeUnit.MINUTES.toMillis(1);
-
-        LogEventResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);
+        LogEventResult eventResult = futureResult.get();
         assertTrue(eventResult.eventWasObserved());
     }
 

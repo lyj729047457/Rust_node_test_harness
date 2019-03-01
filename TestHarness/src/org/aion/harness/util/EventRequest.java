@@ -63,6 +63,7 @@ public final class EventRequest {
         if (isSatisfied) {
             this.currentState = RequestState.SATISFIED;
             this.timeOfObservationInMilliseconds = unit.toMillis(currentTime);
+            finishFuture();
         }
 
         return isSatisfied;
@@ -128,18 +129,21 @@ public final class EventRequest {
         if (this.currentState == RequestState.PENDING) {
             this.causeOfRejection = cause;
             this.currentState = RequestState.REJECTED;
+            finishFuture();
         }
     }
 
     public synchronized void markAsUnobserved() {
         if (this.currentState == RequestState.PENDING) {
             this.currentState = RequestState.UNOBSERVED;
+            finishFuture();
         }
     }
 
     public synchronized void markAsExpired() {
         if (this.currentState == RequestState.PENDING) {
             this.currentState = RequestState.EXPIRED;
+            finishFuture();
         }
     }
 

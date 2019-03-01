@@ -7,6 +7,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
@@ -128,7 +129,7 @@ public class NodePreserveDatabaseTest {
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return Transaction
-                .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private void shutdownNodeIfRunning() {
@@ -143,21 +144,23 @@ public class NodePreserveDatabaseTest {
 
     private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
-                preminedPrivateKey,
-                destination,
-                transferValue,
-                BigInteger.ZERO);
+            preminedPrivateKey,
+            destination,
+            transferValue,
+            BigInteger.ZERO);
 
         Transaction transaction = transactionResult.getTransaction();
+
+        FutureResult<LogEventResult> futureResult = new NodeListener().listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            1,
+            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);
         assertTrue(result.success);
 
-        byte[] transactionHash = transaction.getTransactionHash();
-        long timeout = TimeUnit.MINUTES.toMillis(1);
-
-        LogEventResult eventResult = new NodeListener().waitForTransactionToBeProcessed(transactionHash, timeout);
+        LogEventResult eventResult = futureResult.get();
         assertTrue(eventResult.eventWasObserved());
     }
 }

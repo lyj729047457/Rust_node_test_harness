@@ -91,7 +91,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        LogEventResult eventResult = listener.waitForEvent(event1, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.listenForEvent(event1, 1, TimeUnit.MINUTES).get();
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
@@ -125,7 +125,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        LogEventResult eventResult = listener.waitForEvent(event2, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.listenForEvent(event2, 1, TimeUnit.MINUTES).get();
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());
@@ -163,7 +163,7 @@ public class ComplexEventTest {
         assertTrue(result.success);
         assertTrue(this.node.isAlive());
 
-        LogEventResult eventResult = listener.waitForEvent(event3, TimeUnit.MINUTES.toMillis(1));
+        LogEventResult eventResult = listener.listenForEvent(event3, 1, TimeUnit.MINUTES).get();
 
         assertTrue(eventResult.eventWasObserved());
         assertEquals(expectedObservedEvents, eventResult.getAllObservedEvents());

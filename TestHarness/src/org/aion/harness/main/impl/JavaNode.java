@@ -411,7 +411,7 @@ public final class JavaNode implements Node {
                 return Result.unsuccessfulDueTo(result.error);
             }
 
-            new NodeListener().waitForEvent(rpcEvent, TimeUnit.SECONDS.toMillis(20));
+            new NodeListener().listenForEvent(rpcEvent, 20, TimeUnit.SECONDS).get();
         }
 
         return (isAlive())

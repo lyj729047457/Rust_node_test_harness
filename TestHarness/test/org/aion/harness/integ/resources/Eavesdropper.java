@@ -51,7 +51,7 @@ public final class Eavesdropper implements Runnable {
                 startTime = System.currentTimeMillis();
 
                 try {
-                    result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
+                    result = this.listener.listenForHeartbeat(2, TimeUnit.MINUTES).get();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -76,7 +76,7 @@ public final class Eavesdropper implements Runnable {
 
                 // Listen for an event that will never occur.
                 try {
-                    result = this.listener.waitForEvent(event, TimeUnit.HOURS.toMillis(1));
+                    result = this.listener.listenForEvent(event, 1, TimeUnit.HOURS).get();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

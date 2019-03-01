@@ -101,7 +101,7 @@ public final class LogListener implements TailerListener {
         }
 
         long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
-        EventRequest eventRequest = new EventRequest(event, deadline, unit);
+        EventRequest eventRequest = new EventRequest(event, deadline, TimeUnit.MILLISECONDS);
 
         // Attempt to add the request to the pool.
         addRequest(eventRequest, timeout, unit);

@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
@@ -8,6 +9,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
@@ -91,18 +93,23 @@ public class KernelAddressTest {
 
         // send transaction with new address private key
         TransactionResult transactionResult = constructTransaction(
-                senderPrivateKey,
-                destination,
-                BigInteger.ZERO,
-                BigInteger.ZERO);
+            senderPrivateKey,
+            destination,
+            BigInteger.ZERO,
+            BigInteger.ZERO);
         assertTrue(transactionResult.success);
         Transaction transaction = transactionResult.getTransaction();
+
+        FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            2,
+            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
-        LogEventResult logEventResult = nodeListener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), 100000);
+        LogEventResult logEventResult = futureResult.get();
         assertTrue(logEventResult.eventWasObserved());
 
         // use the receipt to determine the real address
@@ -121,24 +128,30 @@ public class KernelAddressTest {
 
     private void transferFunds(NodeListener nodeListener, PrivateKey senderPrivateKey) throws InterruptedException {
         TransactionResult transactionResult = constructTransaction(
-                preminedPrivateKey,
-                senderPrivateKey.getAddress(),
-                BigInteger.TEN.pow(20),
-                BigInteger.ZERO);
+            preminedPrivateKey,
+            senderPrivateKey.getAddress(),
+            BigInteger.TEN.pow(20),
+            BigInteger.ZERO);
         assertTrue(transactionResult.success);
 
         Transaction transaction = transactionResult.getTransaction();
+
+        FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            2,
+            TimeUnit.MINUTES);
+
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.success);
 
-        LogEventResult logEventResult = nodeListener.waitForTransactionToBeProcessed(transaction.getTransactionHash(), 100000);
+        LogEventResult logEventResult = futureResult.get();
         assertTrue(logEventResult.eventWasObserved());
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return Transaction
-                .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
+            .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
     private Result initializeNode() {

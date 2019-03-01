@@ -56,7 +56,7 @@ public class NodeListenerLifecycleTest {
         NodeListener listener = new NodeListener();
 
         // Time out should be irrelevant in this situation.
-        LogEventResult result = listener.waitForHeartbeat(0);
+        LogEventResult result = listener.listenForHeartbeat(10, TimeUnit.SECONDS).get();
         System.out.println("Result = " + result);
         assertTrue(result.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", result.causeOfRejection());
@@ -82,7 +82,7 @@ public class NodeListenerLifecycleTest {
         assertTrue(result.success);
         assertFalse(this.node.isAlive());
 
-        LogEventResult eventResult = listener.waitForHeartbeat(0);
+        LogEventResult eventResult = listener.listenForHeartbeat(0, TimeUnit.NANOSECONDS).get();
         System.out.println("Result = " + eventResult);
         assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());

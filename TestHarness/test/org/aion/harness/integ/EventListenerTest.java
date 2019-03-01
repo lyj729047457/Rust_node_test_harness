@@ -11,6 +11,9 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.event.Event;
+import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.NodeConfigurations;
@@ -76,7 +79,7 @@ public class EventListenerTest {
 
         NodeListener listener = new NodeListener();
 
-        LogEventResult requestResult = listener.waitForMinersToStart(TimeUnit.MINUTES.toMillis(2));
+        LogEventResult requestResult = listener.listenForMinersToStart(2, TimeUnit.MINUTES).get();
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -91,10 +94,10 @@ public class EventListenerTest {
     @Test
     public void testTransactionProcessed() throws Exception {
         TransactionResult transactionResult = constructTransaction(
-                preminedPrivateKey,
-                destination,
-                BigInteger.ONE,
-                BigInteger.ZERO);
+            preminedPrivateKey,
+            destination,
+            BigInteger.ONE,
+            BigInteger.ZERO);
 
         if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
@@ -112,11 +115,14 @@ public class EventListenerTest {
 
         Transaction transaction = transactionResult.getTransaction();
 
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            2,
+            TimeUnit.MINUTES);
+
         this.rpc.sendTransaction(transaction);
 
-        LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
-            TimeUnit.MINUTES.toMillis(2));
+        LogEventResult requestResult = futureResult.get();
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -136,10 +142,10 @@ public class EventListenerTest {
         // ------------------------------------------------------------------------------
 
         transactionResult = constructTransaction(
-                preminedPrivateKey,
-                destination,
-                BigInteger.ONE,
-                BigInteger.ONE);
+            preminedPrivateKey,
+            destination,
+            BigInteger.ONE,
+            BigInteger.ONE);
 
         if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
@@ -153,11 +159,14 @@ public class EventListenerTest {
 
         transaction = transactionResult.getTransaction();
 
+        futureResult = listener.listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            2,
+            TimeUnit.MINUTES);
+
         this.rpc.sendTransaction(transaction);
 
-        requestResult = listener.waitForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
-            TimeUnit.MINUTES.toMillis(2));
+        requestResult = futureResult.get();
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -179,10 +188,10 @@ public class EventListenerTest {
         PrivateKey privateKeyWithNoBalance = PrivateKey.fromBytes(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
         TransactionResult transactionResult = constructTransaction(
-                privateKeyWithNoBalance,
-                destination,
-                BigInteger.ONE,
-                BigInteger.ZERO);
+            privateKeyWithNoBalance,
+            destination,
+            BigInteger.ONE,
+            BigInteger.ZERO);
 
         if (!transactionResult.success) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
@@ -200,11 +209,14 @@ public class EventListenerTest {
 
         Transaction transaction = transactionResult.getTransaction();
 
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
+            transaction.getTransactionHash(),
+            2,
+            TimeUnit.MINUTES);
+
         this.rpc.sendTransaction(transaction);
 
-        LogEventResult requestResult = listener.waitForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
-            TimeUnit.MINUTES.toMillis(2));
+        LogEventResult requestResult = futureResult.get();
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -247,6 +259,67 @@ public class EventListenerTest {
 
         result = listener.waitForSyncToComplete(delay, timeout);
         System.out.println("Sync result: " + result);
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testFutureResultBlocksOnGet() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        NodeListener listener = new NodeListener();
+        IEvent event = new Event("I will never occur");
+
+        long duration = 10;
+
+        long start = System.nanoTime();
+        listener.listenForEvent(event, duration, TimeUnit.SECONDS).get();
+        long end = System.nanoTime();
+
+        // Basically we expect to wait approximately duration seconds since this is a blocking call.
+        assertTrue(TimeUnit.NANOSECONDS.toSeconds(end - start) >= (duration - 1));
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.success);
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testListenForDoesNotBlock() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.success);
+        assertTrue(this.node.isAlive());
+
+        NodeListener listener = new NodeListener();
+        IEvent event = new Event("I will never occur");
+
+        long duration = 10;
+
+        long start = System.nanoTime();
+        FutureResult<LogEventResult> futureResult = listener.listenForEvent(event, duration, TimeUnit.SECONDS);
+        long end = System.nanoTime();
+
+        // Basically we expect to return much earlier than the duration. Using less than here just
+        // as in opposition to the blocking event test above & to avoid making assumptions.
+        // So long as the event never does occur this property is strong enough.
+        assertTrue(TimeUnit.NANOSECONDS.toSeconds(end - start) < (duration - 1));
+
+        // Verify that we did in fact expire
+        assertTrue(futureResult.get().eventExpired());
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
