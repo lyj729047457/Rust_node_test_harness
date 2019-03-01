@@ -188,8 +188,8 @@ public final class RPC {
             long deadline = currentTime + timeoutInMillis;
 
             RpcResult<SyncStatus> syncStatus = getSyncingStatus();
-            if (!syncStatus.success) {
-                return Result.unsuccessfulDueTo(syncStatus.error);
+            if (!syncStatus.isSuccess()) {
+                return Result.unsuccessfulDueTo(syncStatus.getError());
             }
 
             while ((currentTime < deadline) && (syncStatus.getResult().isSyncing())) {
@@ -203,8 +203,8 @@ public final class RPC {
 
                 // Update the status.
                 syncStatus = getSyncingStatus();
-                if (!syncStatus.success) {
-                    return Result.unsuccessfulDueTo(syncStatus.error);
+                if (!syncStatus.isSuccess()) {
+                    return Result.unsuccessfulDueTo(syncStatus.getError());
                 }
 
                 currentTime = System.currentTimeMillis();

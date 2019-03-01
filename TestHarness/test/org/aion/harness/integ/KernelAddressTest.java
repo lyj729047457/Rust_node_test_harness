@@ -107,14 +107,14 @@ public class KernelAddressTest {
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
-        assertTrue(rpcResult.success);
+        assertTrue(rpcResult.isSuccess());
 
         LogEventResult logEventResult = futureResult.get();
         assertTrue(logEventResult.eventWasObserved());
 
         // use the receipt to determine the real address
         RpcResult<TransactionReceipt> rpcResult2 = this.rpc.getTransactionReceipt(rpcResult.getResult());
-        assertTrue(rpcResult2.success);
+        assertTrue(rpcResult2.isSuccess());
         TransactionReceipt transactionReceipt = rpcResult2.getResult();
 
         assertEquals(senderPrivateKey.getAddress(), transactionReceipt.getTransactionSender());
@@ -143,7 +143,7 @@ public class KernelAddressTest {
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
-        assertTrue(rpcResult.success);
+        assertTrue(rpcResult.isSuccess());
 
         LogEventResult logEventResult = futureResult.get();
         assertTrue(logEventResult.eventWasObserved());

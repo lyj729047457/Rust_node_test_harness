@@ -158,7 +158,7 @@ public class NodePreserveDatabaseTest {
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         LogEventResult eventResult = futureResult.get();
         assertTrue(eventResult.eventWasObserved());

@@ -18,9 +18,9 @@ package org.aion.harness.result;
  * immutability is of course dependent upon whatever type this ends up being.
  */
 public final class RpcResult<T> {
-    public final boolean success;
-    public final String error;
-    public final long timeOfCallInMillis;
+    private final boolean success;
+    private final String error;
+    private final long timeOfCallInMillis;
 
     private final T result;
 
@@ -71,6 +71,33 @@ public final class RpcResult<T> {
      */
     public T getResult() {
         return this.result;
+    }
+
+    /**
+     * Returns the time at which the RPC call was issued in milliseconds.
+     *
+     * @return the time of the RPC call.
+     */
+    public long getTimeOfCall() {
+        return this.timeOfCallInMillis;
+    }
+
+    /**
+     * Returns {@code true} only if the RPC call this result represents was successful.
+     *
+     * @return whether or not the call was a success.
+     */
+    public boolean isSuccess() {
+        return this.success;
+    }
+
+    /**
+     * Returns the error if one exists.
+     *
+     * @return The error.
+     */
+    public String getError() {
+        return this.error;
     }
 
     @Override
