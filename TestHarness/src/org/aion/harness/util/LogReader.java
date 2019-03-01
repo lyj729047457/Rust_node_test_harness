@@ -33,7 +33,7 @@ public final class LogReader {
 
         // Attempt to turn the listener on. If it is already on then pass this "warning/error" to the caller.
         Result result = this.listener.startListening();
-        if (!result.success) {
+        if (!result.isSuccess()) {
             return result;
         }
 

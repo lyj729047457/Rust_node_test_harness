@@ -73,7 +73,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -91,7 +91,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -101,7 +101,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
@@ -111,7 +111,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -121,7 +121,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -139,7 +139,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -149,7 +149,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -167,7 +167,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -177,7 +177,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -195,7 +195,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -205,7 +205,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -233,7 +233,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -259,7 +259,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -277,7 +277,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -290,7 +290,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -309,7 +309,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -319,7 +319,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         BigInteger transferValue = BigInteger.valueOf(50);
@@ -346,7 +346,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         BigInteger transferValue = BigInteger.ZERO;
@@ -375,7 +375,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         BigInteger negativeTransferValue = BigInteger.valueOf(-10);
@@ -403,7 +403,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         // check nonce before
@@ -432,7 +432,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -480,7 +480,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -490,7 +490,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -533,7 +533,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -543,7 +543,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         TransactionResult transactionResult = constructTransaction(
@@ -563,7 +563,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -583,7 +583,7 @@ public class RpcTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         Result syncResult = this.rpc.waitForSyncToComplete(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(40));
@@ -592,7 +592,7 @@ public class RpcTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -626,7 +626,7 @@ public class RpcTest {
     private Result initializeNode() {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
         }
@@ -636,7 +636,7 @@ public class RpcTest {
 
     private void initializeNodeWithChecks() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -668,7 +668,7 @@ public class RpcTest {
             Result result = this.node.stop();
             System.out.println("shutdownNodeIfRunning Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

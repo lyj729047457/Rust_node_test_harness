@@ -88,7 +88,7 @@ public class ComplexEventTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         LogEventResult eventResult = listener.listenForEvent(event1, 1, TimeUnit.MINUTES).get();
@@ -99,7 +99,7 @@ public class ComplexEventTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -122,7 +122,7 @@ public class ComplexEventTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         LogEventResult eventResult = listener.listenForEvent(event2, 1, TimeUnit.MINUTES).get();
@@ -133,7 +133,7 @@ public class ComplexEventTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -160,7 +160,7 @@ public class ComplexEventTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         LogEventResult eventResult = listener.listenForEvent(event3, 1, TimeUnit.MINUTES).get();
@@ -171,13 +171,13 @@ public class ComplexEventTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
     private void initializeNodeWithChecks() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -194,7 +194,7 @@ public class ComplexEventTest {
     private Result initializeNode() {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
         }
@@ -220,7 +220,7 @@ public class ComplexEventTest {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

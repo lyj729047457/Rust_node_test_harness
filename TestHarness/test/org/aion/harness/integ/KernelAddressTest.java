@@ -85,7 +85,7 @@ public class KernelAddressTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         // Transfer funds to the new private key so it can pay for transaction.
@@ -122,7 +122,7 @@ public class KernelAddressTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -157,7 +157,7 @@ public class KernelAddressTest {
     private Result initializeNode() {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
         }
@@ -167,7 +167,7 @@ public class KernelAddressTest {
 
     private void initializeNodeWithChecks() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -199,7 +199,7 @@ public class KernelAddressTest {
             Result result = this.node.stop();
             System.out.println("shutdownNodeIfRunning Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

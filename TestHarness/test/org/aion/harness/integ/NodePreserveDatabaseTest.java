@@ -66,11 +66,11 @@ public class NodePreserveDatabaseTest {
     public void testPreserveDatabaseCheckTransaction() throws InterruptedException {
         // initialize and run node to generate a database, then shutdown the node
         Result result = this.node.initializeKernelAndPreserveDatabase();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // start the node
         result = this.node.start();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // transfer and wait
         BigInteger transferValue = BigInteger.valueOf(50);
@@ -85,16 +85,16 @@ public class NodePreserveDatabaseTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
         // re-initialize node, but with the preserved database
         result = this.node.initializeKernelAndPreserveDatabase();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // start the node
         result = this.node.start();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // check that the transfer is still present
         rpcResult = this.rpc.getBalance(destination.getAddressBytes());
@@ -108,7 +108,7 @@ public class NodePreserveDatabaseTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -116,11 +116,11 @@ public class NodePreserveDatabaseTest {
     public void testInitializeWhenNewNetworkDirectoryNotCreated() {
         // initialize and run node to create the node folder
         Result result = this.node.initializeKernelAndPreserveDatabase();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // try to preserve a database that does not yet exist
         result = this.node.initializeKernelAndPreserveDatabase();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
     }
 
     private static void deleteLogs() throws IOException {
@@ -137,7 +137,7 @@ public class NodePreserveDatabaseTest {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

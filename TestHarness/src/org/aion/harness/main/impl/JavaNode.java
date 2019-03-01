@@ -347,7 +347,7 @@ public final class JavaNode implements Node {
             int untarStatus = builder.start().waitFor();
             tarDestination.delete();
 
-            if (!SingletonFactory.singleton().logManager().setupLogFiles().success) {
+            if (!SingletonFactory.singleton().logManager().setupLogFiles().isSuccess()) {
                 return Result.unsuccessfulDueTo("Failed to set up log files!");
             }
 
@@ -406,7 +406,7 @@ public final class JavaNode implements Node {
             IEvent rpcEvent = new Event("rpc-server - (UNDERTOW) started");
 
             Result result = SingletonFactory.singleton().logReader().startReading(outputLog);
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
 

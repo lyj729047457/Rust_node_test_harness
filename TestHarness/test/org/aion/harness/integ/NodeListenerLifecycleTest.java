@@ -69,7 +69,7 @@ public class NodeListenerLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         NodeListener listener = new NodeListener();
@@ -79,7 +79,7 @@ public class NodeListenerLifecycleTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
         LogEventResult eventResult = listener.listenForHeartbeat(0, TimeUnit.NANOSECONDS).get();
@@ -103,7 +103,7 @@ public class NodeListenerLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         // We launch the listener on a separate thread so that we don't get blocked by it.
@@ -188,13 +188,13 @@ public class NodeListenerLifecycleTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
     private void initializeNodeWithChecks() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -211,7 +211,7 @@ public class NodeListenerLifecycleTest {
     private Result initializeNode() {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
         }
@@ -237,7 +237,7 @@ public class NodeListenerLifecycleTest {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

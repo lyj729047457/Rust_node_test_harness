@@ -55,7 +55,7 @@ public class MultipleListenerThreadsTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         // Create the thread pool and all of our eavesdroppers.
@@ -83,7 +83,7 @@ public class MultipleListenerThreadsTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
         executor.awaitTermination(30, TimeUnit.SECONDS);
@@ -107,7 +107,7 @@ public class MultipleListenerThreadsTest {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }

@@ -6,7 +6,15 @@ package org.aion.harness.result;
  * If unsuccessful, then this result will hold either a String with an error message or else it
  * will hold an exception.
  *
+ * It is highly recommended that the result always be printed to the console, not only because it
+ * will give valuable debug information but also because it will force a stack trace to be printed
+ * if an exception was caught.
+ *
  * If successful, then both the error string and the exception are meaningless and possibly null.
+ *
+ * It is highly recommended that the result always be printed to the console, not only because it
+ * will give valuable debug information but also because it will force a stack trace to be printed
+ * if an exception was caught.
  *
  * There is not concept of equality defined for a result.
  *
@@ -14,9 +22,9 @@ package org.aion.harness.result;
  * guarantees of that particular class.
  */
 public final class Result {
-    public final boolean success;
-    public final String error;
-    public final Exception exception;
+    private final boolean success;
+    private final String error;
+    private final Exception exception;
 
     private Result(boolean success, String error, Exception exception) {
         this.success = success;
@@ -43,12 +51,41 @@ public final class Result {
 
         return new Result(false, e.toString(), e);
     }
+
+    /**
+     * Returns {@code true} only if the event represented by this result was successful.
+     *
+     * @return whether or not the event was successful or not.
+     */
+    public boolean isSuccess() {
+        return this.success;
+    }
+
+    /**
+     * Returns the error if one exists.
+     *
+     * @return The error.
+     */
+    public String getError() {
+        return this.error;
+    }
+
+    /**
+     * Returns the exception that occurred while executing the event this result represents, if an
+     * exception did occur.
+     *
+     * @return The exception.
+     */
+    public Exception getException() {
+        return this.exception;
+    }
     
     @Override
     public String toString() {
         if (this.success) {
             return "Result { successful }";
         } else if (this.exception != null) {
+            this.exception.printStackTrace();
             return "Result { unsuccessful due to exception: " + this.exception.toString() + " }";
         } else {
             return "Result { unsuccessful due to: " + this.error + " }";

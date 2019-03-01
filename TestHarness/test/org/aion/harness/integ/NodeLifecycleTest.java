@@ -55,7 +55,7 @@ public class NodeLifecycleTest {
     @Test
     public void testInitializeNode() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -75,7 +75,7 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
     }
 
@@ -94,7 +94,7 @@ public class NodeLifecycleTest {
     @Test(expected = IllegalStateException.class)
     public void testInvokingStartTwice() {
         initializeNodeWithChecks();
-        assertTrue(this.node.start().success);
+        assertTrue(this.node.start().isSuccess());
         this.node.start();
     }
 
@@ -104,13 +104,13 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -120,7 +120,7 @@ public class NodeLifecycleTest {
         Result result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertFalse(result.success);
+        assertFalse(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -130,19 +130,19 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertFalse(result.success);
+        assertFalse(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -152,7 +152,7 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         Thread.sleep(TimeUnit.SECONDS.toMillis(heartbeatDurationInSeconds));
@@ -161,7 +161,7 @@ public class NodeLifecycleTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
@@ -171,7 +171,7 @@ public class NodeLifecycleTest {
 
         Result result = this.node.resetState();
         System.out.println("Reset result = " + result);
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         assertFalse(this.configurations.getDatabase().exists());
     }
@@ -182,7 +182,7 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         this.node.resetState();
@@ -197,11 +197,11 @@ public class NodeLifecycleTest {
 
         Result result = this.node.resetState();
         System.out.println("Reset result = " + result);
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         result = this.node.resetState();
         System.out.println("Reset result = " + result);
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -224,7 +224,7 @@ public class NodeLifecycleTest {
         Result result = this.node.resetState();
         System.out.println("Reset result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
     }
 
     private void setupDatabase() throws InterruptedException {
@@ -232,7 +232,7 @@ public class NodeLifecycleTest {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
         File database = this.configurations.getDatabase();
@@ -253,14 +253,14 @@ public class NodeLifecycleTest {
         result = this.node.stop();
         System.out.println("Stop result = " + result);
 
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
     }
 
     private Result initializeNode() {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
-            if (!result.success) {
+            if (!result.isSuccess()) {
                 return result;
             }
         }
@@ -270,7 +270,7 @@ public class NodeLifecycleTest {
 
     private void initializeNodeWithChecks() {
         Result result = initializeNode();
-        assertTrue(result.success);
+        assertTrue(result.isSuccess());
 
         // verify the node directory was created.
         assertTrue(nodeDirectory.exists());
@@ -302,7 +302,7 @@ public class NodeLifecycleTest {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);
 
-            assertTrue(result.success);
+            assertTrue(result.isSuccess());
             assertFalse(this.node.isAlive());
         }
     }
