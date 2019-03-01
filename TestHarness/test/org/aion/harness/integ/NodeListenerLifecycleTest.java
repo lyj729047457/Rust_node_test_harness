@@ -52,7 +52,7 @@ public class NodeListenerLifecycleTest {
     }
 
     @Test
-    public void testNodeListenerBeforeStartingNode() {
+    public void testNodeListenerBeforeStartingNode() throws InterruptedException {
         NodeListener listener = new NodeListener();
 
         // Time out should be irrelevant in this situation.

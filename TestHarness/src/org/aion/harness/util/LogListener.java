@@ -3,7 +3,9 @@ package org.aion.harness.util;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.StatusResult;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -76,8 +78,10 @@ public final class LogListener implements TailerListener {
     /**
      * Attempts to submit the specified event request into the request pool.
      *
-     * This method will block until the request is resolved. The request may
-     * be resolved in any one of the following ways:
+     * This method is non-blocking unless there is no space available in the request pool, then this
+     * method will block until space becomes available.
+     *
+     * The request may be resolved in any one of the following ways:
      *
      * 1. The listener was not listening when the request came in or it stopped
      *    listening after the request came in.
@@ -91,25 +95,18 @@ public final class LogListener implements TailerListener {
      * 5. The request is observed.
      *    -> request is marked satisfied.
      */
-    public void submitEventRequest(EventRequest eventRequest) {
-        if (eventRequest == null) {
+    public FutureResult<LogEventResult> submitEventToBeListenedFor(IEvent event, long timeout, TimeUnit unit) {
+        if (event == null) {
             throw new NullPointerException("Cannot submit a null event request.");
         }
 
-        synchronized (STATE_MONITOR) {
-            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-                eventRequest.markAsRejected("Listener is not currently listening to a log file.");
-            }
-        }
+        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
+        EventRequest eventRequest = new EventRequest(event, deadline, unit);
 
         // Attempt to add the request to the pool.
-        addRequest(eventRequest);
+        addRequest(eventRequest, timeout, unit);
 
-        // If the request is pending then it was added to the pool and hasn't been satisfied yet,
-        // so we wait for the outcome.
-        if (eventRequest.isPending()) {
-            eventRequest.waitForOutcome();
-        }
+        return eventRequest.future;
     }
 
     /**
@@ -167,27 +164,15 @@ public final class LogListener implements TailerListener {
      * 3. An interrupt exception occurs before adding the request to the pool.
      *    -> request is marked rejected.
      */
-    private void addRequest(EventRequest request) {
-
+    private void addRequest(EventRequest request, long timeout, TimeUnit unit) {
         try {
-            long timeout = request.deadline(TimeUnit.MILLISECONDS) - System.currentTimeMillis();
-
             // Try to acquire a permit to add the request to the pool.
-            if (!REQUEST_POOL_GATE.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
+            if (!REQUEST_POOL_GATE.tryAcquire(timeout, unit)) {
                 request.markAsExpired();
                 return;
             }
         } catch (InterruptedException e) {
             request.markAsRejected("Interrupted while waiting to submit request!");
-        }
-
-        // If the listener is no longer listening, reject the request and return the pool permit.
-        synchronized (STATE_MONITOR) {
-            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
-                request.markAsRejected("Listener is no longer listening to a log file.");
-                REQUEST_POOL_GATE.release();
-                return;
-            }
         }
 
         // If the request has expired, mark it as so and return the pool permit.
@@ -200,6 +185,15 @@ public final class LogListener implements TailerListener {
         // Otherwise, we are free to add the request since we took the permit.
         synchronized (this) {
             this.requestPool.add(request);
+        }
+
+        // If the listener is no longer listening, reject the request and return the pool permit.
+        synchronized (STATE_MONITOR) {
+            if (this.currentState != ListenerState.ALIVE_AND_LISTENING) {
+                request.markAsRejected("Listener is not currently listening to a log file.");
+                this.requestPool.remove(request);
+                REQUEST_POOL_GATE.release();
+            }
         }
     }
 
@@ -233,10 +227,8 @@ public final class LogListener implements TailerListener {
 
                 if (!request.isPending()) {
                     requestIterator.remove();
-                    request.notifyRequestIsResolved();
                     numRequestsRemoved++;
                 } else if (request.isSatisfiedBy(nextLine, currentTime, TimeUnit.MILLISECONDS)) {
-                    request.notifyRequestIsResolved();
                     requestIterator.remove();
                     numRequestsRemoved++;
                 }
@@ -328,8 +320,6 @@ public final class LogListener implements TailerListener {
             } else {
                 request.markAsUnobserved();
             }
-
-            request.notifyRequestIsResolved();
         }
 
         this.requestPool.clear();

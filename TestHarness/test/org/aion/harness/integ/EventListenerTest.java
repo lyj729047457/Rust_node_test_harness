@@ -65,7 +65,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForMinersToStart() {
+    public void testWaitForMinersToStart() throws InterruptedException {
         initializeNodeWithChecks();
 
         Result result = this.node.start();

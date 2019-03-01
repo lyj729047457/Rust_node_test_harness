@@ -49,7 +49,12 @@ public final class Eavesdropper implements Runnable {
 
                 // Listen for a regular heartbeat event.
                 startTime = System.currentTimeMillis();
-                result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
+
+                try {
+                    result = this.listener.waitForHeartbeat(TimeUnit.MINUTES.toMillis(2));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
 
                 // If we die during the waitFor it is possible for it to return null.
                 if ((result == null) && (!this.dead.get())) {
@@ -70,7 +75,11 @@ public final class Eavesdropper implements Runnable {
             } else if (this.gossip == Gossip.UNSPEAKABLE) {
 
                 // Listen for an event that will never occur.
-                result = this.listener.waitForEvent(event, TimeUnit.HOURS.toMillis(1));
+                try {
+                    result = this.listener.waitForEvent(event, TimeUnit.HOURS.toMillis(1));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
 
             }
 

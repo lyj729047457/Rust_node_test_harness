@@ -76,7 +76,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X, Y.
      */
     @Test
-    public void testComplexLogic1() {
+    public void testComplexLogic1() throws InterruptedException {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -111,7 +111,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X.
      */
     @Test
-    public void testComplexLogic2() {
+    public void testComplexLogic2() throws InterruptedException {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -147,7 +147,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: W, Y, Z.
      */
     @Test
-    public void testComplexLogic3() {
+    public void testComplexLogic3() throws InterruptedException {
         NodeListener listener = new NodeListener();
 
         List<String> expectedObservedEvents = new ArrayList<>();

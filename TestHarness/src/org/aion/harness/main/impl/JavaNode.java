@@ -395,7 +395,7 @@ public final class JavaNode implements Node {
     /**
      * Waits for the RPC server to start before returning.
      */
-    private Result waitForRpcServerToStart(File outputLog) {
+    private Result waitForRpcServerToStart(File outputLog) throws InterruptedException {
         // We wait for the rpc event to know we are ok to return. There is a chance that we will miss
         // this event and start listening too late. That is why we timeout after 20 seconds, which
         // should be more than sufficient for the server to activate, and then we check if the node

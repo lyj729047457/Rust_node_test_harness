@@ -8,6 +8,9 @@ import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.result.LogEventResult;
 
 public final class EventRequest {
+    private static long instanceCount = 0;
+    private final long ID;
+
     private final IEvent requestedEvent;
     private final long deadlineInMilliseconds;
 
@@ -32,6 +35,7 @@ public final class EventRequest {
     public EventRequest(IEvent eventToRequest, long deadline, TimeUnit unit) {
         this.requestedEvent = eventToRequest;
         this.deadlineInMilliseconds = unit.toMillis(deadline);
+        this.ID = instanceCount++;
     }
 
     /**
@@ -43,7 +47,7 @@ public final class EventRequest {
      *
      * Not thread-safe.
      */
-    public void finishFuture() {
+    private void finishFuture() {
         this.future.finish(extractResultFromRequest());
     }
 
@@ -196,27 +200,28 @@ public final class EventRequest {
     }
 
     /**
-     * {@inheritDoc}
+     * An event request is only equal to itself and no other event request object.
      *
-     * Thread safe.
+     * @implNote This is based solely off a unique identifier, which is a {@code long}, and thus
+     * this object can only be equal to another event request if the entire long value range has
+     * been used up.
+     *
+     * @param other The other object whose equality is to be tested.
+     * @return whether or not this object is equal to other.
      */
     @Override
-    public synchronized boolean equals(Object other) {
+    public boolean equals(Object other) {
         if (!(other instanceof EventRequest)) {
             return false;
         }
 
-        if (this == other) {
-            return true;
-        }
-
         EventRequest otherEventRequest = (EventRequest) other;
-        return this.requestedEvent.equals(otherEventRequest.requestedEvent);
+        return this.ID == otherEventRequest.ID;
     }
 
     @Override
     public int hashCode() {
-        return this.requestedEvent.eventStatement().hashCode();
+        return (int) this.ID;
     }
 
 }
