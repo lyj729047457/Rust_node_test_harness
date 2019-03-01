@@ -37,8 +37,6 @@ public final class RPC {
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
      * receipt until the transaction has been fully processed.
      *
-     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
-     *
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
@@ -53,8 +51,6 @@ public final class RPC {
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
      * receipt until the transaction has been fully processed.
-     *
-     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
      *
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
@@ -71,8 +67,6 @@ public final class RPC {
      * Note that a receipt will not become available until a transaction has been sealed into a
      * block.
      *
-     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
-     *
      * @param receiptHash The receipt hash of the receipt to get.
      * @return the result of this attempt to get the transaction receipt.
      */
@@ -85,8 +79,6 @@ public final class RPC {
      *
      * Note that a receipt will not become available until a transaction has been sealed into a
      * block.
-     *
-     * See {@link NodeListener#waitForTransactionToBeProcessed(byte[], long)}.
      *
      * @param receiptHash The receipt hash of the receipt to get.
      * @return the result of this attempt to get the transaction receipt.
