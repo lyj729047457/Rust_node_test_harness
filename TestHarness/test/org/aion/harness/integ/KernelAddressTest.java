@@ -97,7 +97,7 @@ public class KernelAddressTest {
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
         Transaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
@@ -132,7 +132,7 @@ public class KernelAddressTest {
             senderPrivateKey.getAddress(),
             BigInteger.TEN.pow(20),
             BigInteger.ZERO);
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         Transaction transaction = transactionResult.getTransaction();
 

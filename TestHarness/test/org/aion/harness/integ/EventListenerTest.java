@@ -101,7 +101,7 @@ public class EventListenerTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        if (!transactionResult.success) {
+        if (!transactionResult.isSuccess()) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }
@@ -149,7 +149,7 @@ public class EventListenerTest {
             BigInteger.ONE,
             BigInteger.ONE);
 
-        if (!transactionResult.success) {
+        if (!transactionResult.isSuccess()) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }
@@ -195,7 +195,7 @@ public class EventListenerTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        if (!transactionResult.success) {
+        if (!transactionResult.isSuccess()) {
             System.err.println("CONSTRUCT TRANSACTION FAILED");
             return;
         }

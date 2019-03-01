@@ -14,8 +14,8 @@ import org.aion.harness.kernel.Transaction;
  * A transaction result is immutable.
  */
 public final class TransactionResult {
-    public final boolean success;
-    public final String error;
+    private final boolean success;
+    private final String error;
     private final Transaction transaction;
 
     private TransactionResult(boolean success, String error, Transaction transaction) {
@@ -40,8 +40,31 @@ public final class TransactionResult {
         return new TransactionResult(false, error, null);
     }
 
+    /**
+     * Returns the transaction if the action responsible for producing it was successful.
+     *
+     * @return the transaction.
+     */
     public Transaction getTransaction() {
         return this.transaction;
+    }
+
+    /**
+     * Returns {@code true} only if the action that this result represents was successful.
+     *
+     * @return whether or not the action was successful.
+     */
+    public boolean isSuccess() {
+        return this.success;
+    }
+
+    /**
+     * Returns the error if one exists.
+     *
+     * @return the error.
+     */
+    public String getError() {
+        return this.error;
     }
 
     @Override

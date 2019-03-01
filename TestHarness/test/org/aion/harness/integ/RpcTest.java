@@ -82,7 +82,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -130,7 +130,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.valueOf(100));
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -158,7 +158,7 @@ public class RpcTest {
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -186,7 +186,7 @@ public class RpcTest {
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -214,7 +214,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         assertTrue(rpcResult.isSuccess());
@@ -225,7 +225,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ONE);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
         rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
@@ -246,7 +246,7 @@ public class RpcTest {
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -268,7 +268,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -299,7 +299,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
         System.out.println("Rpc result = " + rpcResult);
@@ -441,7 +441,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         NodeListener listener = new NodeListener();
         Transaction transaction = transactionResult.getTransaction();
@@ -499,7 +499,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         NodeListener listener = new NodeListener();
         Transaction transaction = transactionResult.getTransaction();
@@ -552,7 +552,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.success);
+        assertTrue(transactionResult.isSuccess());
 
         ReceiptHash receiptHash = new ReceiptHash(new byte[32]);
 
