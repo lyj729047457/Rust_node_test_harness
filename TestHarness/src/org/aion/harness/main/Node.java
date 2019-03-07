@@ -8,6 +8,7 @@ import org.aion.harness.result.Result;
  * An Aion node.
  */
 public interface Node {
+    public int getID();
 
     /**
      * Configures the node with the specified settings.

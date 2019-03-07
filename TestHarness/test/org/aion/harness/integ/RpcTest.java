@@ -443,7 +443,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.isSuccess());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
         Transaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
@@ -501,7 +501,7 @@ public class RpcTest {
 
         assertTrue(transactionResult.isSuccess());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
         Transaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
@@ -605,7 +605,7 @@ public class RpcTest {
 
         Transaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = new NodeListener().listenForTransactionToBeProcessed(
+        FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
             1,
             TimeUnit.MINUTES);

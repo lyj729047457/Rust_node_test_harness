@@ -77,7 +77,7 @@ public class ComplexEventTest {
      */
     @Test
     public void testComplexLogic1() throws InterruptedException {
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
         expectedObservedEvents.add(sslString);
@@ -112,7 +112,7 @@ public class ComplexEventTest {
      */
     @Test
     public void testComplexLogic2() throws InterruptedException {
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
         expectedObservedEvents.add(sslString);
@@ -148,7 +148,7 @@ public class ComplexEventTest {
      */
     @Test
     public void testComplexLogic3() throws InterruptedException {
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
         expectedObservedEvents.add(sslString);

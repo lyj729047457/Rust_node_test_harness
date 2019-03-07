@@ -77,7 +77,7 @@ public class KernelAddressTest {
 
     @Test
     public void testCorrectness() throws InterruptedException, InvalidKeySpecException {
-        NodeListener nodeListener = new NodeListener();
+        NodeListener nodeListener = NodeListener.listenTo(this.node);
         PrivateKey senderPrivateKey = PrivateKey.random();
         System.out.println("private key = " + senderPrivateKey);
 

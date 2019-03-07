@@ -151,7 +151,7 @@ public class NodePreserveDatabaseTest {
 
         Transaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = new NodeListener().listenForTransactionToBeProcessed(
+        FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
             1,
             TimeUnit.MINUTES);

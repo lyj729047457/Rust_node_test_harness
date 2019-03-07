@@ -79,7 +79,7 @@ public class EventListenerTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         LogEventResult requestResult = listener.listenForMinersToStart(2, TimeUnit.MINUTES).get();
 
@@ -113,7 +113,7 @@ public class EventListenerTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         Transaction transaction = transactionResult.getTransaction();
 
@@ -157,7 +157,7 @@ public class EventListenerTest {
         System.out.println(this.node.start());
         Assert.assertTrue(this.node.isAlive());
 
-        listener = new NodeListener();
+        listener = NodeListener.listenTo(this.node);
 
         transaction = transactionResult.getTransaction();
 
@@ -207,7 +207,7 @@ public class EventListenerTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
 
         Transaction transaction = transactionResult.getTransaction();
 
@@ -244,7 +244,7 @@ public class EventListenerTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
         IEvent event = new Event("I will never occur");
 
         long duration = 10;
@@ -272,7 +272,7 @@ public class EventListenerTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        NodeListener listener = new NodeListener();
+        NodeListener listener = NodeListener.listenTo(this.node);
         IEvent event = new Event("I will never occur");
 
         long duration = 10;

@@ -24,9 +24,23 @@ import java.util.concurrent.TimeUnit;
  */
 public final class JavaNode implements Node {
     private NodeConfigurations configurations = null;
+    private LogReader logReader;
+    private LogManager logManager;
+    private final int ID;
 
     // The running instance of the kernel.
     private Process runningKernel = null;
+
+    @Override
+    public int getID() {
+        return this.ID;
+    }
+
+    public JavaNode() {
+        this.logReader = new LogReader();
+        this.logManager = new LogManager();
+        this.ID = SingletonFactory.singleton().nodeWatcher().addReader(this.logReader);
+    }
 
     /**
      * Configures the node with the specified settings.
@@ -114,16 +128,15 @@ public final class JavaNode implements Node {
             ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
                 .directory(NodeFileManager.getKernelDirectory());
 
-            LogManager logManager = SingletonFactory.singleton().logManager();
-            File outputLog = logManager.getCurrentOutputLogFile();
+            File outputLog = this.logManager.getCurrentOutputLogFile();
 
             if (outputLog == null) {
-                logManager.setupLogFiles();
-                outputLog = logManager.getCurrentOutputLogFile();
+                this.logManager.setupLogFiles();
+                outputLog = this.logManager.getCurrentOutputLogFile();
             }
 
             builder.redirectOutput(outputLog);
-            builder.redirectError(logManager.getCurrentErrorLogFile());
+            builder.redirectError(this.logManager.getCurrentErrorLogFile());
 
             this.runningKernel = builder.start();
 
@@ -153,7 +166,7 @@ public final class JavaNode implements Node {
                 this.runningKernel.destroy();
                 boolean shutdown = this.runningKernel.waitFor(1, TimeUnit.MINUTES);
                 this.runningKernel = null;
-                SingletonFactory.singleton().logReader().stopReading();
+                this.logReader.stopReading();
 
                 result = (shutdown) ? Result.successful() : Result.unsuccessfulDueTo("Timed out waiting for node to shut down!");
 
@@ -347,7 +360,7 @@ public final class JavaNode implements Node {
             int untarStatus = builder.start().waitFor();
             tarDestination.delete();
 
-            if (!SingletonFactory.singleton().logManager().setupLogFiles().isSuccess()) {
+            if (!this.logManager.setupLogFiles().isSuccess()) {
                 return Result.unsuccessfulDueTo("Failed to set up log files!");
             }
 
@@ -405,13 +418,12 @@ public final class JavaNode implements Node {
             // We wait for the Rpc event or else 20 seconds, in case we come too late and never see it.
             IEvent rpcEvent = new Event("rpc-server - (UNDERTOW) started");
 
-            Result result = SingletonFactory.singleton().logReader().startReading(outputLog);
+            Result result = this.logReader.startReading(outputLog);
             if (!result.isSuccess()) {
                 return result;
             }
 
-            new NodeListener().listenForEvent(rpcEvent, 20, TimeUnit.SECONDS).get();
-        }
+            NodeListener.listenTo(this).listenForEvent(rpcEvent, 20, TimeUnit.SECONDS).get();        }
 
         return (isAlive())
             ? Result.successful()

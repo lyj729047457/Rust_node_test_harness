@@ -29,7 +29,18 @@ import org.apache.commons.codec.binary.Hex;
  * This class is not thread-safe.
  */
 public final class NodeListener {
-    private final LogListener logListener = SingletonFactory.singleton().logReader().getLogListener();
+    private final LogListener logListener;
+
+    private NodeListener(LogListener logListener) {
+        this.logListener = logListener;
+    }
+
+    public static NodeListener listenTo(Node node) {
+        if (node == null) {
+            throw new IllegalStateException("node cannot be null");
+        }
+        return new NodeListener(SingletonFactory.singleton().nodeWatcher().getReaderForNodeByID(node.getID()).getLogListener());
+    }
 
     /**
      * Listens for the miners to start up.
@@ -122,8 +133,8 @@ public final class NodeListener {
      *
      * @return total number of events being listened for.
      */
-    public static int numberOfEventsBeingListenedFor() {
-        return SingletonFactory.singleton().logReader().getLogListener().numberOfPendingEventRequests();
+    public  int numberOfEventsBeingListenedFor() {
+        return this.logListener.numberOfPendingEventRequests();
     }
 
     // ------------ pre-packaged events that this class provides ---------------
