@@ -1,7 +1,6 @@
 package org.aion.harness.main;
 
 import java.io.File;
-import org.aion.harness.main.Network;
 import org.aion.harness.util.NodeFileManager;
 
 /**
@@ -12,31 +11,68 @@ import org.aion.harness.util.NodeFileManager;
 public final class NodeConfigurations {
     private final Network network;
     private final String kernelSourceDirectory;
-    private final String kernelBuildDirectory;
+    private final String builtKernelFile;
     private final String database;
+    private final boolean conditionalBuild;
     private final boolean preserveDatabase;
 
     /**
      * Constructs an instance of this class using the specified parameters.
      */
-    public NodeConfigurations(Network network, String kernelSourceDirectory, String kernelBuildDirectory, boolean preserveDatabase) {
+    private NodeConfigurations(Network network, String kernelSourceDirectory, String builtKernelFile, boolean conditionalBuild, boolean preserveDatabase) {
         if (network == null) {
             throw new NullPointerException("Cannot construct NodeConfigurations with null network.");
-        }
-        if (kernelSourceDirectory == null) {
-            throw new NullPointerException("Cannot construct NodeConfigurations with null kernelSourceDirectory.");
-        }
-        if (kernelBuildDirectory == null) {
-            throw new NullPointerException("Cannot construct NodeConfigurations with null kernelBuildDirectory.");
         }
 
         this.network = network;
         this.kernelSourceDirectory = kernelSourceDirectory;
-        this.kernelBuildDirectory = kernelBuildDirectory;
+        this.builtKernelFile = builtKernelFile;
+        this.conditionalBuild = conditionalBuild;
         this.preserveDatabase = preserveDatabase;
 
         // This is an internal detail and should not be customizable.
         this.database = NodeFileManager.getKernelDirectory().getAbsolutePath() + File.separator + this.network.string() + File.separator + "database";
+    }
+
+    /**
+     * Constructs a node configurations object that is used for "conditional builds". That is, for
+     * when the kernel should be built from source only if the provided built file does not yet
+     * exist.
+     *
+     * A conditional build allows for the source build to only occur once, or to only occur when the
+     * built file has been removed.
+     *
+     * @param network The network to connect the node to.
+     * @param kernelSourceDirectory The directory that contains the kernel source files.
+     * @param builtKernelFile The built kernel file.
+     * @return the conditional configurations.
+     */
+    public static NodeConfigurations conditionalBuild(Network network, String kernelSourceDirectory, String builtKernelFile, boolean preserveDatabase) {
+        if (kernelSourceDirectory == null) {
+            throw new NullPointerException("Cannot construct NodeConfigurations with null kernelSourceDirectory.");
+        }
+        if (builtKernelFile == null) {
+            throw new NullPointerException("Cannot construct NodeConfigurations with null builtKernelFile.");
+        }
+
+        return new NodeConfigurations(network, kernelSourceDirectory, builtKernelFile, true, preserveDatabase);
+    }
+
+    /**
+     * Constructs a node configurations object that is used for "unconditional builds". That is, for
+     * when the kernel should be built from source every single time, regardless of whether or not
+     * a build already exists.
+     *
+     * @param network The network to connect the node to.
+     * @param kernelSourceDirectory The directory that contains the kernel source files.
+     * @return the unconditional configurations.
+     */
+    public static NodeConfigurations unconditionalBuild(Network network, String kernelSourceDirectory, boolean preserveDatabase) {
+        if (kernelSourceDirectory == null) {
+            throw new NullPointerException("Cannot construct NodeConfigurations with null kernelSourceDirectory.");
+        }
+
+        return new NodeConfigurations(network, kernelSourceDirectory, null, false, preserveDatabase);
     }
 
     /**
@@ -58,12 +94,14 @@ public final class NodeConfigurations {
     }
 
     /**
-     * Returns the directory of the built kernel.
+     * Returns the built kernel file.
+     *
+     * The assumption is that this is a tar.bz2 file.
      *
      * @return the built kernel directory.
      */
-    public File getKernelBuildDirectory() {
-        return new File(this.kernelBuildDirectory);
+    public File getBuiltKernelFile() {
+        return new File(this.builtKernelFile);
     }
 
     /**
@@ -73,6 +111,15 @@ public final class NodeConfigurations {
      */
     public File getDatabase() {
         return new File(this.database);
+    }
+
+    /**
+     * Returns {@code true} only if a conditional build was specified.
+     *
+     * @return whether or not to perform a conditional build.
+     */
+    public boolean isConditionalBuildSpecified() {
+        return this.conditionalBuild;
     }
 
     /**

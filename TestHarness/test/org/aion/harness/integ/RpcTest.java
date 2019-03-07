@@ -2,14 +2,18 @@ package org.aion.harness.integ;
 
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
+import org.aion.harness.integ.resources.TarFileFinder;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.*;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.types.Block;
+import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.RPC;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.Network;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
@@ -33,7 +37,6 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 public class RpcTest {
-    private static boolean doFullInitialization = false;
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
@@ -52,7 +55,11 @@ public class RpcTest {
         preminedAddress = preminedPrivateKey.getAddress();
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
         this.rpc = new RPC("127.0.0.1", "8545");
     }
 
@@ -573,6 +580,8 @@ public class RpcTest {
     public void testSyncingToNetwork() throws IOException, InterruptedException {
         NodeConfigurations configurations = new NodeConfigurationBuilder()
             .network(Network.MAINNET)
+            .unconditionalBuild(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR)
+            .doNotPreserveDatabase()
             .build();
 
         this.node.configure(configurations);
@@ -655,19 +664,8 @@ public class RpcTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
-    private Result initializeNode() throws IOException, InterruptedException {
-        if (doFullInitialization) {
-            Result result = this.node.buildKernel();
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        return this.node.initializeKernel();
-    }
-
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.

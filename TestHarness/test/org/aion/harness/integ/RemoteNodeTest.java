@@ -1,6 +1,7 @@
 package org.aion.harness.integ;
 
 import org.aion.harness.integ.resources.LogWriter;
+import org.aion.harness.integ.resources.TarFileFinder;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
@@ -31,17 +32,16 @@ public class RemoteNodeTest {
     private LocalNode localNode;
     private RemoteNode remoteNode;
 
-    /**
-     * Set to false for testing convenience, tune to true if starting from scratch.
-     */
-    private static boolean doFullInitialization = false;
-
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.remoteNode = NodeFactory.getNewRemoteNodeInstance(NodeType.JAVA_NODE);
         this.localNode = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        this.localNode.configure( NodeConfigurationBuilder.defaultConfigurations(false));
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.localNode.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
     }
 
     @After
@@ -300,19 +300,8 @@ public class RemoteNodeTest {
         return outputLogFile;
     }
 
-    private Result initializeNode() throws IOException, InterruptedException {
-        if (doFullInitialization) {
-            Result result = this.localNode.buildKernel();
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        return this.localNode.initializeKernel();
-    }
-
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.localNode.initialize();
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.

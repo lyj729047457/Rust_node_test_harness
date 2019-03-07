@@ -13,8 +13,9 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.NodeFactory;
+import org.aion.harness.integ.resources.TarFileFinder;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeFactory;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -36,7 +37,11 @@ public class MultipleListenerThreadsTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
     }
 
     @After
@@ -50,7 +55,7 @@ public class MultipleListenerThreadsTest {
     @Test
     public void testMultipleThreadsRequestingHeartbeatEvents() throws IOException, InterruptedException {
         // Start the node.
-        this.node.initializeKernel();
+        this.node.initialize();
 
         Result result = this.node.start();
         System.out.println("Start result = " + result);

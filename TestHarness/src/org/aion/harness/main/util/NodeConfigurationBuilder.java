@@ -2,7 +2,6 @@ package org.aion.harness.main.util;
 
 import java.io.File;
 import org.aion.harness.main.Network;
-import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeConfigurations;
 
 /**
@@ -14,14 +13,14 @@ import org.aion.harness.main.NodeConfigurations;
  */
 public final class NodeConfigurationBuilder {
     private static final String PROJECT_DIR = System.getProperty("user.dir") + File.separator + "..";
-    
+
     public static final Network DEFAULT_NETWORK = Network.MASTERY;
     public static final String DEFAULT_KERNEL_SOURCE_DIR = PROJECT_DIR + File.separator + ".." + File.separator + "aion";
-    public static final String DEFAULT_KERNEL_BUILD_DIR = DEFAULT_KERNEL_SOURCE_DIR + File.separator + "pack";
 
     private Network network;
     private String kernelSourceDirectory;
-    private String kernelBuildDirectory;
+    private String builtKernelFile;
+    private boolean isConditionalBuild;
     private boolean preserveDatabase = false;
 
     /**
@@ -36,27 +35,42 @@ public final class NodeConfigurationBuilder {
     }
 
     /**
-     * The root directory of the kernel source code.
+     * Tell the node to perform a conditional build.
      *
-     * @param kernelSourceDirectory The kernel source code.
+     * A conditional build will first check whether or not the file whose path is
+     * {@code builtKernelFile} exists, and if not, it will build the kernel from the sources at
+     * the given source directory.
+     *
+     * Otherwise, if the built kernel file does exist, no build will occur and the kernel will be
+     * fetched directly from the built file.
+     *
+     * Assumption: the built kernel file is a tar.bz2 file.
+     *
+     * @param kernelSourceDirectory The path to the root directory of the kernel source files.
+     * @param builtKernelFile The path to the built kernel file.
      * @return this builder.
      */
-    public NodeConfigurationBuilder kernelSourceDirectory(String kernelSourceDirectory) {
+    public NodeConfigurationBuilder conditionalBuild(String kernelSourceDirectory, String builtKernelFile) {
         this.kernelSourceDirectory = kernelSourceDirectory;
+        this.builtKernelFile = builtKernelFile;
+        this.isConditionalBuild = true;
         return this;
     }
 
     /**
-     * The directory that contains the built kernel (as a .tar.bz2 file).
+     * Tell the node to perform an unconditional build.
      *
-     * This field is set when no build is desired, then the build is assumed to exist in the provided
-     * directory.
+     * An unconditional build will build the kernel from the sources at the given source directory
+     * every time the node is initialized.
      *
-     * @param kernelBuildDirectory The build kernel.
+     * Assumption: the built kernel file is a tar.bz2 file.
+     *
+     * @param kernelSourceDirectory The path to the root directory of the kernel source files.
      * @return this builder.
      */
-    public NodeConfigurationBuilder directoryOfBuiltKernel(String kernelBuildDirectory) {
-        this.kernelBuildDirectory = kernelBuildDirectory;
+    public NodeConfigurationBuilder unconditionalBuild(String kernelSourceDirectory) {
+        this.kernelSourceDirectory = kernelSourceDirectory;
+        this.isConditionalBuild = false;
         return this;
     }
 
@@ -85,40 +99,47 @@ public final class NodeConfigurationBuilder {
     }
 
     /**
-     * Builds the {@link NodeConfigurations} object.
+     * Builds the node configurations from the fields that were set in this builder.
      *
-     * The following default values are supplied if the fields are not set:
-     *   - network = {@link Network#MASTERY}
-     *   - kernel source directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
-     *   - kernel build directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_BUILD_DIR}
+     * If database preservation is not specified then the default value will be to preserve the
+     * database.
      *
-     * The database will not be preserved by default.
-     *
-     * @return the built configuration object.
+     * @return the node configurations.
      */
     public NodeConfigurations build() {
-        Network network = (this.network == null) ? DEFAULT_NETWORK : this.network;
-
-        String kernelSource = (this.kernelSourceDirectory == null)
-            ? DEFAULT_KERNEL_SOURCE_DIR
-            : this.kernelSourceDirectory;
-
-        String kernelBuild = (this.kernelBuildDirectory == null)
-            ? DEFAULT_KERNEL_BUILD_DIR
-            : this.kernelBuildDirectory;
-
-        return new NodeConfigurations(network, kernelSource, kernelBuild, this.preserveDatabase);
+        if (this.isConditionalBuild) {
+            return NodeConfigurations.conditionalBuild(this.network, this.kernelSourceDirectory, this.builtKernelFile, this.preserveDatabase);
+        } else {
+            return NodeConfigurations.unconditionalBuild(this.network, this.kernelSourceDirectory, this.preserveDatabase);
+        }
     }
 
     /**
-     * Returns a {@link NodeConfigurations} object with all of the default values specified by
-     * {@code build()}.
+     * Constructs node configurations that will use the default values and will specify a conditonal
+     * build.
      *
-     * @param preserveDatabase Whether or not to preserve the database between runs.
-     * @return a default configurations object.
+     * The default network is: {@link NodeConfigurationBuilder#DEFAULT_NETWORK}
+     * The default kernel source directory is: {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
+     *
+     * @param preserveDatabase whether or not to preserve the database.
+     * @return a default conditional build configuration.
      */
-    public static NodeConfigurations defaultConfigurations(boolean preserveDatabase) {
-        return new NodeConfigurations(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, DEFAULT_KERNEL_BUILD_DIR, preserveDatabase);
+    public static NodeConfigurations defaultConditionalBuildConfigurations(String builtKernelFile, boolean preserveDatabase) {
+        return NodeConfigurations.conditionalBuild(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, builtKernelFile, preserveDatabase);
+    }
+
+    /**
+     * Constructs node configurations that will use the default values and will specify an
+     * unconditonal build.
+     *
+     * The default network is: {@link NodeConfigurationBuilder#DEFAULT_NETWORK}
+     * The default kernel source directory is: {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
+     *
+     * @param preserveDatabase whether or not to preserve the database.
+     * @return a default unconditional build configuration.
+     */
+    public static NodeConfigurations defaultUnconditionalBuildConfigurations(boolean preserveDatabase) {
+        return NodeConfigurations.unconditionalBuild(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, preserveDatabase);
     }
 
 }

@@ -1,8 +1,9 @@
 package org.aion.harness.integ;
 
 import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.NodeFactory;
+import org.aion.harness.integ.resources.TarFileFinder;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -26,11 +27,6 @@ public class NodeLifecycleTest {
     private NodeConfigurations configurations;
 
     /**
-     * Set to false for testing convenience, tune to true if starting from scratch.
-     */
-    private static boolean doFullInitialization = false;
-
-    /**
      * Number of seconds to sleep during the heartbeat test. Set to something more meaningful for
      * temporary verification.
      */
@@ -40,7 +36,11 @@ public class NodeLifecycleTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.configurations = NodeConfigurationBuilder.defaultConfigurations(false);
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.configurations = NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel, false);
         this.node.configure(this.configurations);
     }
 
@@ -54,7 +54,7 @@ public class NodeLifecycleTest {
 
     @Test
     public void testInitializeNode() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.
@@ -257,19 +257,9 @@ public class NodeLifecycleTest {
         assertFalse(this.node.isAlive());
     }
 
-    private Result initializeNode() throws IOException, InterruptedException {
-        if (doFullInitialization) {
-            Result result = this.node.buildKernel();
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        return this.node.initializeKernel();
-    }
-
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.node.initialize();
+        System.out.println("Init result = " + result);
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.

@@ -3,9 +3,13 @@ package org.aion.harness.integ;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.*;
-import org.aion.harness.result.FutureResult;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeConfigurations;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.RPC;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
@@ -60,11 +64,16 @@ public class NodePreserveDatabaseTest {
 
     @Test
     public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
-        // initialize and run node to generate a database, then shutdown the node.
-        // We do not want to preserve the database yet, or else we get someone elses changes.
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+        NodeConfigurations configurations = new NodeConfigurationBuilder()
+            .network(NodeConfigurationBuilder.DEFAULT_NETWORK)
+            .unconditionalBuild(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR)
+            .preserveDatabase()
+            .build();
 
-        Result result = this.node.initializeKernel();
+        this.node.configure(configurations);
+
+        // initialize and run node to generate a database, then shutdown the node
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // start the node
@@ -87,11 +96,8 @@ public class NodePreserveDatabaseTest {
         assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
-        // Now we want to preserve the database.
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(true));
-
         // re-initialize node, but with the preserved database
-        result = this.node.initializeKernel();
+        result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // start the node
@@ -116,14 +122,20 @@ public class NodePreserveDatabaseTest {
 
     @Test
     public void testInitializeWhenNewNetworkDirectoryNotCreated() throws IOException, InterruptedException {
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(true));
+        NodeConfigurations configurations = new NodeConfigurationBuilder()
+            .network(NodeConfigurationBuilder.DEFAULT_NETWORK)
+            .unconditionalBuild(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR)
+            .preserveDatabase()
+            .build();
+
+        this.node.configure(configurations);
 
         // initialize and run node to create the node folder
-        Result result = this.node.initializeKernel();
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // try to preserve a database that does not yet exist
-        result = this.node.initializeKernel();
+        result = this.node.initialize();
         assertTrue(result.isSuccess());
     }
 

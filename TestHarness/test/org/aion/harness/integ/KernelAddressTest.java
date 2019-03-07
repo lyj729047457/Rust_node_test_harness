@@ -1,13 +1,17 @@
 package org.aion.harness.integ;
 
 import java.util.concurrent.TimeUnit;
+import org.aion.harness.integ.resources.TarFileFinder;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
-import org.aion.harness.main.*;
-import org.aion.harness.result.FutureResult;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeFactory;
+import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.RPC;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.misc.Assumptions;
@@ -31,7 +35,6 @@ import java.security.spec.InvalidKeySpecException;
 import static org.junit.Assert.*;
 
 public class KernelAddressTest {
-    private static boolean doFullInitialization = false;
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static PrivateKey preminedPrivateKey;
@@ -47,7 +50,11 @@ public class KernelAddressTest {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
         this.rpc = new RPC("127.0.0.1", "8545");
     }
 
@@ -151,19 +158,8 @@ public class KernelAddressTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
-    private Result initializeNode() throws IOException, InterruptedException {
-        if (doFullInitialization) {
-            Result result = this.node.buildKernel();
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        return this.node.initializeKernel();
-    }
-
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.

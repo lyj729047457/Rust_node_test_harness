@@ -14,9 +14,10 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.LocalNode;
+import org.aion.harness.integ.resources.TarFileFinder;
+import org.aion.harness.main.util.NodeConfigurationBuilder;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -31,16 +32,15 @@ public class NodeListenerLifecycleTest {
 
     private LocalNode node;
 
-    /**
-     * Set to false for testing convenience, tune to true if starting from scratch.
-     */
-    private static boolean doFullInitialization = false;
-
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+
+        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
+        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+
+        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
     }
 
     @After
@@ -193,7 +193,7 @@ public class NodeListenerLifecycleTest {
     }
 
     private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = initializeNode();
+        Result result = this.node.initialize();
         assertTrue(result.isSuccess());
 
         // verify the node directory was created.
@@ -206,17 +206,6 @@ public class NodeListenerLifecycleTest {
         assertEquals(1, nodeDirectoryEntries.length);
         assertEquals(kernelDirectory, nodeDirectoryEntries[0]);
         assertTrue(nodeDirectoryEntries[0].isDirectory());
-    }
-
-    private Result initializeNode() throws IOException, InterruptedException {
-        if (doFullInitialization) {
-            Result result = this.node.buildKernel();
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        return this.node.initializeKernel();
     }
 
     private static void deleteInitializationDirectories() throws IOException {
