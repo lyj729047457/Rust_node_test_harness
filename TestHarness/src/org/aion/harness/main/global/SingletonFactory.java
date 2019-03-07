@@ -2,6 +2,7 @@ package org.aion.harness.main.global;
 
 import org.aion.harness.util.LogManager;
 import org.aion.harness.util.LogReader;
+import org.aion.harness.util.NodeWatcher;
 
 /**
  * A class that provides always the same instance of the requested class, so that the class becomes
@@ -20,10 +21,12 @@ public final class SingletonFactory {
 
     private final LogManager logManager;
     private final LogReader logReader;
+    private final NodeWatcher nodeWatcher;
 
     private SingletonFactory() {
         this.logManager = new LogManager();
         this.logReader = new LogReader();
+        this.nodeWatcher = new NodeWatcher();
     }
 
     /**
@@ -59,6 +62,19 @@ public final class SingletonFactory {
      */
     public LogReader logReader() {
         return this.logReader;
+    }
+
+    /**
+     * Returns an instance of {@link NodeWatcher}.
+     *
+     * If two {@link NodeWatcher} instances are obtained by subsequent calls to this method, then
+     * the two instances will in fact be the same instance and therefore will be equal as per the
+     * {@code ==} operator.
+     *
+     * @return a node watcher singleton.
+     */
+    public NodeWatcher nodeWatcher() {
+        return this.nodeWatcher;
     }
 
 }
