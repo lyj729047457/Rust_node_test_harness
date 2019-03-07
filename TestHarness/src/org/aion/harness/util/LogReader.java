@@ -16,9 +16,13 @@ public final class LogReader {
     private ExecutorService threadExecutor;
     private Tailer logTailer;
     private LogListener listener;
+    private final int ID;
+    private static int IDCounter = 1;
 
     public LogReader() {
         this.listener = new LogListener();
+        this.ID = IDCounter;
+        IDCounter++;
     }
 
     public Result startReading(File log) {
@@ -65,6 +69,16 @@ public final class LogReader {
 
     public LogListener getLogListener() {
         return this.listener;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other == this;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.ID;
     }
 
 }
