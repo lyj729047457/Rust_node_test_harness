@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
-import org.aion.harness.main.Node;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.result.Result;
@@ -30,12 +30,12 @@ public class MultipleListenerThreadsTest {
 
     private static final long TEST_DURATION = TimeUnit.SECONDS.toMillis(45);
 
-    private Node node;
+    private LocalNode node;
 
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
     }
 

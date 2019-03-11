@@ -12,7 +12,7 @@ public final class NodeFactory {
 
     public enum NodeType { JAVA_NODE }
 
-    public static Node getNewNodeInstance(NodeType node) {
+    public static LocalNode getNewLocalNodeInstance(NodeType node) {
         if (node == null) {
             throw new NullPointerException("Cannot get null node.");
         }

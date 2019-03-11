@@ -5,10 +5,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
-import org.aion.harness.main.Node;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.RPC;
+import org.aion.harness.main.*;
 import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
@@ -43,13 +40,13 @@ public class KernelAddressTest {
     private static long energyPrice = 10_000_000_000L;
 
     private RPC rpc;
-    private Node node;
+    private LocalNode node;
     @Before
     public void setup() throws IOException, DecoderException, InvalidKeySpecException {
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC("127.0.0.1", "8545");
     }

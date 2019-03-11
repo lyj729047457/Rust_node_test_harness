@@ -5,10 +5,7 @@ import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
-import org.aion.harness.main.Node;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.RPC;
+import org.aion.harness.main.*;
 import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.Network;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
@@ -45,7 +42,7 @@ public class RpcTest {
     private static long energyPrice = 10_000_000_000L;
 
     private RPC rpc;
-    private Node node;
+    private LocalNode node;
 
     @Before
     public void setup() throws IOException, DecoderException, InvalidKeySpecException {
@@ -53,7 +50,7 @@ public class RpcTest {
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         preminedAddress = preminedPrivateKey.getAddress();
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC("127.0.0.1", "8545");
     }

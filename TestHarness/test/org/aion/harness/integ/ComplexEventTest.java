@@ -10,7 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.aion.harness.main.Node;
+
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
@@ -46,7 +47,7 @@ public class ComplexEventTest {
     private static IEvent event2 = Event.or(Event.or(sslString, corsString), new Event(workerString));
     private static IEvent event3 = Event.or(Event.and(sslString, "I do not exist"), Event.and(corsString, workerString));
 
-    private Node node;
+    private LocalNode node;
 
     /**
      * Set to false for testing convenience, tune to true if starting from scratch.
@@ -56,7 +57,7 @@ public class ComplexEventTest {
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
     }
 

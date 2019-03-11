@@ -3,10 +3,7 @@ package org.aion.harness.integ;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
-import org.aion.harness.main.Node;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.RPC;
+import org.aion.harness.main.*;
 import org.aion.harness.main.types.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
@@ -34,13 +31,13 @@ public class NodePreserveDatabaseTest {
     private static Address destination;
 
     private RPC rpc;
-    private Node node;
+    private LocalNode node;
 
     @Before
     public void setup() throws DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC("127.0.0.1", "8545");
     }

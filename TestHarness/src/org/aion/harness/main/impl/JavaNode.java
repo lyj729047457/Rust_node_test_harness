@@ -1,6 +1,6 @@
 package org.aion.harness.main.impl;
 
-import org.aion.harness.main.Node;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  *
  * A JavaNode is not thread-safe.
  */
-public final class JavaNode implements Node {
+public final class JavaNode implements LocalNode {
     private NodeConfigurations configurations = null;
     private LogReader logReader;
     private LogManager logManager;
@@ -31,15 +31,15 @@ public final class JavaNode implements Node {
     // The running instance of the kernel.
     private Process runningKernel = null;
 
-    @Override
-    public int getID() {
-        return this.ID;
-    }
-
     public JavaNode() {
         this.logReader = new LogReader();
         this.logManager = new LogManager();
         this.ID = SingletonFactory.singleton().nodeWatcher().addReader(this.logReader);
+    }
+
+    @Override
+    public int getID() {
+        return this.ID;
     }
 
     /**

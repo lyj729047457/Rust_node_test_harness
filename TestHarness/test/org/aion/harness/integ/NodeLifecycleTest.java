@@ -1,6 +1,6 @@
 package org.aion.harness.integ;
 
-import org.aion.harness.main.Node;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.NodeConfigurations;
@@ -22,7 +22,7 @@ public class NodeLifecycleTest {
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
-    private Node node;
+    private LocalNode node;
     private NodeConfigurations configurations;
 
     /**
@@ -39,7 +39,7 @@ public class NodeLifecycleTest {
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.configurations = NodeConfigurationBuilder.defaultConfigurations();
         this.node.configure(this.configurations);
     }

@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
-import org.aion.harness.main.Node;
+import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
@@ -29,7 +29,7 @@ public class NodeListenerLifecycleTest {
     private static File nodeDirectory = NodeFileManager.getNodeDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
-    private Node node;
+    private LocalNode node;
 
     /**
      * Set to false for testing convenience, tune to true if starting from scratch.
@@ -39,7 +39,7 @@ public class NodeListenerLifecycleTest {
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
-        this.node = NodeFactory.getNewNodeInstance(NodeFactory.NodeType.JAVA_NODE);
+        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
     }
 
