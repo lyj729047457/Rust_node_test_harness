@@ -120,4 +120,44 @@ public final class SyncStatus {
         }
     }
 
+    /**
+     * Returns {@code true} if, and only if, other is a sync status object and other this sync
+     * status and other report the same starting, current and highest block numbers as well as the
+     * same {@code isSyncing()} and {@code isWaitingToConnect()} values.
+     *
+     * @param other The other object whose equality is to be tested.
+     * @return true if other is a sync status object with the same status as this one.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof SyncStatus)) {
+            return false;
+        }
+
+        SyncStatus otherSync = (SyncStatus) other;
+
+        if (!this.startingBlockNumber.equals(otherSync.startingBlockNumber)) {
+            return false;
+        }
+        if (!this.currentBlockNumber.equals(otherSync.currentBlockNumber)) {
+            return false;
+        }
+        if (!this.highestBlockNumber.equals(otherSync.highestBlockNumber)) {
+            return false;
+        }
+        if (this.isSyncing != otherSync.isSyncing) {
+            return false;
+        }
+        return this.waitingToConnect == otherSync.waitingToConnect;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 37;
+        hash += this.startingBlockNumber.intValue() + this.currentBlockNumber.intValue() + this.highestBlockNumber.intValue();
+        hash += ((this.isSyncing) ? 1 : 0);
+        hash += ((this.waitingToConnect) ? 1 : 0);
+        return hash;
+    }
+
 }

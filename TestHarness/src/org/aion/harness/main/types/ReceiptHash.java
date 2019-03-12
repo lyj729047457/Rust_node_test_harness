@@ -44,4 +44,26 @@ public final class ReceiptHash {
         return "ReceiptHash { hash = 0x" + Hex.encodeHexString(this.hash) + " }";
     }
 
+    /**
+     * Returns {@code true} if, and only if, other is a receipt hash and it has the same hash as
+     * this receipt hash.
+     *
+     * @param other The other object whose equality is to be tested.
+     * @return true if other is a receipt hash with the same hash as this receipt hash.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof ReceiptHash)) {
+            return false;
+        }
+
+        ReceiptHash otherHash = (ReceiptHash) other;
+        return Arrays.equals(this.hash, otherHash.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(this.hash);
+    }
+
 }

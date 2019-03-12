@@ -196,4 +196,42 @@ public final class TransactionReceipt {
             + ", transaction sender = " + this.sender
             + ", transaction destination = " + this.destination + " }";
     }
+
+    /**
+     * Returns {@code true} if, and only if, other is a transaction receipt and the transaction hash
+     * of other is equal to this receipt's transaction hash, and the block hash of other is equal to
+     * this receipt's block hash, and both receipts have the same transaction index.
+     *
+     * These three values are sufficient enough for equality, and should imply that all other fields
+     * must be equal as well. If this does not hold it is a kernel error.
+     *
+     * @param other The other object whose equality is to be tested.
+     * @return true if other is a transaction receipt with the same transaction index, hash and block hash.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof TransactionReceipt)) {
+            return false;
+        }
+
+        TransactionReceipt otherReceipt = (TransactionReceipt) other;
+
+        if (!Arrays.equals(this.transactionHash, otherReceipt.transactionHash)) {
+            return false;
+        }
+        if (!Arrays.equals(this.blockHash, otherReceipt.blockHash)) {
+            return false;
+        }
+        return this.transactionIndex == otherReceipt.transactionIndex;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 37;
+        hash += Arrays.hashCode(this.transactionHash);
+        hash += Arrays.hashCode(this.blockHash);
+        hash += this.transactionIndex;
+        return hash;
+    }
+
 }
