@@ -4,7 +4,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.*;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.Network;
@@ -441,7 +441,7 @@ public class RpcTest {
         assertTrue(transactionResult.isSuccess());
 
         NodeListener listener = NodeListener.listenTo(this.node);
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
 
@@ -499,7 +499,7 @@ public class RpcTest {
         assertTrue(transactionResult.isSuccess());
 
         NodeListener listener = NodeListener.listenTo(this.node);
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
 
@@ -600,7 +600,7 @@ public class RpcTest {
             transferValue,
             BigInteger.ZERO);
 
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
@@ -616,7 +616,7 @@ public class RpcTest {
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction
+        return RawTransaction
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 

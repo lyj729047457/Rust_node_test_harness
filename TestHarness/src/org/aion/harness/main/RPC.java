@@ -3,7 +3,7 @@ package org.aion.harness.main;
 import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.concurrent.TimeUnit;
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
@@ -44,7 +44,7 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransaction(Transaction transaction) throws InterruptedException {
+    public RpcResult<ReceiptHash> sendTransaction(RawTransaction transaction) throws InterruptedException {
         return callSendTransaction(transaction, false);
     }
 
@@ -59,7 +59,7 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransactionVerbose(Transaction transaction) throws InterruptedException {
+    public RpcResult<ReceiptHash> sendTransactionVerbose(RawTransaction transaction) throws InterruptedException {
         return callSendTransaction(transaction, true);
     }
 
@@ -238,7 +238,7 @@ public final class RPC {
         }
     }
 
-    private RpcResult<ReceiptHash> callSendTransaction(Transaction transaction, boolean verbose) throws InterruptedException {
+    private RpcResult<ReceiptHash> callSendTransaction(RawTransaction transaction, boolean verbose) throws InterruptedException {
         if (transaction == null) {
             throw new IllegalArgumentException("Cannot send a null transaction.");
         }

@@ -3,7 +3,7 @@ package org.aion.harness.integ;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
 import org.aion.harness.main.*;
 import org.aion.harness.result.FutureResult;
@@ -95,7 +95,7 @@ public class KernelAddressTest {
             BigInteger.ZERO,
             BigInteger.ZERO);
         assertTrue(transactionResult.isSuccess());
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
@@ -131,7 +131,7 @@ public class KernelAddressTest {
             BigInteger.ZERO);
         assertTrue(transactionResult.isSuccess());
 
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
@@ -147,7 +147,7 @@ public class KernelAddressTest {
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction
+        return RawTransaction
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 

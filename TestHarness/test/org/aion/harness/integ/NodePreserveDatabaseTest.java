@@ -2,7 +2,7 @@ package org.aion.harness.integ;
 
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.*;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
@@ -125,7 +125,7 @@ public class NodePreserveDatabaseTest {
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction
+        return RawTransaction
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
@@ -146,7 +146,7 @@ public class NodePreserveDatabaseTest {
             transferValue,
             BigInteger.ZERO);
 
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),

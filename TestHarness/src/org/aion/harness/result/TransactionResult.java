@@ -1,9 +1,9 @@
 package org.aion.harness.result;
 
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 
 /**
- * A result from some process that generates a {@link Transaction} upon success.
+ * A result from some process that generates a {@link RawTransaction} upon success.
  *
  * If {@code success == true} then the transaction will be non-null.
  *
@@ -16,9 +16,9 @@ import org.aion.harness.kernel.Transaction;
 public final class TransactionResult {
     private final boolean success;
     private final String error;
-    private final Transaction transaction;
+    private final RawTransaction transaction;
 
-    private TransactionResult(boolean success, String error, Transaction transaction) {
+    private TransactionResult(boolean success, String error, RawTransaction transaction) {
         if (error == null) {
             throw new NullPointerException("Cannot construct transaction result with null error.");
         }
@@ -28,7 +28,7 @@ public final class TransactionResult {
         this.transaction = transaction;
     }
 
-    public static TransactionResult successful(Transaction transaction) {
+    public static TransactionResult successful(RawTransaction transaction) {
         if (transaction == null) {
             throw new NullPointerException("Cannot construct successful transaction result with null transaction.");
         }
@@ -45,7 +45,7 @@ public final class TransactionResult {
      *
      * @return the transaction.
      */
-    public Transaction getTransaction() {
+    public RawTransaction getTransaction() {
         return this.transaction;
     }
 

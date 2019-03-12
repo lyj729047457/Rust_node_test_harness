@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.*;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
@@ -110,7 +110,7 @@ public class EventListenerTest {
 
         NodeListener listener = NodeListener.listenTo(this.node);
 
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
@@ -204,7 +204,7 @@ public class EventListenerTest {
 
         NodeListener listener = NodeListener.listenTo(this.node);
 
-        Transaction transaction = transactionResult.getTransaction();
+        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
             transaction.getTransactionHash(),
@@ -292,7 +292,7 @@ public class EventListenerTest {
     }
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return Transaction
+        return RawTransaction
             .buildAndSignTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
