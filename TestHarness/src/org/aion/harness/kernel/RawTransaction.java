@@ -66,7 +66,7 @@ public final class RawTransaction {
      * @param value Amount of value to transfer to destination from sender.
      * @return The signed transaction.
      */
-    public static TransactionResult buildAndSignTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
+    public static TransactionResult buildAndSignFvmTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
         Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
 
         try {
