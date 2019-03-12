@@ -85,6 +85,14 @@ public final class OrEvent implements IEvent {
      * {@inheritDoc}
      */
     @Override
+    public synchronized boolean hasBeenObserved() {
+        return this.event1.hasBeenObserved() || this.event2.hasBeenObserved();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<String> getAllObservedEvents() {
         List<String> events = new ArrayList<>();
         events.addAll(this.event1.getAllObservedEvents());

@@ -26,11 +26,19 @@ public class EventTest {
         long observedTimeString1 = System.nanoTime();
         assertFalse(fullEvent.isSatisfiedBy("one", observedTimeString1, TimeUnit.NANOSECONDS));
 
+        assertTrue(event1.hasBeenObserved());
+        assertFalse(event2.hasBeenObserved());
+        assertFalse(fullEvent.hasBeenObserved());
+
         // Just to really make sure the two times differ...
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 
         long observedTimeString2 = System.nanoTime();
         assertTrue(fullEvent.isSatisfiedBy("two", observedTimeString2, TimeUnit.NANOSECONDS));
+
+        assertTrue(event1.hasBeenObserved());
+        assertTrue(event2.hasBeenObserved());
+        assertTrue(fullEvent.hasBeenObserved());
 
         assertEquals(observedTimeString1, event1.observedAt(TimeUnit.NANOSECONDS));
         assertEquals(observedTimeString2, event2.observedAt(TimeUnit.NANOSECONDS));
@@ -41,6 +49,7 @@ public class EventTest {
         String eventString = "me";
         IEvent event = new Event(eventString);
         assertFalse(event.isSatisfiedBy("em", System.nanoTime(), TimeUnit.NANOSECONDS));
+        assertFalse(event.hasBeenObserved());
 
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
@@ -50,6 +59,7 @@ public class EventTest {
 
         long observedAt = System.nanoTime();
         assertTrue(event.isSatisfiedBy("me2", observedAt, TimeUnit.NANOSECONDS));
+        assertTrue(event.hasBeenObserved());
 
         observed = event.getAllObservedEvents();
         assertEquals(1, observed.size());
@@ -62,10 +72,16 @@ public class EventTest {
         String condition1string = "lucky";
         String condition2string = "news";
 
-        IEvent event = new Event(condition1string);
-        event = event.and(new Event(condition2string));
+        IEvent event1 = new Event(condition1string);
+        IEvent event2 = new Event(condition2string);
+
+        IEvent event = Event.and(event1, event2);
 
         assertFalse(event.isSatisfiedBy("chucky crews", System.nanoTime(), TimeUnit.NANOSECONDS));
+
+        assertFalse(event1.hasBeenObserved());
+        assertFalse(event2.hasBeenObserved());
+        assertFalse(event.hasBeenObserved());
 
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
@@ -76,6 +92,10 @@ public class EventTest {
         // The condition is not satisfied by this, but one part of it is.
         String logLine = "i read the news today";
         assertFalse(event.isSatisfiedBy(logLine, System.nanoTime(), TimeUnit.NANOSECONDS));
+
+        assertFalse(event1.hasBeenObserved());
+        assertTrue(event2.hasBeenObserved());
+        assertFalse(event.hasBeenObserved());
 
         observed = event.getAllObservedEvents();
         assertEquals(1, observed.size());
@@ -88,6 +108,10 @@ public class EventTest {
         String logLine2 = "news l ucky news lucky";
         long observedAt = System.nanoTime();
         assertTrue(event.isSatisfiedBy(logLine2, observedAt, TimeUnit.NANOSECONDS));
+
+        assertTrue(event1.hasBeenObserved());
+        assertTrue(event2.hasBeenObserved());
+        assertTrue(event.hasBeenObserved());
 
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
@@ -118,10 +142,16 @@ public class EventTest {
         String condition1string = "lucky";
         String condition2string = "news";
 
-        IEvent event = new Event(condition1string);
-        event = event.or(new Event(condition2string));
+        IEvent event1 = new Event(condition1string);
+        IEvent event2 = new Event(condition2string);
+
+        IEvent event = Event.or(event1, event2);
 
         assertFalse(event.isSatisfiedBy("chucky crews", System.nanoTime(), TimeUnit.NANOSECONDS));
+
+        assertFalse(event1.hasBeenObserved());
+        assertFalse(event2.hasBeenObserved());
+        assertFalse(event.hasBeenObserved());
 
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
@@ -133,6 +163,10 @@ public class EventTest {
         String logLine = "i read the news today";
         long observedAt = System.nanoTime();
         assertTrue(event.isSatisfiedBy(logLine, observedAt, TimeUnit.NANOSECONDS));
+
+        assertFalse(event1.hasBeenObserved());
+        assertTrue(event2.hasBeenObserved());
+        assertTrue(event.hasBeenObserved());
 
         observed = event.getAllObservedEvents();
         assertEquals(1, observed.size());
@@ -149,10 +183,16 @@ public class EventTest {
         String condition1string = "lucky";
         String condition2string = "news";
 
-        IEvent event = new Event(condition1string);
-        event = event.or(new Event(condition2string));
+        IEvent event1 = new Event(condition1string);
+        IEvent event2 = new Event(condition2string);
+
+        IEvent event = Event.or(event1, event2);
 
         assertFalse(event.isSatisfiedBy("chucky crews", System.nanoTime(), TimeUnit.NANOSECONDS));
+
+        assertFalse(event1.hasBeenObserved());
+        assertFalse(event2.hasBeenObserved());
+        assertFalse(event.hasBeenObserved());
 
         List<String> observed = event.getAllObservedEvents();
         assertTrue(observed.isEmpty());
@@ -162,6 +202,10 @@ public class EventTest {
         String logLine = "news l ucky news lucky";
         long observedAt = System.nanoTime();
         assertTrue(event.isSatisfiedBy(logLine, observedAt, TimeUnit.NANOSECONDS));
+
+        assertTrue(event1.hasBeenObserved());
+        assertTrue(event2.hasBeenObserved());
+        assertTrue(event.hasBeenObserved());
 
         observed = event.getAllObservedEvents();
         assertEquals(2, observed.size());
@@ -220,6 +264,11 @@ public class EventTest {
         long observedAt = System.nanoTime();
         assertTrue(total.isSatisfiedBy(logLine, observedAt, TimeUnit.NANOSECONDS));
         List<String> observed = total.getAllObservedEvents();
+
+        assertFalse(hammerOrNails.hasBeenObserved());
+        assertTrue(drillAndTimberOrChalk.hasBeenObserved());
+        assertTrue(chalkAndMill.hasBeenObserved());
+        assertTrue(total.hasBeenObserved());
 
         // 3 because there are 2 "chalk" events in the logic.
         assertEquals(3, observed.size());
@@ -282,6 +331,11 @@ public class EventTest {
         assertFalse(total.isSatisfiedBy(logLine, System.nanoTime(), TimeUnit.NANOSECONDS));
         assertEquals(1, total.getAllObservedEvents().size());
 
+        assertTrue(hammerOrNails.hasBeenObserved());
+        assertFalse(drillAndTimberOrChalk.hasBeenObserved());
+        assertFalse(chalkAndMill.hasBeenObserved());
+        assertFalse(total.hasBeenObserved());
+
         // we observed the event: nails
         List<String> logs = total.getAllObservedLogs();
         assertEquals(1, logs.size());
@@ -295,6 +349,11 @@ public class EventTest {
         String logLine2 = "drilll";
         assertFalse(total.isSatisfiedBy(logLine2, System.nanoTime(), TimeUnit.NANOSECONDS));
         assertEquals(2, total.getAllObservedEvents().size());
+
+        assertTrue(hammerOrNails.hasBeenObserved());
+        assertFalse(drillAndTimberOrChalk.hasBeenObserved());
+        assertFalse(chalkAndMill.hasBeenObserved());
+        assertFalse(total.hasBeenObserved());
 
         // we observed the events: nails, drill
         logs = total.getAllObservedLogs();
@@ -311,6 +370,11 @@ public class EventTest {
         assertEquals(2, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());
 
+        assertTrue(hammerOrNails.hasBeenObserved());
+        assertFalse(drillAndTimberOrChalk.hasBeenObserved());
+        assertFalse(chalkAndMill.hasBeenObserved());
+        assertFalse(total.hasBeenObserved());
+
         logs = total.getAllObservedLogs();
         assertEquals(2, logs.size());
         assertEquals(expectedLogs, total.getAllObservedLogs());
@@ -320,6 +384,11 @@ public class EventTest {
         String logLine3 = "chalk";
         long observedAt = System.nanoTime();
         assertTrue(total.isSatisfiedBy(logLine3, observedAt, TimeUnit.NANOSECONDS));
+
+        assertTrue(hammerOrNails.hasBeenObserved());
+        assertTrue(drillAndTimberOrChalk.hasBeenObserved());
+        assertFalse(chalkAndMill.hasBeenObserved());
+        assertTrue(total.hasBeenObserved());
 
         // 4 because there are 2 "chalk" events.
         assertEquals(4, total.getAllObservedEvents().size());
@@ -338,6 +407,12 @@ public class EventTest {
         // Now observe "mill", which should 're-satisfy' the top level clause.
         // But this is not possible, so nothing changes.
         assertTrue(total.isSatisfiedBy("mill", System.nanoTime(), TimeUnit.NANOSECONDS));
+
+        // Nothing here should change.
+        assertTrue(hammerOrNails.hasBeenObserved());
+        assertTrue(drillAndTimberOrChalk.hasBeenObserved());
+        assertFalse(chalkAndMill.hasBeenObserved());
+        assertTrue(total.hasBeenObserved());
 
         assertEquals(4, total.getAllObservedEvents().size());
         assertEquals(expectedStrings, total.getAllObservedEvents());

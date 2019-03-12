@@ -115,6 +115,14 @@ public final class Event implements IEvent {
      * {@inheritDoc}
      */
     @Override
+    public synchronized boolean hasBeenObserved() {
+        return this.isSatisfied;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized List<String> getAllObservedEvents() {
         return (this.isSatisfied) ? Collections.singletonList(this.eventString) : Collections.emptyList();
     }

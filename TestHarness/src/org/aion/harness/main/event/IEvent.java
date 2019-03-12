@@ -100,6 +100,14 @@ public interface IEvent {
     boolean isSatisfiedBy(String line, long observedAt, TimeUnit unit);
 
     /**
+     * Returns {@code true} only if this event has been observed or "satisfied" (the two terms are
+     * used interchangeably here). Otherwise returns {@code false}.
+     *
+     * @return whether or not the event has been observed.
+     */
+    boolean hasBeenObserved();
+
+    /**
      * Returns a list of all the event strings that have been observed so far.
      *
      * For all strings returned by {@code getAllObservedLogs()}, each should be a superstring of a
