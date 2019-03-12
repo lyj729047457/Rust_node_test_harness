@@ -23,6 +23,7 @@ import org.apache.commons.codec.binary.Hex;
  */
 public final class RawTransaction {
     private final byte[] signedTransaction;
+    private byte[] hash;
 
     private RawTransaction(PrivateKey sender, BigInteger nonce, Address destination, byte[] data,
         long energyLimit, long energyPrice, BigInteger value, boolean isForAvm)
@@ -118,7 +119,10 @@ public final class RawTransaction {
      * @return The transaction hash.
      */
     public byte[] getTransactionHash() {
-        return SignedTransactionBuilder.getTransactionHashOfSignedTransaction(this.signedTransaction);
+        if (this.hash == null) {
+            this.hash = SignedTransactionBuilder.getTransactionHashOfSignedTransaction(this.signedTransaction);
+        }
+        return this.hash;
     }
 
     @Override
