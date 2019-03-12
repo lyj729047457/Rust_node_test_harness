@@ -1,18 +1,12 @@
 package org.aion.harness.main;
 
-import java.math.BigInteger;
-import java.text.NumberFormat;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.OrEvent;
 import org.aion.harness.main.global.SingletonFactory;
-import org.aion.harness.main.types.FutureResult;
-import org.aion.harness.main.types.SyncStatus;
-import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.Result;
-import org.aion.harness.result.RpcResult;
 import org.aion.harness.util.LogListener;
 import org.apache.commons.codec.binary.Hex;
 

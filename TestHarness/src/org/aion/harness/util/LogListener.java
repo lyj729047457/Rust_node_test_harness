@@ -3,7 +3,7 @@ package org.aion.harness.util;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.types.FutureResult;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.apache.commons.io.input.Tailer;

@@ -1,6 +1,7 @@
 package org.aion.harness.main.types;
 
 import java.io.File;
+import org.aion.harness.main.Network;
 import org.aion.harness.main.Node;
 
 /**

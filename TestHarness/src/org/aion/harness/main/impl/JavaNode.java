@@ -5,7 +5,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
-import org.aion.harness.main.types.Network;
+import org.aion.harness.main.Network;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;

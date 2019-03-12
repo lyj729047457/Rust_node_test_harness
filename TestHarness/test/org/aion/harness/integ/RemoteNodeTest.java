@@ -6,7 +6,7 @@ import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
-import org.aion.harness.main.types.FutureResult;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;

@@ -1,4 +1,4 @@
-package org.aion.harness.main.types;
+package org.aion.harness.result;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;

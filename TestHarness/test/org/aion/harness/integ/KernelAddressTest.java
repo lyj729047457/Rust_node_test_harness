@@ -6,7 +6,7 @@ import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
 import org.aion.harness.main.*;
-import org.aion.harness.main.types.FutureResult;
+import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.NodeConfigurationBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
