@@ -1,6 +1,7 @@
 package org.aion.harness.main;
 
 import java.util.concurrent.TimeUnit;
+import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.OrEvent;
@@ -55,26 +56,23 @@ public final class NodeListener {
     }
 
     /**
-     * Listens for the transaction with the specified hash to be processed.
+     * Listens for the transaction to be processed.
      *
      * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
      * implementation.
      *
-     * @param transactionHash The hash of the transaction.
+     * @param transaction The transaction.
      * @param timeout The duration after which the event expires.
      * @param unit The time unit of the duration.
      * @return the result of this event.
      */
-    public FutureResult<LogEventResult> listenForTransactionToBeProcessed(byte[] transactionHash, long timeout, TimeUnit unit) {
-        if (transactionHash == null) {
-            throw new NullPointerException("Cannot wait for a null transaction hash.");
-        }
+    public FutureResult<LogEventResult> listenForTransactionToBeProcessed(RawTransaction transaction, long timeout, TimeUnit unit) {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
-        IEvent transactionSealedEvent = getTransactionSealedEvent(transactionHash);
-        IEvent transactionRejectedEvent = getTransactionRejectedEvent(transactionHash);
+        IEvent transactionSealedEvent = getTransactionSealedEvent(transaction);
+        IEvent transactionRejectedEvent = getTransactionRejectedEvent(transaction);
         IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
 
         return this.logListener.submitEventToBeListenedFor(transactionProcessedEvent, timeout, unit);
@@ -137,18 +135,18 @@ public final class NodeListener {
         return new Event("sealer starting");
     }
 
-    private IEvent getTransactionSealedEvent(byte[] transactionHash) {
-        if (transactionHash == null) {
-            throw new NullPointerException("Cannot get event for null transaction hash.");
+    private IEvent getTransactionSealedEvent(RawTransaction transaction) {
+        if (transaction == null) {
+            throw new NullPointerException("Cannot get event for null transaction.");
         }
-        return new Event("Transaction: " + Hex.encodeHexString(transactionHash) + " was sealed into block");
+        return new Event("Transaction: " + Hex.encodeHexString(transaction.getTransactionHash()) + " was sealed into block");
     }
 
-    private IEvent getTransactionRejectedEvent(byte[] transactionHash) {
-        if (transactionHash == null) {
-            throw new NullPointerException("Cannot get event for null transaction hash.");
+    private IEvent getTransactionRejectedEvent(RawTransaction transaction) {
+        if (transaction == null) {
+            throw new NullPointerException("Cannot get event for null transaction.");
         }
-        return new Event("tx " + Hex.encodeHexString(transactionHash) + " is rejected");
+        return new Event("tx " + Hex.encodeHexString(transaction.getTransactionHash()) + " is rejected");
     }
 
     private IEvent getHeartbeatEvent() {

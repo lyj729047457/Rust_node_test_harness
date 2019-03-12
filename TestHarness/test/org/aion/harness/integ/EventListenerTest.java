@@ -113,7 +113,7 @@ public class EventListenerTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             2,
             TimeUnit.MINUTES);
 
@@ -157,7 +157,7 @@ public class EventListenerTest {
         transaction = transactionResult.getTransaction();
 
         futureResult = listener.listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             2,
             TimeUnit.MINUTES);
 
@@ -207,7 +207,7 @@ public class EventListenerTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             2,
             TimeUnit.MINUTES);
 

@@ -443,7 +443,7 @@ public class RpcTest {
         NodeListener listener = NodeListener.listenTo(this.node);
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction, 2, TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
@@ -501,7 +501,7 @@ public class RpcTest {
         NodeListener listener = NodeListener.listenTo(this.node);
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction.getTransactionHash(), 2, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction, 2, TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
@@ -603,7 +603,7 @@ public class RpcTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             1,
             TimeUnit.MINUTES);
 

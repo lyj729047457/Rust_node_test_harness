@@ -149,7 +149,7 @@ public class NodePreserveDatabaseTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             1,
             TimeUnit.MINUTES);
 

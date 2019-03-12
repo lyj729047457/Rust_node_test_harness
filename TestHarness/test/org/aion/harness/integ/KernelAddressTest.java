@@ -98,7 +98,7 @@ public class KernelAddressTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             2,
             TimeUnit.MINUTES);
 
@@ -134,7 +134,7 @@ public class KernelAddressTest {
         RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
-            transaction.getTransactionHash(),
+            transaction,
             2,
             TimeUnit.MINUTES);
 
