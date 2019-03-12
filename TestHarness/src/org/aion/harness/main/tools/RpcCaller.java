@@ -68,7 +68,7 @@ public final class RpcCaller {
                 // We expect the content of 'error' to itself be a Json String. If it has no content
                 // then the error is unknown.
                 if (error == null) {
-                    return InternalRpcResult.unsuccessful("unknown error");
+                    return InternalRpcResult.unsuccessful(getCurlError(status));
                 } else {
                     JsonStringParser errorParser = new JsonStringParser(error);
 
@@ -78,12 +78,33 @@ public final class RpcCaller {
                     // If there was no data value then try to grab the less informative 'message'.
                     error = (error == null) ? errorParser.attributeToString("message") : error;
 
+                    // If there was no message this is probably a curl error.
+                    error = (error == null) ? getCurlError(status) : error;
+
                     return InternalRpcResult.unsuccessful(error);
                 }
             }
 
         } catch (IOException e) {
             return InternalRpcResult.unsuccessful(e.toString());
+        }
+    }
+
+    /**
+     * Returns descriptive strings for curl errors. We only cover the errors that we deem possible
+     * here and that we can give better answers for.
+     */
+    private String getCurlError(int status) {
+        switch (status) {
+            case 7: return "Failed to connect to the host, check your IP and port are correct: " + this.ip + ":" + this.port;
+            case 8: return "The server replied with data that curl was unable to parse.";
+            case 9: return "The server denied login or the particular resource you wanted to reach.";
+            case 15: return "Couldn't resolve the specified IP: " + this.ip;
+            case 23: return "Failed to write the data to the server.";
+            case 26: return "Failed to read the data from the server.";
+            case 27: return "Out of memory error";
+            case 28: return "Timed out";
+            default: return "unknown error; curl exit code: " + status;
         }
     }
 
