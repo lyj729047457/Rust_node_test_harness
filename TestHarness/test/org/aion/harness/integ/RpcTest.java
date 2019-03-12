@@ -8,7 +8,7 @@ import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.*;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.Network;
-import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.internal.NodeConfigurationBuilder;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;

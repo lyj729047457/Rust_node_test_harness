@@ -1,8 +1,9 @@
-package org.aion.harness.main.types;
+package org.aion.harness.main.types.internal;
 
 import java.math.BigInteger;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.main.tools.JsonStringParser;
+import org.aion.harness.main.types.TransactionReceipt;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 

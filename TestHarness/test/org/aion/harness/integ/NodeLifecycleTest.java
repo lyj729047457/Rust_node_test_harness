@@ -2,7 +2,7 @@ package org.aion.harness.integ;
 
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.internal.NodeConfigurationBuilder;
 import org.aion.harness.main.types.NodeConfigurations;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;

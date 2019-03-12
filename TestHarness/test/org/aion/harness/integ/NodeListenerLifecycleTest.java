@@ -16,7 +16,7 @@ import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.types.NodeConfigurationBuilder;
+import org.aion.harness.main.types.internal.NodeConfigurationBuilder;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;

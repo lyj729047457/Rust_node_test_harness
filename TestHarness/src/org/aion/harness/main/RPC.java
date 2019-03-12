@@ -13,7 +13,7 @@ import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.SyncStatus;
 import org.aion.harness.main.types.TransactionReceipt;
-import org.aion.harness.main.types.TransactionReceiptBuilder;
+import org.aion.harness.main.types.internal.TransactionReceiptBuilder;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;

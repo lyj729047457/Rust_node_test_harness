@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Optional;
 import org.aion.harness.kernel.Address;
+import org.aion.harness.main.types.internal.TransactionReceiptBuilder;
 import org.apache.commons.codec.binary.Hex;
 
 /**
