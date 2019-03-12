@@ -2,14 +2,12 @@ package org.aion.harness.main;
 
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.OrEvent;
+import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.util.LogListener;
-import org.apache.commons.codec.binary.Hex;
 
 /**
  * A listener that listens to a node and waits for logging events to occur.
@@ -51,8 +49,11 @@ public final class NodeListener {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
+        if (unit == null) {
+            throw new IllegalArgumentException("Cannot specify a null time unit.");
+        }
 
-        return this.logListener.submitEventToBeListenedFor(getStartedMiningEvent(), timeout, unit);
+        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getStartedMiningEvent(), timeout, unit);
     }
 
     /**
@@ -70,12 +71,11 @@ public final class NodeListener {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
+        if (unit == null) {
+            throw new IllegalArgumentException("Cannot specify a null time unit.");
+        }
 
-        IEvent transactionSealedEvent = getTransactionSealedEvent(transaction);
-        IEvent transactionRejectedEvent = getTransactionRejectedEvent(transaction);
-        IEvent transactionProcessedEvent = new OrEvent(transactionSealedEvent, transactionRejectedEvent);
-
-        return this.logListener.submitEventToBeListenedFor(transactionProcessedEvent, timeout, unit);
+        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getTransactionProcessedEvent(transaction), timeout, unit);
     }
 
     /**
@@ -92,8 +92,11 @@ public final class NodeListener {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
+        if (unit == null) {
+            throw new IllegalArgumentException("Cannot specify a null time unit.");
+        }
 
-        return this.logListener.submitEventToBeListenedFor(getHeartbeatEvent(), timeout, unit);
+        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getHeartbeatEvent(), timeout, unit);
     }
 
     /**
@@ -114,6 +117,9 @@ public final class NodeListener {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
+        if (unit == null) {
+            throw new IllegalArgumentException("Cannot specify a null time unit.");
+        }
 
         return this.logListener.submitEventToBeListenedFor(event, timeout, unit);
     }
@@ -128,30 +134,5 @@ public final class NodeListener {
     public  int numberOfEventsBeingListenedFor() {
         return this.logListener.numberOfPendingEventRequests();
     }
-
-    // ------------ pre-packaged events that this class provides ---------------
-
-    private IEvent getStartedMiningEvent() {
-        return new Event("sealer starting");
-    }
-
-    private IEvent getTransactionSealedEvent(RawTransaction transaction) {
-        if (transaction == null) {
-            throw new NullPointerException("Cannot get event for null transaction.");
-        }
-        return new Event("Transaction: " + Hex.encodeHexString(transaction.getTransactionHash()) + " was sealed into block");
-    }
-
-    private IEvent getTransactionRejectedEvent(RawTransaction transaction) {
-        if (transaction == null) {
-            throw new NullPointerException("Cannot get event for null transaction.");
-        }
-        return new Event("tx " + Hex.encodeHexString(transaction.getTransactionHash()) + " is rejected");
-    }
-
-    private IEvent getHeartbeatEvent() {
-        return new Event("p2p-status");
-    }
-
 
 }
