@@ -9,10 +9,11 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
+
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
-import org.aion.harness.main.impl.RemoteNode;
+import org.aion.harness.main.impl.GenericRemoteNode;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import java.io.File;
@@ -30,12 +31,12 @@ public class RemoteNodeTest {
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private LocalNode localNode;
-    private RemoteNode remoteNode;
+    private GenericRemoteNode remoteNode;
 
     @Before
     public void setup() throws IOException {
         deleteInitializationDirectories();
-        this.remoteNode = NodeFactory.getNewRemoteNodeInstance(NodeType.JAVA_NODE);
+        this.remoteNode = NodeFactory.getNewGenericRemoteNodeInstance(NodeType.JAVA_NODE);
         this.localNode = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
 
         File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
