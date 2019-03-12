@@ -2,8 +2,8 @@ package org.aion.harness.integ;
 
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.types.internal.NodeConfigurationBuilder;
-import org.aion.harness.main.types.NodeConfigurations;
+import org.aion.harness.main.util.NodeConfigurationBuilder;
+import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;

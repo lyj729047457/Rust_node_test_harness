@@ -1,9 +1,9 @@
-package org.aion.harness.main.types.internal;
+package org.aion.harness.main.util;
 
 import java.io.File;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.Node;
-import org.aion.harness.main.types.NodeConfigurations;
+import org.aion.harness.main.NodeConfigurations;
 
 /**
  * A builder class used to construct instances of {@link NodeConfigurations}.

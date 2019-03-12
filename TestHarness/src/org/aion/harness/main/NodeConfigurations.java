@@ -1,4 +1,4 @@
-package org.aion.harness.main.types;
+package org.aion.harness.main;
 
 import java.io.File;
 import org.aion.harness.main.Network;

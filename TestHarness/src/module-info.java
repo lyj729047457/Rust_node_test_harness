@@ -11,4 +11,5 @@ module aion.node.harness {
     exports org.aion.harness.main.impl;
     exports org.aion.harness.main.event;
     exports org.aion.harness.main.types;
+    exports org.aion.harness.main.util;
 }
