@@ -255,9 +255,8 @@ public final class RPC {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
-            // This should never happen.
             if (result == null) {
-                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+                return RpcResult.unsuccessful("No receipt hash was returned, transaction was likely rejected.");
             }
             
             try {
@@ -355,9 +354,8 @@ public final class RPC {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
             String result = outputParser.attributeToString("result");
 
-            // This should never happen.
             if (result == null) {
-                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+                return RpcResult.unsuccessful("No transaction receipt was returned, the transaction may still be processing.");
             }
 
             try {
