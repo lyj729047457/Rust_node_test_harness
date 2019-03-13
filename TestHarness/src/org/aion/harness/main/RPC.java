@@ -633,6 +633,17 @@ public final class RPC {
                 // We can tell that we haven't connected to the network yet if its highest block number is zero.
                 boolean waitingToConnect = (highestBlock != null) && (highestBlock.equals(BigInteger.ZERO));
 
+                // There is currently a bug in the kernel where it can report being at block N of N
+                // yet not realize it is finished syncing yet..
+                if ((currentBlock != null) && (highestBlock != null)) {
+                    if (highestBlock.subtract(currentBlock).compareTo(BigInteger.valueOf(5)) < 0) {
+                        return RpcResult.successful(
+                            SyncStatus.notSyncing(),
+                            internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                            TimeUnit.NANOSECONDS);
+                    }
+                }
+
                 return RpcResult.successful(
                     SyncStatus.syncing(waitingToConnect, startingBlock, currentBlock, highestBlock),
                     internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
