@@ -256,6 +256,54 @@ public final class RPC {
     }
 
     /**
+     * Returns a list of the nonces of all the specified addresses if their results are successful.
+     *
+     * The returned list is such that the i'th result corresponds to the i'th address in the input
+     * list.
+     *
+     * Displays the I/O of the attempts to hit the RPC endpoint.
+     *
+     * @param addresses The addresses whose nonces are to be queried.
+     * @return the nonces of the addresses.
+     */
+    public List<RpcResult<BigInteger>> getNoncesVerbose(List<Address> addresses) throws InterruptedException {
+        if (addresses == null) {
+            throw new NullPointerException("Cannot get nonces from a null list of addresses.");
+        }
+
+        List<RpcResult<BigInteger>> results = new ArrayList<>();
+
+        for (Address address : addresses) {
+            results.add(getNonceVerbose(address));
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns a list of the nonces of all the specified addresses if their results are successful.
+     *
+     * The returned list is such that the i'th result corresponds to the i'th address in the input
+     * list.
+     *
+     * @param addresses The addresses whose nonces are to be queried.
+     * @return the nonces of the addresses.
+     */
+    public List<RpcResult<BigInteger>> getNonces(List<Address> addresses) throws InterruptedException {
+        if (addresses == null) {
+            throw new NullPointerException("Cannot get nonces from a null list of addresses.");
+        }
+
+        List<RpcResult<BigInteger>> results = new ArrayList<>();
+
+        for (Address address : addresses) {
+            results.add(getNonce(address));
+        }
+
+        return results;
+    }
+
+    /**
      * Sends the specified transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
