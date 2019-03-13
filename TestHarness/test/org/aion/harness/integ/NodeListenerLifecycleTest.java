@@ -44,7 +44,7 @@ public class NodeListenerLifecycleTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -63,7 +63,7 @@ public class NodeListenerLifecycleTest {
     }
 
     @Test
-    public void testNodeListenerAfterShuttingDownNode() throws InterruptedException {
+    public void testNodeListenerAfterShuttingDownNode() throws IOException, InterruptedException {
         initializeNodeWithChecks();
 
         Result result = this.node.start();
@@ -96,7 +96,7 @@ public class NodeListenerLifecycleTest {
      * panic, and all subsequent requests will be immediately rejected.
      */
     @Test
-    public void testDeletingLogFileWhileNodeIsRunning() throws InterruptedException {
+    public void testDeletingLogFileWhileNodeIsRunning() throws IOException, InterruptedException {
 
         // Initialize and start the node.
         initializeNodeWithChecks();
@@ -192,7 +192,7 @@ public class NodeListenerLifecycleTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -208,7 +208,7 @@ public class NodeListenerLifecycleTest {
         assertTrue(nodeDirectoryEntries[0].isDirectory());
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -232,7 +232,7 @@ public class NodeListenerLifecycleTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

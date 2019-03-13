@@ -62,7 +62,7 @@ public class ComplexEventTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -77,7 +77,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X, Y.
      */
     @Test
-    public void testComplexLogic1() throws InterruptedException {
+    public void testComplexLogic1() throws IOException, InterruptedException {
         NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -112,7 +112,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: X.
      */
     @Test
-    public void testComplexLogic2() throws InterruptedException {
+    public void testComplexLogic2() throws IOException, InterruptedException {
         NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -148,7 +148,7 @@ public class ComplexEventTest {
      * Therefore we expect the observed strings to be: W, Y, Z.
      */
     @Test
-    public void testComplexLogic3() throws InterruptedException {
+    public void testComplexLogic3() throws IOException, InterruptedException {
         NodeListener listener = NodeListener.listenTo(this.node);
 
         List<String> expectedObservedEvents = new ArrayList<>();
@@ -176,7 +176,7 @@ public class ComplexEventTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -192,7 +192,7 @@ public class ComplexEventTest {
         assertTrue(nodeDirectoryEntries[0].isDirectory());
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -216,7 +216,7 @@ public class ComplexEventTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

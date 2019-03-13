@@ -1,5 +1,6 @@
 package org.aion.harness.main;
 
+import java.io.IOException;
 import org.aion.harness.result.Result;
 
 public interface LocalNode extends Node {
@@ -37,7 +38,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success or failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result initializeKernelVerbose();
+    public Result initializeKernelVerbose() throws IOException, InterruptedException;
 
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
@@ -51,7 +52,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success or failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result initializeKernel();
+    public Result initializeKernel() throws IOException, InterruptedException;
 
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
@@ -70,7 +71,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success or failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    Result initializeKernelAndPreserveDatabaseVerbose();
+    Result initializeKernelAndPreserveDatabaseVerbose() throws IOException, InterruptedException;
 
     /**
      * Grabs a built kernel and brings it into the working directory, doing whatever other
@@ -87,7 +88,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success or failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    Result initializeKernelAndPreserveDatabase();
+    Result initializeKernelAndPreserveDatabase() throws IOException, InterruptedException;
 
     /**
      * Builds the kernel from source.
@@ -97,7 +98,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success of failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result buildKernelVerbose();
+    public Result buildKernelVerbose() throws IOException, InterruptedException;
 
     /**
      * Builds the kernel from source.
@@ -105,7 +106,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success of failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result buildKernel();
+    public Result buildKernel() throws IOException, InterruptedException;
 
     /**
      * Starts running the node.
@@ -113,7 +114,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success of failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result start();
+    public Result start() throws IOException, InterruptedException;
 
     /**
      * Shuts the node down.
@@ -121,7 +122,7 @@ public interface LocalNode extends Node {
      * @return a result indicating the success of failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result stop();
+    public Result stop() throws IOException, InterruptedException;
 
     /**
      * Returns {@code true} if node is running, {@code false} otherwise.
@@ -138,6 +139,6 @@ public interface LocalNode extends Node {
      * @return a result indicating the success of failure of this method.
      * @throws IllegalStateException if the node has not been configured yet.
      */
-    public Result resetState();
+    public Result resetState() throws IOException;
 
 }

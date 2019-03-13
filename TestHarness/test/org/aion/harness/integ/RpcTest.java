@@ -57,7 +57,7 @@ public class RpcTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -66,7 +66,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueViaRPC() throws InterruptedException {
+    public void testSendValueViaRPC() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -114,7 +114,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueWithIncorrectNonceViaRPC() throws InterruptedException {
+    public void testSendValueWithIncorrectNonceViaRPC() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -142,7 +142,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendNegativeValueViaRPC() throws InterruptedException {
+    public void testSendNegativeValueViaRPC() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -170,7 +170,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendZeroValueViaRPC() throws InterruptedException {
+    public void testSendZeroValueViaRPC() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -198,7 +198,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendMultipleValueTransfersViaRPC() throws InterruptedException {
+    public void testSendMultipleValueTransfersViaRPC() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -252,7 +252,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueToInvalidAddress() throws InterruptedException {
+    public void testSendValueToInvalidAddress() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -425,7 +425,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetTransactionReceipt() throws InterruptedException {
+    public void testGetTransactionReceipt() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -483,7 +483,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetTransactionReceiptFromContractDeploy() throws InterruptedException {
+    public void testGetTransactionReceiptFromContractDeploy() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -536,7 +536,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetTransactionReceiptFromNonExistentReceiptHash() throws InterruptedException {
+    public void testGetTransactionReceiptFromNonExistentReceiptHash() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -570,7 +570,7 @@ public class RpcTest {
      * anything meaningful to latch on to. It is here so that we can visually monitor this output.
      */
     @Test
-    public void testSyncingToNetwork() {
+    public void testSyncingToNetwork() throws IOException, InterruptedException {
         NodeConfigurations configurations = new NodeConfigurationBuilder()
             .network(Network.MAINNET)
             .build();
@@ -595,7 +595,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetBlockByNumber() throws InterruptedException {
+    public void testGetBlockByNumber() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -612,7 +612,7 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetBlockByNumberWhenBlockDoesNotExist() throws InterruptedException {
+    public void testGetBlockByNumberWhenBlockDoesNotExist() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -655,7 +655,7 @@ public class RpcTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -666,7 +666,7 @@ public class RpcTest {
         return this.node.initializeKernel();
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -695,7 +695,7 @@ public class RpcTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("shutdownNodeIfRunning Stop result = " + result);

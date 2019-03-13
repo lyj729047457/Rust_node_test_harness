@@ -43,7 +43,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteLogs();
         this.node = null;
@@ -60,7 +60,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @Test
-    public void testPreserveDatabaseCheckTransaction() throws InterruptedException {
+    public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
         // initialize and run node to generate a database, then shutdown the node
         Result result = this.node.initializeKernelAndPreserveDatabase();
         assertTrue(result.isSuccess());
@@ -110,7 +110,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @Test
-    public void testInitializeWhenNewNetworkDirectoryNotCreated() {
+    public void testInitializeWhenNewNetworkDirectoryNotCreated() throws IOException, InterruptedException {
         // initialize and run node to create the node folder
         Result result = this.node.initializeKernelAndPreserveDatabase();
         assertTrue(result.isSuccess());
@@ -129,7 +129,7 @@ public class NodePreserveDatabaseTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

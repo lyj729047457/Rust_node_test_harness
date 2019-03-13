@@ -45,7 +45,7 @@ public class NodeLifecycleTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -53,7 +53,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testInitializeNode() {
+    public void testInitializeNode() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -70,7 +70,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testStart() {
+    public void testStart() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -80,26 +80,26 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testStartWhenNoAionKernelBuildExistsInNodeDirectory() throws IOException {
+    public void testStartWhenNoAionKernelBuildExistsInNodeDirectory() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         FileUtils.deleteDirectory(kernelDirectory);
         this.node.start();
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testStartWhenNoNodeDirectoryExists() {
+    public void testStartWhenNoNodeDirectoryExists() throws IOException, InterruptedException {
         this.node.start();
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testInvokingStartTwice() {
+    public void testInvokingStartTwice() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         assertTrue(this.node.start().isSuccess());
         this.node.start();
     }
 
     @Test
-    public void testStop() {
+    public void testStop() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -115,7 +115,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testStopWhenKernelIsNotStarted() {
+    public void testStopWhenKernelIsNotStarted() throws IOException, InterruptedException {
         assertFalse(this.node.isAlive());
         Result result = this.node.stop();
         System.out.println("Stop result = " + result);
@@ -125,7 +125,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testInvokingStopTwice() {
+    public void testInvokingStopTwice() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -147,7 +147,7 @@ public class NodeLifecycleTest {
     }
 
     @Test
-    public void testNodeHeartbeat() throws InterruptedException {
+    public void testNodeHeartbeat() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -177,7 +177,7 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testResetWhileNodeIsRunning() {
+    public void testResetWhileNodeIsRunning() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -205,7 +205,7 @@ public class NodeLifecycleTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testResetWhenNoNodeDirectoryExists() {
+    public void testResetWhenNoNodeDirectoryExists() throws IOException {
         this.node.resetState();
     }
 
@@ -227,7 +227,7 @@ public class NodeLifecycleTest {
         assertTrue(result.isSuccess());
     }
 
-    private void setupDatabase() throws InterruptedException {
+    private void setupDatabase() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -257,7 +257,7 @@ public class NodeLifecycleTest {
         assertFalse(this.node.isAlive());
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -268,7 +268,7 @@ public class NodeLifecycleTest {
         return this.node.initializeKernel();
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -297,7 +297,7 @@ public class NodeLifecycleTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

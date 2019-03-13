@@ -40,7 +40,7 @@ public class MultipleListenerThreadsTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -48,7 +48,7 @@ public class MultipleListenerThreadsTest {
     }
 
     @Test
-    public void testMultipleThreadsRequestingHeartbeatEvents() throws InterruptedException {
+    public void testMultipleThreadsRequestingHeartbeatEvents() throws IOException, InterruptedException {
         // Start the node.
         this.node.initializeKernel();
 
@@ -102,7 +102,7 @@ public class MultipleListenerThreadsTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

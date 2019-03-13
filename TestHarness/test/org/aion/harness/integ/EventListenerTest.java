@@ -56,7 +56,7 @@ public class EventListenerTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -65,7 +65,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForMinersToStart() throws InterruptedException {
+    public void testWaitForMinersToStart() throws IOException, InterruptedException {
         initializeNodeWithChecks();
 
         Result result = this.node.start();
@@ -180,7 +180,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForTransactionToBeRejected() throws DecoderException, InterruptedException, InvalidKeySpecException {
+    public void testWaitForTransactionToBeRejected() throws DecoderException, IOException, InterruptedException, InvalidKeySpecException {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
         PrivateKey privateKeyWithNoBalance = PrivateKey.fromBytes(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
@@ -231,7 +231,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testFutureResultBlocksOnGet() throws InterruptedException {
+    public void testFutureResultBlocksOnGet() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -259,7 +259,7 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testListenForDoesNotBlock() throws InterruptedException {
+    public void testListenForDoesNotBlock() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -296,7 +296,7 @@ public class EventListenerTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -307,7 +307,7 @@ public class EventListenerTest {
         return this.node.initializeKernel();
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -336,7 +336,7 @@ public class EventListenerTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("Stop result = " + result);

@@ -205,50 +205,45 @@ public final class RPC {
      * @param timeoutUnit The time units of the timeout quantity.
      * @return  the result of this event.
      */
-    public Result waitForSyncToComplete(long timeout, TimeUnit timeoutUnit) {
+    public Result waitForSyncToComplete(long timeout, TimeUnit timeoutUnit) throws InterruptedException {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
 
-        try {
-            long currentTimeInNanos = System.nanoTime();
-            long deadlineInNanos = currentTimeInNanos + timeoutUnit.toNanos(timeout);
+        long currentTimeInNanos = System.nanoTime();
+        long deadlineInNanos = currentTimeInNanos + timeoutUnit.toNanos(timeout);
 
-            RpcResult<SyncStatus> syncStatus = getSyncingStatus();
+        RpcResult<SyncStatus> syncStatus = getSyncingStatus();
+        if (!syncStatus.isSuccess()) {
+            return Result.unsuccessfulDueTo(syncStatus.getError());
+        }
+
+        while ((currentTimeInNanos < deadlineInNanos) && (syncStatus.getResult().isSyncing())) {
+            // Log the current status.
+            SyncStatus status = syncStatus.getResult();
+            broadcastSyncUpdate(status.isWaitingToConnect(), status.getSyncCurrentBlockNumber(), status.getHighestBlockNumber());
+
+            // Sleep for the specified delay, unless there is less time remaining until the
+            // deadline, then sleep only until the deadline.
+            long deadlineInMillis = TimeUnit.NANOSECONDS.toMillis(deadlineInNanos - currentTimeInNanos);
+            long timeoutInMillis = timeoutUnit.toNanos(timeout);
+            Thread.sleep(Math.min(deadlineInMillis, timeoutInMillis));
+
+            // Update the status.
+            syncStatus = getSyncingStatus();
             if (!syncStatus.isSuccess()) {
                 return Result.unsuccessfulDueTo(syncStatus.getError());
             }
 
-            while ((currentTimeInNanos < deadlineInNanos) && (syncStatus.getResult().isSyncing())) {
-                // Log the current status.
-                SyncStatus status = syncStatus.getResult();
-                broadcastSyncUpdate(status.isWaitingToConnect(), status.getSyncCurrentBlockNumber(), status.getHighestBlockNumber());
+            currentTimeInNanos = System.nanoTime();
+        }
 
-                // Sleep for the specified delay, unless there is less time remaining until the
-                // deadline, then sleep only until the deadline.
-                long deadlineInMillis = TimeUnit.NANOSECONDS.toMillis(deadlineInNanos - currentTimeInNanos);
-                long timeoutInMillis = timeoutUnit.toNanos(timeout);
-                Thread.sleep(Math.min(deadlineInMillis, timeoutInMillis));
-
-                // Update the status.
-                syncStatus = getSyncingStatus();
-                if (!syncStatus.isSuccess()) {
-                    return Result.unsuccessfulDueTo(syncStatus.getError());
-                }
-
-                currentTimeInNanos = System.nanoTime();
-            }
-
-            // We either timed out or finished syncing.
-            if (currentTimeInNanos >= deadlineInNanos) {
-                return Result.unsuccessfulDueTo("Timed out waiting for sync to finish.");
-            } else {
-                System.out.println(syncStatus);
-                return Result.successful();
-            }
-
-        } catch (InterruptedException e) {
-            return Result.unsuccessfulDueToException(e);
+        // We either timed out or finished syncing.
+        if (currentTimeInNanos >= deadlineInNanos) {
+            return Result.unsuccessfulDueTo("Timed out waiting for sync to finish.");
+        } else {
+            System.out.println(syncStatus);
+            return Result.successful();
         }
     }
 

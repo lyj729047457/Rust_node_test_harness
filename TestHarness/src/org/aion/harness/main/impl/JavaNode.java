@@ -70,7 +70,7 @@ public final class JavaNode implements LocalNode {
      * @return a result indicating the success of failure of this method.
      */
     @Override
-    public Result buildKernelVerbose() {
+    public Result buildKernelVerbose() throws IOException, InterruptedException {
         return buildJavaKernel(true);
     }
 
@@ -80,27 +80,27 @@ public final class JavaNode implements LocalNode {
      * @return a result indicating the success of failure of this method.
      */
     @Override
-    public Result buildKernel() {
+    public Result buildKernel() throws IOException, InterruptedException {
         return buildJavaKernel(false);
     }
 
     @Override
-    public Result initializeKernelAndPreserveDatabaseVerbose() {
+    public Result initializeKernelAndPreserveDatabaseVerbose() throws IOException, InterruptedException {
         return initializePreserveDatabase(true);
     }
 
     @Override
-    public Result initializeKernelAndPreserveDatabase() {
+    public Result initializeKernelAndPreserveDatabase() throws IOException, InterruptedException {
         return initializePreserveDatabase(false);
     }
 
     @Override
-    public Result initializeKernelVerbose() {
+    public Result initializeKernelVerbose() throws IOException, InterruptedException {
         return initialize(true);
     }
 
     @Override
-    public Result initializeKernel() {
+    public Result initializeKernel() throws IOException, InterruptedException {
         return initialize(false);
     }
 
@@ -110,7 +110,7 @@ public final class JavaNode implements LocalNode {
      * @throws IllegalStateException if the node is already started or the kernel does not exist.
      */
     @Override
-    public Result start() {
+    public Result start() throws IOException, InterruptedException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot start kernel.");
         }
@@ -124,34 +124,29 @@ public final class JavaNode implements LocalNode {
 
         System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
 
-        try {
-            ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
-                .directory(NodeFileManager.getKernelDirectory());
+        ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
+            .directory(NodeFileManager.getKernelDirectory());
 
-            File outputLog = this.logManager.getCurrentOutputLogFile();
+        File outputLog = this.logManager.getCurrentOutputLogFile();
 
-            if (outputLog == null) {
-                this.logManager.setupLogFiles();
-                outputLog = this.logManager.getCurrentOutputLogFile();
-            }
-
-            builder.redirectOutput(outputLog);
-            builder.redirectError(this.logManager.getCurrentErrorLogFile());
-
-            this.runningKernel = builder.start();
-
-            return waitForRpcServerToStart(outputLog);
-
-        } catch (Exception e) {
-            return Result.unsuccessfulDueToException(e);
+        if (outputLog == null) {
+            this.logManager.setupLogFiles();
+            outputLog = this.logManager.getCurrentOutputLogFile();
         }
+
+        builder.redirectOutput(outputLog);
+        builder.redirectError(this.logManager.getCurrentErrorLogFile());
+
+        this.runningKernel = builder.start();
+
+        return waitForRpcServerToStart(outputLog);
     }
 
     /**
      * Stops the node if it is currently running.
      */
     @Override
-    public Result stop() {
+    public Result stop() throws InterruptedException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot stop kernel.");
         }
@@ -161,20 +156,14 @@ public final class JavaNode implements LocalNode {
         if (isAlive()) {
             System.out.println(Assumptions.LOGGER_BANNER + "Stopping Java kernel node...");
 
-            try {
+            this.runningKernel.destroy();
+            boolean shutdown = this.runningKernel.waitFor(1, TimeUnit.MINUTES);
+            this.runningKernel = null;
+            this.logReader.stopReading();
 
-                this.runningKernel.destroy();
-                boolean shutdown = this.runningKernel.waitFor(1, TimeUnit.MINUTES);
-                this.runningKernel = null;
-                this.logReader.stopReading();
+            result = (shutdown) ? Result.successful() : Result.unsuccessfulDueTo("Timed out waiting for node to shut down!");
 
-                result = (shutdown) ? Result.successful() : Result.unsuccessfulDueTo("Timed out waiting for node to shut down!");
-
-            } catch (Exception e) {
-                result = Result.unsuccessfulDueToException(e);
-            } finally {
-                System.out.println(Assumptions.LOGGER_BANNER + "Java kernel node stopped.");
-            }
+            System.out.println(Assumptions.LOGGER_BANNER + "Java kernel node stopped.");
 
         } else {
             result = Result.unsuccessfulDueTo("Node is not currently alive!");
@@ -205,7 +194,7 @@ public final class JavaNode implements LocalNode {
      * @throws IllegalStateException if the node is currently running or there is no kernel.
      */
     @Override
-    public Result resetState() {
+    public Result resetState() throws IOException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot reset kernel state.");
         }
@@ -219,17 +208,11 @@ public final class JavaNode implements LocalNode {
 
         System.out.println(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");
 
-        try {
-
-            File database = this.configurations.getDatabase();
-            if (database.exists()) {
-                FileUtils.deleteDirectory(database);
-            }
-            return Result.successful();
-
-        } catch (Exception e) {
-            return Result.unsuccessfulDueToException(e);
+        File database = this.configurations.getDatabase();
+        if (database.exists()) {
+            FileUtils.deleteDirectory(database);
         }
+        return Result.successful();
     }
 
     /**
@@ -245,7 +228,7 @@ public final class JavaNode implements LocalNode {
         return (this.configurations == null) ? null : this.configurations.getNetwork();
     }
 
-    private Result initializePreserveDatabase(boolean verbose) {
+    private Result initializePreserveDatabase(boolean verbose) throws IOException, InterruptedException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
         }
@@ -254,42 +237,38 @@ public final class JavaNode implements LocalNode {
         File kernelDatabaseDirectory = this.configurations.getDatabase();
         File temporaryDatabaseDirectory = NodeFileManager.getTemporaryDatabase();
 
-        try {
-            if (nodeDirectory.exists()) {
-                if (kernelDatabaseDirectory.exists()) {
+        if (nodeDirectory.exists()) {
+            if (kernelDatabaseDirectory.exists()) {
 
-                    // if preserved database directory already exist, delete it
-                    if (temporaryDatabaseDirectory.exists()) {
-                        throw new IllegalStateException("there is already a database at " + temporaryDatabaseDirectory);
-                    }
-
-                    // move the kernel database
-                    FileUtils.moveDirectory(kernelDatabaseDirectory, temporaryDatabaseDirectory);
-
-                    // delete node directory
-                    FileUtils.deleteDirectory(nodeDirectory);
-
-                    if (!nodeDirectory.mkdir()) {
-                        throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
-                    }
-
-                    // move the preserved database back to the node directory
-                    FileUtils.moveDirectory(temporaryDatabaseDirectory, kernelDatabaseDirectory);
+                // if preserved database directory already exist, delete it
+                if (temporaryDatabaseDirectory.exists()) {
+                    throw new IllegalStateException("there is already a database at " + temporaryDatabaseDirectory);
                 }
 
-            } else {
+                // move the kernel database
+                FileUtils.moveDirectory(kernelDatabaseDirectory, temporaryDatabaseDirectory);
+
+                // delete node directory
+                FileUtils.deleteDirectory(nodeDirectory);
+
                 if (!nodeDirectory.mkdir()) {
                     throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
                 }
+
+                // move the preserved database back to the node directory
+                FileUtils.moveDirectory(temporaryDatabaseDirectory, kernelDatabaseDirectory);
             }
-        } catch (Exception e) {
-            return Result.unsuccessfulDueToException(e);
+
+        } else {
+            if (!nodeDirectory.mkdir()) {
+                throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
+            }
         }
 
         return untarAndSetupKernel(verbose);
     }
 
-    private Result initialize(boolean verbose) {
+    private Result initialize(boolean verbose) throws IOException, InterruptedException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
         }
@@ -306,7 +285,7 @@ public final class JavaNode implements LocalNode {
         return untarAndSetupKernel(verbose);
     }
 
-    private Result untarAndSetupKernel(boolean verbose) {
+    private Result untarAndSetupKernel(boolean verbose) throws IOException, InterruptedException {
         System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
 
         if (verbose) {
@@ -320,88 +299,77 @@ public final class JavaNode implements LocalNode {
                 "Unable to find kernel build directory at: " + kernelBuildDirectory);
         }
 
-        try {
-            File kernelTarFile = null;
-            File[] entries = kernelBuildDirectory.listFiles();
-            if (entries == null) {
-                throw new NoSuchFileException("Could not find kernel tar file.");
-            }
-
-            if (verbose) {
-                System.out.println(Assumptions.LOGGER_BANNER + "Looking for file with the following format: aion-v***.tar.bz2");
-            }
-
-            for (File file : entries) {
-                if (Assumptions.KERNEL_TAR_PATTERN.matcher(file.getName()).matches()) {
-                    kernelTarFile = file;
-                }
-            }
-
-            if (kernelTarFile == null) {
-                throw new NoSuchFileException("Could not find kernel tar file.");
-            }
-
-
-            File tarDestination = new File(
-                    NodeFileManager.getNodeDirectory().getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
-            Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
-
-            if (verbose) {
-                System.out.println(Assumptions.LOGGER_BANNER + "Unzipping Java Kernel tar file using command: tar xvjf");
-            }
-
-            ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
-                .directory(tarDestination.getParentFile());
-
-            if (verbose) {
-                builder.inheritIO();
-            }
-
-            int untarStatus = builder.start().waitFor();
-            tarDestination.delete();
-
-            if (!this.logManager.setupLogFiles().isSuccess()) {
-                return Result.unsuccessfulDueTo("Failed to set up log files!");
-            }
-
-            return (untarStatus == 0)
-                ? Result.successful()
-                : Result.unsuccessfulDueTo("Failed to prepare the kernel");
-
-        } catch (Exception e) {
-            return Result.unsuccessfulDueToException(e);
+        File kernelTarFile = null;
+        File[] entries = kernelBuildDirectory.listFiles();
+        if (entries == null) {
+            throw new NoSuchFileException("Could not find kernel tar file.");
         }
+
+        if (verbose) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Looking for file with the following format: aion-v***.tar.bz2");
+        }
+
+        for (File file : entries) {
+            if (Assumptions.KERNEL_TAR_PATTERN.matcher(file.getName()).matches()) {
+                kernelTarFile = file;
+            }
+        }
+
+        if (kernelTarFile == null) {
+            throw new NoSuchFileException("Could not find kernel tar file.");
+        }
+
+
+        File tarDestination = new File(
+            NodeFileManager.getNodeDirectory().getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
+        Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
+
+        if (verbose) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Unzipping Java Kernel tar file using command: tar xvjf");
+        }
+
+        ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
+            .directory(tarDestination.getParentFile());
+
+        if (verbose) {
+            builder.inheritIO();
+        }
+
+        int untarStatus = builder.start().waitFor();
+        tarDestination.delete();
+
+        if (!this.logManager.setupLogFiles().isSuccess()) {
+            return Result.unsuccessfulDueTo("Failed to set up log files!");
+        }
+
+        return (untarStatus == 0)
+            ? Result.successful()
+            : Result.unsuccessfulDueTo("Failed to prepare the kernel");
     }
 
-    private Result buildJavaKernel(boolean verbose) {
+    private Result buildJavaKernel(boolean verbose) throws IOException, InterruptedException {
         if (this.configurations == null) {
             throw new IllegalStateException("Node has not been configured yet! Cannot build kernel.");
         }
 
         System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
-        try {
-
-            if (verbose) {
-                System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
-                System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: "
-                    + this.configurations.getKernelSourceDirectory());
-            }
-
-            ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
-                .directory(this.configurations.getKernelSourceDirectory());
-
-            if (verbose) {
-                builder.inheritIO();
-            }
-
-            return (builder.start().waitFor() == 0)
-                ? Result.successful()
-                : Result.unsuccessfulDueTo("An error occurred building the kernel!");
-
-        } catch (Exception e) {
-            return Result.unsuccessfulDueToException(e);
+        if (verbose) {
+            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
+            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: "
+                + this.configurations.getKernelSourceDirectory());
         }
+
+        ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
+            .directory(this.configurations.getKernelSourceDirectory());
+
+        if (verbose) {
+            builder.inheritIO();
+        }
+
+        return (builder.start().waitFor() == 0)
+            ? Result.successful()
+            : Result.unsuccessfulDueTo("An error occurred building the kernel!");
     }
 
     /**

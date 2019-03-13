@@ -45,7 +45,7 @@ public class RemoteNodeTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -73,7 +73,7 @@ public class RemoteNodeTest {
     }
 
     @Test
-    public void testConnectRemoteNodeToLocalNodeLogFile() throws InterruptedException {
+    public void testConnectRemoteNodeToLocalNodeLogFile() throws IOException, InterruptedException {
         initializeNodeWithChecks();
         Result result = this.localNode.start();
         System.out.println("Start result = " + result);
@@ -300,7 +300,7 @@ public class RemoteNodeTest {
         return outputLogFile;
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.localNode.buildKernel();
             if (!result.isSuccess()) {
@@ -311,7 +311,7 @@ public class RemoteNodeTest {
         return this.localNode.initializeKernel();
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -340,7 +340,7 @@ public class RemoteNodeTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.localNode != null) && (this.localNode.isAlive())) {
             Result result = this.localNode.stop();
             System.out.println("Stop result = " + result);

@@ -52,7 +52,7 @@ public class KernelAddressTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
         shutdownNodeIfRunning();
         deleteInitializationDirectories();
         deleteLogs();
@@ -73,7 +73,7 @@ public class KernelAddressTest {
 
 
     @Test
-    public void testCorrectness() throws InterruptedException, InvalidKeySpecException {
+    public void testCorrectness() throws IOException, InterruptedException, InvalidKeySpecException {
         NodeListener nodeListener = NodeListener.listenTo(this.node);
         PrivateKey senderPrivateKey = PrivateKey.random();
         System.out.println("private key = " + senderPrivateKey);
@@ -151,7 +151,7 @@ public class KernelAddressTest {
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
-    private Result initializeNode() {
+    private Result initializeNode() throws IOException, InterruptedException {
         if (doFullInitialization) {
             Result result = this.node.buildKernel();
             if (!result.isSuccess()) {
@@ -162,7 +162,7 @@ public class KernelAddressTest {
         return this.node.initializeKernel();
     }
 
-    private void initializeNodeWithChecks() {
+    private void initializeNodeWithChecks() throws IOException, InterruptedException {
         Result result = initializeNode();
         assertTrue(result.isSuccess());
 
@@ -191,7 +191,7 @@ public class KernelAddressTest {
         FileUtils.deleteDirectory(NodeFileManager.getLogsDirectory());
     }
 
-    private void shutdownNodeIfRunning() {
+    private void shutdownNodeIfRunning() throws IOException, InterruptedException {
         if ((this.node != null) && (this.node.isAlive())) {
             Result result = this.node.stop();
             System.out.println("shutdownNodeIfRunning Stop result = " + result);

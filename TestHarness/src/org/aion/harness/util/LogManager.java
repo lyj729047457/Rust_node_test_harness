@@ -26,7 +26,7 @@ public final class LogManager {
      *
      * @return A result indicating the successfulness of this call.
      */
-    public Result setupLogFiles() {
+    public Result setupLogFiles() throws IOException {
 
         // Set the logs to null so we can trust these variables after multiple calls.
         this.currentOutputLog = null;
@@ -36,22 +36,18 @@ public final class LogManager {
             return Result.unsuccessfulDueTo("failed to create log directory");
         }
 
-        try {
-            // archive any old log files.
-            archiveLogs();
+        // archive any old log files.
+        archiveLogs();
 
-            // create the new log files.
-            this.currentOutputLog = createNewStdoutLog();
-            if (this.currentOutputLog == null) {
-                return Result.unsuccessfulDueTo("failed to create stdout log");
-            }
+        // create the new log files.
+        this.currentOutputLog = createNewStdoutLog();
+        if (this.currentOutputLog == null) {
+            return Result.unsuccessfulDueTo("failed to create stdout log");
+        }
 
-            this.currentErrorLog = createNewStderrLog();
-            if (this.currentErrorLog == null) {
-                return Result.unsuccessfulDueTo("failed to create stderr log");
-            }
-        } catch (IOException e) {
-            return Result.unsuccessfulDueToException(e);
+        this.currentErrorLog = createNewStderrLog();
+        if (this.currentErrorLog == null) {
+            return Result.unsuccessfulDueTo("failed to create stderr log");
         }
 
         return Result.successful();
