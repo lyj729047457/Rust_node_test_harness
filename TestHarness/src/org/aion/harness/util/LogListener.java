@@ -40,7 +40,7 @@ import java.util.*;
  * This class is thread-safe.
  */
 public final class LogListener implements TailerListener {
-    private static final int CAPACITY = 10;
+    private static final int CAPACITY = 32_768;
     private static final Object STATE_MONITOR = new Object();
     private static final Semaphore REQUEST_POOL_GATE = new Semaphore(CAPACITY, true);
 
