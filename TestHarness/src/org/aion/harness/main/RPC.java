@@ -376,6 +376,9 @@ public final class RPC {
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout value was negative: " + timeout);
         }
+        if (timeoutUnit == null) {
+            throw new IllegalArgumentException("Cannot specify a null time unit.");
+        }
 
         long currentTimeInNanos = System.nanoTime();
         long deadlineInNanos = currentTimeInNanos + timeoutUnit.toNanos(timeout);
@@ -393,8 +396,8 @@ public final class RPC {
             // Sleep for the specified delay, unless there is less time remaining until the
             // deadline, then sleep only until the deadline.
             long deadlineInMillis = TimeUnit.NANOSECONDS.toMillis(deadlineInNanos - currentTimeInNanos);
-            long timeoutInMillis = timeoutUnit.toNanos(timeout);
-            Thread.sleep(Math.min(deadlineInMillis, timeoutInMillis));
+            long delayInMillis = TimeUnit.SECONDS.toMillis(30);
+            Thread.sleep(Math.min(deadlineInMillis, delayInMillis));
 
             // Update the status.
             syncStatus = getSyncingStatus();
@@ -409,7 +412,6 @@ public final class RPC {
         if (currentTimeInNanos >= deadlineInNanos) {
             return Result.unsuccessfulDueTo("Timed out waiting for sync to finish.");
         } else {
-            System.out.println(syncStatus);
             return Result.successful();
         }
     }
