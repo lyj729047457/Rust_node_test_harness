@@ -74,7 +74,7 @@ public class NodePreserveDatabaseTest {
         doBalanceTransfer(transferValue);
 
         // check balance of destination address
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
         BigInteger balanceAfter = rpcResult.getResult();
         Assert.assertEquals(transferValue, balanceAfter);
 
@@ -94,7 +94,7 @@ public class NodePreserveDatabaseTest {
         assertTrue(result.isSuccess());
 
         // check that the transfer is still present
-        rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        rpcResult = this.rpc.getBalance(destination);
         BigInteger balanceAfter2 = rpcResult.getResult();
         Assert.assertEquals(transferValue, balanceAfter2);
 

@@ -102,7 +102,7 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -323,7 +323,7 @@ public class RpcTest {
         BigInteger transferValue = BigInteger.valueOf(50);
 
         // check balance before
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(BigInteger.ZERO, rpcResult.getResult());
@@ -332,7 +332,7 @@ public class RpcTest {
         doBalanceTransfer(transferValue);
 
         // check balance after
-        rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(transferValue, rpcResult.getResult());
@@ -350,7 +350,7 @@ public class RpcTest {
         BigInteger transferValue = BigInteger.ZERO;
 
         // check balance before
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(BigInteger.ZERO, rpcResult.getResult());
@@ -359,7 +359,7 @@ public class RpcTest {
         doBalanceTransfer(transferValue);
 
         // check balance after
-        rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(BigInteger.ZERO, rpcResult.getResult());
@@ -380,7 +380,7 @@ public class RpcTest {
         BigInteger positiveRepresentation = new BigInteger(1, negativeTransferValue.toByteArray());
 
         // check balance before
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(BigInteger.ZERO, rpcResult.getResult());
@@ -389,7 +389,7 @@ public class RpcTest {
         doBalanceTransfer(negativeTransferValue);
 
         // check balance after - for positive representation
-        rpcResult = this.rpc.getBalance(destination.getAddressBytes());
+        rpcResult = this.rpc.getBalance(destination);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
         assertEquals(positiveRepresentation, rpcResult.getResult());
@@ -405,7 +405,7 @@ public class RpcTest {
         assertTrue(this.node.isAlive());
 
         // check nonce before
-        RpcResult<BigInteger> rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
+        RpcResult<BigInteger> rpcResult = this.rpc.getNonce(preminedAddress);
         System.out.println("Rpc result = " + rpcResult);
 
         BigInteger nonceBefore = rpcResult.getResult();
@@ -415,7 +415,7 @@ public class RpcTest {
         doBalanceTransfer(BigInteger.ONE);
 
         // check nonce after
-        rpcResult = this.rpc.getNonce(preminedAddress.getAddressBytes());
+        rpcResult = this.rpc.getNonce(preminedAddress);
         System.out.println("Rpc result = " + rpcResult);
 
         BigInteger nonceAfter = rpcResult.getResult();
