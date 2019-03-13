@@ -2,6 +2,8 @@ package org.aion.harness.main;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.tools.InternalRpcResult;
@@ -35,6 +37,64 @@ public final class RPC {
 
     public RPC(String ip, String port) {
         this.rpc = new RpcCaller(ip, port);
+    }
+
+    /**
+     * Sends the specified transactions to the node.
+     *
+     * These calls are asynchronous, and, as such, the returned list of receipt hashes will not
+     * correspond to receipts until the corresponding transactions have been fully processed.
+     *
+     * The returned list is such that the i'th result corresponds to the i'th transaction in the
+     * input list.
+     *
+     * The returned bulk result will be unsuccessful if at least one sendTransaction call failed.
+     *
+     * Displays the I/O of the attempts to hit the RPC endpoint.
+     *
+     * @param transactions The transactions to send.
+     * @return the results.
+     */
+    public List<RpcResult<ReceiptHash>> sendTransactionsVerbose(List<RawTransaction> transactions) throws InterruptedException {
+        if (transactions == null) {
+            throw new NullPointerException("Cannot send null transactions.");
+        }
+
+        List<RpcResult<ReceiptHash>> results = new ArrayList<>();
+
+        for (RawTransaction transaction : transactions) {
+            results.add(sendTransactionVerbose(transaction));
+        }
+
+        return results;
+    }
+
+    /**
+     * Sends the specified transactions to the node.
+     *
+     * These calls are asynchronous, and, as such, the returned list of receipt hashes will not
+     * correspond to receipts until the corresponding transactions have been fully processed.
+     *
+     * The returned list is such that the i'th result corresponds to the i'th transaction in the
+     * input list.
+     *
+     * The returned bulk result will be unsuccessful if at least one sendTransaction call failed.
+     *
+     * @param transactions The transactions to send.
+     * @return the results.
+     */
+    public List<RpcResult<ReceiptHash>> sendTransactions(List<RawTransaction> transactions) throws InterruptedException {
+        if (transactions == null) {
+            throw new NullPointerException("Cannot send null transactions.");
+        }
+
+        List<RpcResult<ReceiptHash>> results = new ArrayList<>();
+
+        for (RawTransaction transaction : transactions) {
+            results.add(sendTransaction(transaction));
+        }
+
+        return results;
     }
 
     /**
