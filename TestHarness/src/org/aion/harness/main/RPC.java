@@ -98,6 +98,56 @@ public final class RPC {
     }
 
     /**
+     * Returns a list of all the blocks whose block numbers are the specified numbers in the input
+     * list.
+     *
+     * The returned list will have the same size as {@code numbers} and the block at index i in the
+     * returned list will have a block number equal to the number at index i in the input list.
+     *
+     * Displays the I/O of the attempts to hit the RPC endpoint.
+     *
+     * @param numbers the block numbers to fetch.
+     * @return the blocks.
+     */
+    public List<RpcResult<Block>> getBlocksByNumberVerbose(List<BigInteger> numbers) throws InterruptedException {
+        if (numbers == null) {
+            throw new NullPointerException("Cannot get blocks from a null list of numbers.");
+        }
+
+        List<RpcResult<Block>> results = new ArrayList<>();
+
+        for (BigInteger number : numbers) {
+            results.add(getBlockByNumberVerbose(number));
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns a list of all the blocks whose block numbers are the specified numbers in the input
+     * list.
+     *
+     * The returned list will have the same size as {@code numbers} and the block at index i in the
+     * returned list will have a block number equal to the number at index i in the input list.
+     *
+     * @param numbers the block numbers to fetch.
+     * @return the blocks.
+     */
+    public List<RpcResult<Block>> getBlocksByNumber(List<BigInteger> numbers) throws InterruptedException {
+        if (numbers == null) {
+            throw new NullPointerException("Cannot get blocks from a null list of numbers.");
+        }
+
+        List<RpcResult<Block>> results = new ArrayList<>();
+
+        for (BigInteger number : numbers) {
+            results.add(getBlockByNumber(number));
+        }
+
+        return results;
+    }
+
+    /**
      * Sends the specified transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
