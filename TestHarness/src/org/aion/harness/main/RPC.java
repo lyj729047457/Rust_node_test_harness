@@ -10,9 +10,11 @@ import org.aion.harness.main.tools.RpcMethod;
 import org.aion.harness.main.tools.JsonStringParser;
 import org.aion.harness.main.tools.RpcPayload;
 import org.aion.harness.main.tools.RpcPayloadBuilder;
+import org.aion.harness.main.types.Block;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.SyncStatus;
 import org.aion.harness.main.types.TransactionReceipt;
+import org.aion.harness.main.types.internal.BlockBuilder;
 import org.aion.harness.main.types.internal.TransactionReceiptBuilder;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
@@ -61,6 +63,28 @@ public final class RPC {
      */
     public RpcResult<ReceiptHash> sendTransactionVerbose(RawTransaction transaction) throws InterruptedException {
         return callSendTransaction(transaction, true);
+    }
+
+    /**
+     * Returns the block whose number is the specified number, if such a block exists.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @param number The block number.
+     * @return the result of the attempt to get the block.
+     */
+    public RpcResult<Block> getBlockByNumberVerbose(BigInteger number) throws InterruptedException {
+        return callGetBlockByNumber(number, true);
+    }
+
+    /**
+     * Returns the block whose number is the specified number, if such a block exists.
+     *
+     * @param number The block number.
+     * @return the result of the attempt to get the block.
+     */
+    public RpcResult<Block> getBlockByNumber(BigInteger number) throws InterruptedException {
+        return callGetBlockByNumber(number, false);
     }
 
     /**
@@ -235,6 +259,42 @@ public final class RPC {
             System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
                 + NumberFormat.getIntegerInstance().format(currentBlock)
                 + " of " + NumberFormat.getIntegerInstance().format(highestBlock) + " }");
+        }
+    }
+
+    private RpcResult<Block> callGetBlockByNumber(BigInteger number, boolean verbose) throws InterruptedException {
+        if (number == null) {
+            throw new NullPointerException("Cannot call getBlockByNumber using null number.");
+        }
+
+        RpcPayload payload = new RpcPayloadBuilder()
+            .method(RpcMethod.GET_BLOCK_BY_NUMBER)
+            .params(number.toString(16))
+            .useLatestBlock()
+            .build();
+
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+
+            if (result == null) {
+                return RpcResult.unsuccessful("No block exists whose block number is: " + number);
+            }
+
+            try {
+                Block block = new BlockBuilder().buildFromJsonString(result);
+                return RpcResult.successful(
+                    block,
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
+            } catch (DecoderException e) {
+                return RpcResult.unsuccessful(e.toString());
+            }
+
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
         }
     }
 

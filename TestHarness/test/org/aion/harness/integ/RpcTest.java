@@ -6,6 +6,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.*;
+import org.aion.harness.main.types.Block;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.util.NodeConfigurationBuilder;
@@ -590,6 +591,40 @@ public class RpcTest {
         System.out.println("Stop result = " + result);
 
         assertTrue(result.isSuccess());
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testGetBlockByNumber() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        RpcResult<Block> blockResult = this.rpc.getBlockByNumber(BigInteger.ZERO);
+        assertTrue(blockResult.isSuccess());
+        assertNotNull(blockResult.getResult());
+
+        assertTrue(this.node.stop().isSuccess());
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testGetBlockByNumberWhenBlockDoesNotExist() throws InterruptedException {
+        initializeNodeWithChecks();
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        RpcResult<Block> blockResult = this.rpc.getBlockByNumber(BigInteger.valueOf(2349865));
+        assertFalse(blockResult.isSuccess());
+        assertTrue(blockResult.getError().contains("No block exists"));
+
+        assertTrue(this.node.stop().isSuccess());
         assertFalse(this.node.isAlive());
     }
 

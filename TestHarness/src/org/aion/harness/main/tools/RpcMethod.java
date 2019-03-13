@@ -10,6 +10,8 @@ public enum RpcMethod {
 
     GET_TRANSACTION_RECEIPT("eth_getTransactionReceipt"),
 
+    GET_BLOCK_BY_NUMBER("eth_getBlockByNumber"),
+
     GET_BALANCE("eth_getBalance"),
 
     IS_SYNCED("eth_syncing"),
