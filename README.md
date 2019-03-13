@@ -17,7 +17,7 @@ You can find the build in the newly created `dist` directory.
 * [Setting up the Test Harness](#framework-setup)
 * [Debugging & Troubleshooting](#debug)
     * [Verbose methods and log files](#verbose-methods-and-logs)
-    * [Commong mistakes](#common-misuses)
+    * [Common mistakes](#common-misuses)
 * [Developing](#develop)
 * [Configuring a local java kernel node](#configure-local-node)
     * [Conditional builds: avoid building the kernel from source](#conditional-build)
