@@ -40,7 +40,7 @@ public class NodeLifecycleTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.configurations = NodeConfigurationBuilder.defaultConfigurations();
+        this.configurations = NodeConfigurationBuilder.defaultConfigurations(false);
         this.node.configure(this.configurations);
     }
 

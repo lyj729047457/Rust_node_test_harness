@@ -85,23 +85,21 @@ public final class JavaNode implements LocalNode {
     }
 
     @Override
-    public Result initializeKernelAndPreserveDatabaseVerbose() throws IOException, InterruptedException {
-        return initializePreserveDatabase(true);
-    }
-
-    @Override
-    public Result initializeKernelAndPreserveDatabase() throws IOException, InterruptedException {
-        return initializePreserveDatabase(false);
-    }
-
-    @Override
     public Result initializeKernelVerbose() throws IOException, InterruptedException {
-        return initialize(true);
+        if (this.configurations.isPreserveDatabaseSpecified()) {
+            return initializePreserveDatabase(true);
+        } else {
+            return initialize(true);
+        }
     }
 
     @Override
     public Result initializeKernel() throws IOException, InterruptedException {
-        return initialize(false);
+        if (this.configurations.isPreserveDatabaseSpecified()) {
+            return initializePreserveDatabase(false);
+        } else {
+            return initialize(false);
+        }
     }
 
     /**

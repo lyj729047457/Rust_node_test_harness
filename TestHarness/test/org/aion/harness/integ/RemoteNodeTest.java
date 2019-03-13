@@ -41,7 +41,7 @@ public class RemoteNodeTest {
         deleteInitializationDirectories();
         this.remoteNode = NodeFactory.getNewRemoteNodeInstance(NodeType.JAVA_NODE);
         this.localNode = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        this.localNode.configure( NodeConfigurationBuilder.defaultConfigurations());
+        this.localNode.configure( NodeConfigurationBuilder.defaultConfigurations(false));
     }
 
     @After

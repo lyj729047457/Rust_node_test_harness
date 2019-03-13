@@ -58,7 +58,7 @@ public class ComplexEventTest {
     public void setup() throws IOException {
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
     }
 
     @After

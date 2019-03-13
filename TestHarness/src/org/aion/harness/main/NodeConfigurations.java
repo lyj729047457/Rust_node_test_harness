@@ -14,11 +14,12 @@ public final class NodeConfigurations {
     private final String kernelSourceDirectory;
     private final String kernelBuildDirectory;
     private final String database;
+    private final boolean preserveDatabase;
 
     /**
      * Constructs an instance of this class using the specified parameters.
      */
-    public NodeConfigurations(Network network, String kernelSourceDirectory, String kernelBuildDirectory) {
+    public NodeConfigurations(Network network, String kernelSourceDirectory, String kernelBuildDirectory, boolean preserveDatabase) {
         if (network == null) {
             throw new NullPointerException("Cannot construct NodeConfigurations with null network.");
         }
@@ -32,6 +33,7 @@ public final class NodeConfigurations {
         this.network = network;
         this.kernelSourceDirectory = kernelSourceDirectory;
         this.kernelBuildDirectory = kernelBuildDirectory;
+        this.preserveDatabase = preserveDatabase;
 
         // This is an internal detail and should not be customizable.
         this.database = NodeFileManager.getKernelDirectory().getAbsolutePath() + File.separator + this.network.string() + File.separator + "database";
@@ -71,6 +73,16 @@ public final class NodeConfigurations {
      */
     public File getDatabase() {
         return new File(this.database);
+    }
+
+    /**
+     * Returns {@code true} only if the database is specified to be preserved across multiple
+     * builds.
+     *
+     * @return whether or not to preserve the database.
+     */
+    public boolean isPreserveDatabaseSpecified() {
+        return this.preserveDatabase;
     }
 
 }

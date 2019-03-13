@@ -51,7 +51,7 @@ public class EventListenerTest {
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
         this.rpc = new RPC(ip, port);
     }
 

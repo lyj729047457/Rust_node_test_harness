@@ -38,7 +38,6 @@ public class NodePreserveDatabaseTest {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
         this.rpc = new RPC("127.0.0.1", "8545");
     }
 
@@ -61,8 +60,11 @@ public class NodePreserveDatabaseTest {
 
     @Test
     public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
-        // initialize and run node to generate a database, then shutdown the node
-        Result result = this.node.initializeKernelAndPreserveDatabase();
+        // initialize and run node to generate a database, then shutdown the node.
+        // We do not want to preserve the database yet, or else we get someone elses changes.
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
+
+        Result result = this.node.initializeKernel();
         assertTrue(result.isSuccess());
 
         // start the node
@@ -85,8 +87,11 @@ public class NodePreserveDatabaseTest {
         assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
+        // Now we want to preserve the database.
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(true));
+
         // re-initialize node, but with the preserved database
-        result = this.node.initializeKernelAndPreserveDatabase();
+        result = this.node.initializeKernel();
         assertTrue(result.isSuccess());
 
         // start the node
@@ -111,12 +116,14 @@ public class NodePreserveDatabaseTest {
 
     @Test
     public void testInitializeWhenNewNetworkDirectoryNotCreated() throws IOException, InterruptedException {
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(true));
+
         // initialize and run node to create the node folder
-        Result result = this.node.initializeKernelAndPreserveDatabase();
+        Result result = this.node.initializeKernel();
         assertTrue(result.isSuccess());
 
         // try to preserve a database that does not yet exist
-        result = this.node.initializeKernelAndPreserveDatabase();
+        result = this.node.initializeKernel();
         assertTrue(result.isSuccess());
     }
 

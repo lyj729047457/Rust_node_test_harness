@@ -52,7 +52,7 @@ public class RpcTest {
         preminedAddress = preminedPrivateKey.getAddress();
         deleteInitializationDirectories();
         this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-        this.node.configure(NodeConfigurationBuilder.defaultConfigurations());
+        this.node.configure(NodeConfigurationBuilder.defaultConfigurations(false));
         this.rpc = new RPC("127.0.0.1", "8545");
     }
 

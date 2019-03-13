@@ -22,6 +22,7 @@ public final class NodeConfigurationBuilder {
     private Network network;
     private String kernelSourceDirectory;
     private String kernelBuildDirectory;
+    private boolean preserveDatabase = false;
 
     /**
      * The network that the node will attempt to connect to.
@@ -37,9 +38,6 @@ public final class NodeConfigurationBuilder {
     /**
      * The root directory of the kernel source code.
      *
-     * This is the source that the node will build the kernel from if {@link Node#buildKernel()} is
-     * invoked.
-     *
      * @param kernelSourceDirectory The kernel source code.
      * @return this builder.
      */
@@ -54,13 +52,35 @@ public final class NodeConfigurationBuilder {
      * This field is set when no build is desired, then the build is assumed to exist in the provided
      * directory.
      *
-     * The {@link Node#initializeKernel()} method uses this.
-     *
      * @param kernelBuildDirectory The build kernel.
      * @return this builder.
      */
     public NodeConfigurationBuilder directoryOfBuiltKernel(String kernelBuildDirectory) {
         this.kernelBuildDirectory = kernelBuildDirectory;
+        return this;
+    }
+
+    /**
+     * Tell the node to preserve the database if it exists. This command is only relevant if a node
+     * will be run multiple times. In this case, the same database will be carried over across each
+     * of these runs.
+     *
+     * @return this builder.
+     */
+    public NodeConfigurationBuilder preserveDatabase() {
+        this.preserveDatabase = true;
+        return this;
+    }
+
+    /**
+     * Tell the node not to preserve the database if it exists. This command is only relevant if a
+     * node will be run multiple times. In this case, a new empty database will be created for each
+     * of these runs.
+     *
+     * @return this builder.
+     */
+    public NodeConfigurationBuilder doNotPreserveDatabase() {
+        this.preserveDatabase = false;
         return this;
     }
 
@@ -72,7 +92,7 @@ public final class NodeConfigurationBuilder {
      *   - kernel source directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_SOURCE_DIR}
      *   - kernel build directory = {@link NodeConfigurationBuilder#DEFAULT_KERNEL_BUILD_DIR}
      *
-     * The database
+     * The database will not be preserved by default.
      *
      * @return the built configuration object.
      */
@@ -87,17 +107,18 @@ public final class NodeConfigurationBuilder {
             ? DEFAULT_KERNEL_BUILD_DIR
             : this.kernelBuildDirectory;
 
-        return new NodeConfigurations(network, kernelSource, kernelBuild);
+        return new NodeConfigurations(network, kernelSource, kernelBuild, this.preserveDatabase);
     }
 
     /**
      * Returns a {@link NodeConfigurations} object with all of the default values specified by
      * {@code build()}.
      *
+     * @param preserveDatabase Whether or not to preserve the database between runs.
      * @return a default configurations object.
      */
-    public static NodeConfigurations defaultConfigurations() {
-        return new NodeConfigurations(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, DEFAULT_KERNEL_BUILD_DIR);
+    public static NodeConfigurations defaultConfigurations(boolean preserveDatabase) {
+        return new NodeConfigurations(DEFAULT_NETWORK, DEFAULT_KERNEL_SOURCE_DIR, DEFAULT_KERNEL_BUILD_DIR, preserveDatabase);
     }
 
 }
