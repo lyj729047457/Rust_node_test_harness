@@ -5,6 +5,7 @@ module aion.node.harness {
     requires gson;
     requires ed25519;
 
+    exports org.aion.harness.statistics;
     exports org.aion.harness.result;
     exports org.aion.harness.kernel;
     exports org.aion.harness.main;
