@@ -148,6 +148,62 @@ public final class RPC {
     }
 
     /**
+     * Returns a list of rpc results that, if successful, will hold the transaction receipt
+     * corresponding to the provided receipt hashes, for each of the provided hashes.
+     *
+     * The returned list will be such that the i'th result corresponds to the i'th hash in the input
+     * list.
+     *
+     * The returned result will be unsuccessful if at least one of the getTransactionReceipt calls
+     * fails.
+     *
+     * Displays the I/O of the attempts to hit the RPC endpoint.
+     *
+     * @param receiptHashes The receipt hashes.
+     * @return a list of results.
+     */
+    public List<RpcResult<TransactionReceipt>> getTransactionReceiptsVerbose(List<ReceiptHash> receiptHashes) throws InterruptedException {
+        if (receiptHashes == null) {
+            throw new NullPointerException("Cannot get transaction receipts for a null list of hashes.");
+        }
+
+        List<RpcResult<TransactionReceipt>> results = new ArrayList<>();
+
+        for (ReceiptHash receiptHash : receiptHashes) {
+            results.add(getTransactionReceiptVerbose(receiptHash));
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns a list of rpc results that, if successful, will hold the transaction receipt
+     * corresponding to the provided receipt hashes, for each of the provided hashes.
+     *
+     * The returned list will be such that the i'th result corresponds to the i'th hash in the input
+     * list.
+     *
+     * The returned result will be unsuccessful if at least one of the getTransactionReceipt calls
+     * fails.
+     *
+     * @param receiptHashes The receipt hashes.
+     * @return a list of results.
+     */
+    public List<RpcResult<TransactionReceipt>> getTransactionReceipts(List<ReceiptHash> receiptHashes) throws InterruptedException {
+        if (receiptHashes == null) {
+            throw new NullPointerException("Cannot get transaction receipts for a null list of hashes.");
+        }
+
+        List<RpcResult<TransactionReceipt>> results = new ArrayList<>();
+
+        for (ReceiptHash receiptHash : receiptHashes) {
+            results.add(getTransactionReceipt(receiptHash));
+        }
+
+        return results;
+    }
+
+    /**
      * Sends the specified transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
