@@ -18,6 +18,7 @@ You can find the build in the newly created `dist` directory.
 * [Debugging & Troubleshooting](#debug)
     * [Verbose methods and log files](#verbose-methods-and-logs)
     * [Commong mistakes](#common-misuses)
+* [Developing](#develop)
 * [Configuring a local java kernel node](#configure-local-node)
     * [Conditional builds: avoid building the kernel from source](#conditional-build)
     * [Unconditional builds: always build the kernel from source](#unconditional-builds)
@@ -587,6 +588,8 @@ blockStats.printStatistics();
 ```
 
 ### <a name="debug">Debugging and Troubleshooting</a>
+Trouble with `ant test`? See the [Developing](#develop) section.
+
 #### <a name="verbose-methods-and-logs">i. Verbose methods and log files</a> 
 There are two primary ways of debugging your program before having to result to live debugging:
 1. Many of the methods provided by the testing harness have a `verbose` variant. The convention is that for a method named `method()` its verbose variant will be named `methodVerbose()`.
@@ -607,5 +610,12 @@ If your troubles are related to waiting for a transaction to be processed note t
 * Ensure that you begin listening for events first, then fire the events off, then wait on the futures. Any other ordering may not produce the desired results.
 * Ensure that you create your `RPC` object with the correct IP and port to listen to the rpc server.
 
+### <a name="develop">Developing</a>
+Running `ant test` at every commit should see all of the tests passing. If you are not seeing this it is very likely because you are using the wrong kernel build. This testing harness has to talk about a kernel, and so we have to make some assumptions about where that kernel is going to live on your file system. Moreover, we also need to use premined accounts, which means we need our own genesis file. Here's how your system should be set up:
+
+1. Let's assume the directory that this test harness is in on your system is named `node_test_harness`. From this root directory you should be able to get to the aion repository (whose root directory must be named `aion` on your system) like so: `cd ../aion`
+2. In the `aion` directory run: `git checkout node_test_harness && git submodule update --init --recursive && ./gradlew clean pack`
+
+The tests should now all pass.
 
 
