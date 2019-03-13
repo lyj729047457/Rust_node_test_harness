@@ -1,5 +1,7 @@
 package org.aion.harness.main;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.event.IEvent;
@@ -57,6 +59,30 @@ public final class NodeListener {
     }
 
     /**
+     * Listens for the transactions to be processed.
+     *
+     * This method is non-blocking but returns blocking {@link java.util.concurrent.Future}
+     * implementations.
+     *
+     * All transactions being listened for will have the exact same timeout values, which are the
+     * values specified in the input parameters.
+     *
+     * @param transactions The transactions.
+     * @param timeout The duration after which the events expire.
+     * @param unit The time unit of the duration.
+     * @return the results of the these events.
+     */
+    public List<FutureResult<LogEventResult>> listenForTransactionsToBeProcessed(List<RawTransaction> transactions, long timeout, TimeUnit unit) {
+        List<FutureResult<LogEventResult>> futures = new ArrayList<>();
+
+        for (RawTransaction transaction : transactions) {
+            futures.add(listenForTransactionToBeProcessed(transaction, timeout, unit));
+        }
+
+        return futures;
+    }
+
+    /**
      * Listens for the transaction to be processed.
      *
      * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
@@ -100,6 +126,30 @@ public final class NodeListener {
     }
 
     /**
+     * Listens for the specified events.
+     *
+     * This method is non-blocking but returns blocking {@link java.util.concurrent.Future}
+     * implementations.
+     *
+     * All events being listened for will have the exact same timeout values, which are the
+     * values specified in the input parameters.
+     *
+     * @param events The events.
+     * @param timeout The duration after which the events expire.
+     * @param unit The time unit of the duration.
+     * @return the results of the these events.
+     */
+    public List<FutureResult<LogEventResult>> listenForEvents(List<IEvent> events, long timeout, TimeUnit unit) {
+        List<FutureResult<LogEventResult>> futures = new ArrayList<>();
+
+        for (IEvent event : events) {
+            futures.add(listenForEvent(event, timeout, unit));
+        }
+
+        return futures;
+    }
+
+    /**
      * Listens for the specified event to occur.
      *
      * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
@@ -131,7 +181,7 @@ public final class NodeListener {
      *
      * @return total number of events being listened for.
      */
-    public  int numberOfEventsBeingListenedFor() {
+    public int numberOfEventsBeingListenedFor() {
         return this.logListener.numberOfPendingEventRequests();
     }
 
