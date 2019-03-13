@@ -205,6 +205,57 @@ public final class RPC {
     }
 
     /**
+     * Returns a list of the balances of the specified addresses if their results were successful.
+     *
+     * The returned list is such that the i'th rpc result corresponds to the i'th address in the
+     * input list.
+     *
+     * The returned result is unsuccessful if at least one of the getBalance calls fails.
+     *
+     * Displays the I/O of the attempt to hit the RPC endpoint.
+     *
+     * @param addresses The addresses whose balances are to be queried.
+     * @return the balances of the addresses.
+     */
+    public List<RpcResult<BigInteger>> getBalancesVerbose(List<Address> addresses) throws InterruptedException {
+        if (addresses == null) {
+            throw new NullPointerException("Cannot get the balances of a null list of addresses.");
+        }
+
+        List<RpcResult<BigInteger>> results = new ArrayList<>();
+
+        for (Address address : addresses) {
+            results.add(getBalanceVerbose(address));
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns a list of the balances of the specified addresses if their results were successful.
+     *
+     * The returned list is such that the i'th rpc result corresponds to the i'th address in the
+     * input list.
+     *
+     * The returned result is unsuccessful if at least one of the getBalance calls fails.
+     * @param addresses The addresses whose balances are to be queried.
+     * @return the balances of the addresses.
+     */
+    public List<RpcResult<BigInteger>> getBalances(List<Address> addresses) throws InterruptedException {
+        if (addresses == null) {
+            throw new NullPointerException("Cannot get the balances of a null list of addresses.");
+        }
+
+        List<RpcResult<BigInteger>> results = new ArrayList<>();
+
+        for (Address address : addresses) {
+            results.add(getBalance(address));
+        }
+
+        return results;
+    }
+
+    /**
      * Sends the specified transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
