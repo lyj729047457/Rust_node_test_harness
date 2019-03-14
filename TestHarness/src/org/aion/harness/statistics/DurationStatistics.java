@@ -140,7 +140,7 @@ public final class DurationStatistics {
         BigDecimal squares = BigDecimal.ZERO;
 
         for (BigDecimal time : times) {
-            squares = squares.add(time.pow(2));
+            squares = squares.add((time.subtract(this.meanDuration)).pow(2));
         }
 
         BigDecimal variance = squares.divide(this.meanDuration, precision, RoundingMode.HALF_UP);
