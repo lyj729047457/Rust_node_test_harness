@@ -94,7 +94,7 @@ The process is very similar to the above, only this time we do not need to speci
 
 _Building a kernel from source takes significantly longer than extracting it from the tar file. If speed is a concern and the source is not changing between invocations, then you should always do conditional builds._
 
-####<a name="preserve-database">Preserving your database</a>
+#### <a name="preserve-database">Preserving your database</a>
 Sometimes you want to preserve your database between invocations of your program rather than always beginning anew, especially if you have to sync up with the network. Just add one extra command to the node configuration builder to do so:
 ```java
 LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
