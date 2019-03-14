@@ -4,3 +4,5 @@
 .idea
 TestHarness/build
 TestHarness/dist
+TestHarness/aion
+Tests/lib/kernel.tar.bz2
