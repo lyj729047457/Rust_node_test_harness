@@ -39,13 +39,15 @@ public final class LogManager {
         // archive any old log files.
         archiveLogs();
 
+        long currentTimeInMillis = System.currentTimeMillis();
+
         // create the new log files.
-        this.currentOutputLog = createNewStdoutLog();
+        this.currentOutputLog = createNewStdoutLog(currentTimeInMillis);
         if (this.currentOutputLog == null) {
             return Result.unsuccessfulDueTo("failed to create stdout log");
         }
 
-        this.currentErrorLog = createNewStderrLog();
+        this.currentErrorLog = createNewStderrLog(currentTimeInMillis);
         if (this.currentErrorLog == null) {
             return Result.unsuccessfulDueTo("failed to create stderr log");
         }
@@ -100,8 +102,8 @@ public final class LogManager {
      *
      * ASSUMPTION: logs directory exists.
      */
-    private File createNewStdoutLog() throws IOException {
-        File stdoutLogFile = new File(NodeFileManager.getLogsDirectory() + File.separator + createLogFilename("out"));
+    private File createNewStdoutLog(long currentTimeInMillis) throws IOException {
+        File stdoutLogFile = new File(NodeFileManager.getLogsDirectory() + File.separator + createLogFilename("out", currentTimeInMillis));
         return (stdoutLogFile.createNewFile()) ? stdoutLogFile : null;
     }
 
@@ -110,8 +112,8 @@ public final class LogManager {
      *
      * ASSUMPTION: logs directory exists.
      */
-    private File createNewStderrLog() throws IOException {
-        File stdoutLogFile = new File(NodeFileManager.getLogsDirectory() + File.separator + createLogFilename("err"));
+    private File createNewStderrLog(long currentTimeInMillis) throws IOException {
+        File stdoutLogFile = new File(NodeFileManager.getLogsDirectory() + File.separator + createLogFilename("err", currentTimeInMillis));
         return (stdoutLogFile.createNewFile()) ? stdoutLogFile : null;
     }
 
@@ -119,8 +121,8 @@ public final class LogManager {
      * Creates a filename following a specific log file naming convention with the option of
      * specifying a postfix to make the name unique.
      */
-    private String createLogFilename(String postfix) {
-        Date currentDate = new Date(System.currentTimeMillis());
+    private String createLogFilename(String postfix, long currentTimeInMillis) {
+        Date currentDate = new Date(currentTimeInMillis);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(currentDate);
 
