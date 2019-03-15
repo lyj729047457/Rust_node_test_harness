@@ -20,11 +20,8 @@ You can find the build in the newly created `dist` directory.
     * [Common mistakes](#common-misuses)
 * [Developing](#develop)
 * [Configuring a local java kernel node](#configure-local-node)
-    * [Conditional builds: avoid building the kernel from source](#conditional-build)
-    * [Unconditional builds: always build the kernel from source](#unconditional-builds)
-    * [Preserving your database](#preserve-database)
-    * [Reusing a kernel](#reuse-kernel)
-* [Initializing a local node](#initialize-local-node)
+    * [Building from source](#build-source)
+    * [Using a pre-built kernel](#use-prebuilt)
 * [Starting and stopping a local node](#start-and-stop-local)
 * [Syncing to a network](#syncing)
 * [Using a remote node](#remote-node)
@@ -58,68 +55,32 @@ The test harness still has a few limitations. In particular, this framework is o
 * The `RPC` class has the ability to wait for a node to sync with the network. This functionality only works on kernel builds that contain the commit `ec32f1c` (currently a Pull Request to the `master-pre-merge` branch).
 
 ### <a name="configure-local-node">Configuring a local Java Kernel node</a>
-#### <a name="conditional-build">i. Conditional builds: avoid building the kernel from source</a>
-You have a `tar.bz2` file that holds the built kernel you want to use. Let's assume our file is named: `kernel.tar.bz2`.
-Let's configure a `Node` instance so that it is able to launch directly from the built assets contained in our tar file. __Currently, there is only support for tar.bz2 builds.__
-
+#### <a name="build-source">Building from source</a>
+You have the `aion` repository somewhere on your machine and you want to build your node from the source files.
 ```java
-LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
+NodeConfigurations configurations = NodeConfigurations.alwaysBuildFromSource(network, "/path/to/source/directory");
 
-NodeConfigurations configurations = new NodeConfigurationBuilder()
-    .network(Network.CUSTOM)
-    .conditionalBuild("/path/to/kernel/source/dir", "/path/to/build/kernel.tar.bz2")
-    .build();
-    
+LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 node.configure(configurations);
+Result result = node.initialize();
 ```
+Now every time you start the node, the node will be built anew from source.
+Note that the test harness will create a 'sandbox' directory in which the new build will be placed each time. If you are building from source, you may want to remove this directory once you are done with it.
 
-What you're doing here is grabbing a new local Java Node instance, and then you're configuring the node to connect to the "custom" network and to perform a "conditional build". A conditional build will first check whether or not the `/path/to/build/kernel.tar.bz2` file exists, and if so, it will extract its assets directly. Otherwise, if it determines that the file does not exist, it will build the kernel from source and place the new `tar.bz2` file in the `/path/to/build` directory and name it `kernel.tar.bz2` so that the next time it is found and the build step can be skipped.
-
-Alternatively, if we know we have the built file and it won't be removed we can do: `conditionalBuild(null, "/path/to/build/kernel.tar.bz2")`
-
-#### <a name="unconditional-builds">ii. Unconditional builds: always build the kernel from source</a>
-You have the `aion` repository somewhere on your machine. Let's assume that the root of the source files is a directory named `aion`. Let's configure the `Node` instance so that it will build the kernel from these source files and run as such.
-
+#### <a name="use-prebuilt">Using a pre-built kernel</a>
+You have a pre-built kernel. Not a tar file, but its extracted contents. This should be a directory named `aion` (most likely) that contains the `aion.sh` script. Now instead of building from source, you want the node to launch directly from this build.
 ```java
-LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
+DatabaseOption databaseOption = DatabaseOption.DO_NOT_PRESERVE_DATABASE;
+NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(network, "/path/to/build", databaseOption);
 
-NodeConfigurations configurations = new NodeConfigurationBuilder()
-    .network(Network.CUSTOM)
-    .unconditionalBuild("/path/to/kernel/source/dir")
-    .build();
-    
+LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 node.configure(configurations);
+Result result = node.initialize();
 ```
-The process is very similar to the above, only this time we do not need to specify a built asset because we never make use of it. An unconditional build will always build the kernel from source every time the program is run. Once again, the path can be relative or absolute.
+Now each time we start up our node it will run directly from this build. Since we specified not to preserve the database, each time we __initialize__ the database will be deleted.
+Caution: if there is no subsequent call to _initialize_ between `start()` and `stop()` the database will remain.
 
-_Building a kernel from source takes significantly longer than extracting it from the tar file. If speed is a concern and the source is not changing between invocations, then you should always do conditional builds._
-
-#### <a name="preserve-database">Preserving your database</a>
-Sometimes you want to preserve your database between invocations of your program rather than always beginning anew, especially if you have to sync up with the network. Just add one extra command to the node configuration builder to do so:
-```java
-LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-
-NodeConfigurations configurations = new NodeConfigurationBuilder()
-    .network(Network.CUSTOM)
-    .unconditionalBuild("/path/to/kernel/source/dir")
-    .preserveDatabase()
-    .build();
-    
-node.configure(configurations);
-```
-
-#### <a name="reuse-kernel">Reusing a kernel</a>
-Both conditional and unconditional builds take time, at the very least you are still extracting the tar file and setting things up. If you want to skip this entirely then just _do not initialize_ the node. Initialization only needs to be done once. __This will become an option soon, for now you have to manually remove the initialization step.__
-
-### <a name="initialize-local-node">Initializing a Local Node</a>
-Once you've configured the node it's time to initialize it (generally speaking). Initialization is the step that takes the configuration receipe you fed to the node and acts on it. This includes whether or not to conditionally build the kernel, what network to connect to and whether or not to persist the database.
-
-To initialize the node you can run:
-```java
-node.initialize();
-```
-
-Initialization is not always necessary. Typically, initialization only needs to be done once. After initialization a `node` directory is created and this is where the kernel lives - the one that this program interacts with. Once this directory is here and is populated with the appropriate contents, you can skip the initialization step. Typically a test suite should only initialize once in a `@BeforeClass` method, unless each test requires further sandboxing from the others.
+If we wanted to preserve the database we simply give the other database option: `DatabaseOption.PRESERVE_DATABASE`.
 
 ### <a name="start-and-stop-local">Starting and Stopping a Local Node</a>
 Once you've configured and initialized the node it's time to start it up.
@@ -611,11 +572,10 @@ If your troubles are related to waiting for a transaction to be processed note t
 * Ensure that you create your `RPC` object with the correct IP and port to listen to the rpc server.
 
 ### <a name="develop">Developing</a>
-Running `ant test` at every commit should see all of the tests passing. If you are not seeing this it is very likely because you are using the wrong kernel build. This testing harness has to talk about a kernel, and so we have to make some assumptions about where that kernel is going to live on your file system. Moreover, we also need to use premined accounts, which means we need our own genesis file. Here's how your system should be set up:
+Running `ant test` at every commit should see all of the tests passing. If you are not seeing this it is very likely because you are using the wrong kernel build. This testing harness has to talk about a kernel, and so we have to make some assumptions about where that kernel is going to live on your file system. Moreover, we also need to use premined accounts, which means we need our own genesis file.
 
-1. Let's assume the directory that this test harness is in on your system is named `node_test_harness`. From this root directory you should be able to get to the aion repository (whose root directory must be named `aion` on your system) like so: `cd ../aion`
-2. In the `aion` directory run: `git checkout node_test_harness && git submodule update --init --recursive && ./gradlew clean pack`
+Simply `cd` into the aion repository and run: `git checkout node_test_harness && git submodule update --init --recursive && ./gradlew clean pack`
 
-The tests should now all pass.
+You can unpack this build (located in the `pack` directory) and use this as your built kernel for the tests.
 
 
