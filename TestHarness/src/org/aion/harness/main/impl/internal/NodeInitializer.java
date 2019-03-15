@@ -7,7 +7,6 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
-import org.aion.harness.util.LogManager;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
 
@@ -18,19 +17,12 @@ import org.apache.commons.io.FileUtils;
 public final class NodeInitializer {
     private final NodeConfigurations configurations;
 
-    // Should we be doing log file setup here?? Seems inappropriate.
-    private final LogManager logManager;
-
-    public NodeInitializer(NodeConfigurations configurations, LogManager manager) {
+    public NodeInitializer(NodeConfigurations configurations) {
         if (configurations == null) {
             throw new NullPointerException("Cannot construct NodeInitializer with null configurations.");
         }
-        if (manager == null) {
-            throw new NullPointerException("Cannot construct NodeInitializer with null log manager.");
-        }
 
         this.configurations = configurations;
-        this.logManager = manager;
     }
 
     /**
@@ -232,10 +224,6 @@ public final class NodeInitializer {
 
         int status = builder.start().waitFor();
         tarDestination.delete();
-
-        if (!this.logManager.setupLogFiles().isSuccess()) {
-            return Result.unsuccessfulDueTo("Failed to set up log files!");
-        }
 
         return (status == 0)
             ? Result.successful()

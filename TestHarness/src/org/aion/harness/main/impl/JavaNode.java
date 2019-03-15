@@ -61,21 +61,35 @@ public final class JavaNode implements LocalNode {
         }
 
         this.configurations = configurations;
-        this.initializer = new NodeInitializer(this.configurations, this.logManager);
+        this.initializer = new NodeInitializer(this.configurations);
     }
 
     @Override
     public Result initializeVerbose() throws IOException, InterruptedException {
-        return (this.configurations.isConditionalBuildSpecified())
+        Result result = (this.configurations.isConditionalBuildSpecified())
             ? this.initializer.doConditionalBuild(true)
             : this.initializer.doUnconditionalBuild(true);
+
+        // If initialization was successful then set up the log files.
+        if (result.isSuccess()) {
+            result = this.logManager.setupLogFiles();
+        }
+
+        return result;
     }
 
     @Override
     public Result initialize() throws IOException, InterruptedException {
-        return (this.configurations.isConditionalBuildSpecified())
+        Result result = (this.configurations.isConditionalBuildSpecified())
             ? this.initializer.doConditionalBuild(false)
             : this.initializer.doUnconditionalBuild(false);
+
+        // If initialization was successful then set up the log files.
+        if (result.isSuccess()) {
+            result = this.logManager.setupLogFiles();
+        }
+
+        return result;
     }
 
     /**
