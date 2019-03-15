@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class MultipleListenerThreadsTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private static final int NUM_THREADS = 20;

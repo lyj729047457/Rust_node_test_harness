@@ -100,7 +100,7 @@ public final class NodeConfigurations {
      *
      * @return the built kernel directory.
      */
-    public File getBuiltKernelFile() {
+    public File getBuiltKernelTarFile() {
         return new File(this.builtKernelFile);
     }
 

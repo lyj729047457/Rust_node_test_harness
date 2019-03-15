@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class EventListenerTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
     private static PrivateKey preminedPrivateKey;

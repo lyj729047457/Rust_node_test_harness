@@ -36,7 +36,7 @@ import org.junit.Test;
  * This is why these tests are excluded from 'ant test'.
  */
 public class ComplexEventTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private static String sslString = "SSL";

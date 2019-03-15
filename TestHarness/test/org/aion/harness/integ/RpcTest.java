@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 public class RpcTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
     private static Address preminedAddress;

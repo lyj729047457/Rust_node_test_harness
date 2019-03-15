@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 
 
 public class RemoteNodeTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private LocalNode localNode;

@@ -54,8 +54,8 @@ public class NodePreserveDatabaseTest {
     }
 
     private static void deleteInitializationDirectories() throws IOException {
-        if (NodeFileManager.getNodeDirectory().exists()) {
-            FileUtils.deleteDirectory(NodeFileManager.getNodeDirectory());
+        if (NodeFileManager.getNodeSandboxDirectory().exists()) {
+            FileUtils.deleteDirectory(NodeFileManager.getNodeSandboxDirectory());
         }
         if (NodeFileManager.getKernelDirectory().exists()) {
             FileUtils.deleteDirectory(NodeFileManager.getKernelDirectory());

@@ -7,13 +7,13 @@ import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
+import org.aion.harness.main.impl.internal.NodeInitializer;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +26,8 @@ public final class JavaNode implements LocalNode {
     private LogReader logReader;
     private LogManager logManager;
     private final int ID;
+
+    private NodeInitializer initializer;
 
     // The running instance of the kernel.
     private Process runningKernel = null;
@@ -59,20 +61,21 @@ public final class JavaNode implements LocalNode {
         }
 
         this.configurations = configurations;
+        this.initializer = new NodeInitializer(this.configurations, this.logManager);
     }
 
     @Override
     public Result initializeVerbose() throws IOException, InterruptedException {
         return (this.configurations.isConditionalBuildSpecified())
-            ? doConditionalBuild(true)
-            : doUnconditionalBuild(true);
+            ? this.initializer.doConditionalBuild(true)
+            : this.initializer.doUnconditionalBuild(true);
     }
 
     @Override
     public Result initialize() throws IOException, InterruptedException {
         return (this.configurations.isConditionalBuildSpecified())
-            ? doConditionalBuild(false)
-            : doUnconditionalBuild(false);
+            ? this.initializer.doConditionalBuild(false)
+            : this.initializer.doUnconditionalBuild(false);
     }
 
     /**
@@ -197,181 +200,6 @@ public final class JavaNode implements LocalNode {
     @Override
     public Network getNetwork() {
         return (this.configurations == null) ? null : this.configurations.getNetwork();
-    }
-
-    /**
-     * Attempts to build the kernel from source only if the built kernel file path given does not
-     * exist.
-     *
-     * The kernel is always initialized. If the kernel was built from source then the new build will
-     * be initialized, otherwise the given built kernel file will be used and the kernel initialized
-     * from there.
-     */
-    private Result doConditionalBuild(boolean verbose) throws IOException, InterruptedException {
-        // If the built kernel file does not exist then build it.
-        if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + " Checking if file exists: " + this.configurations.getBuiltKernelFile().getAbsolutePath());
-        }
-
-        if (!this.configurations.getBuiltKernelFile().exists()) {
-            Result result = buildJavaKernel(verbose);
-            if (!result.isSuccess()) {
-                return result;
-            }
-
-            // Move the newly built kernel to the expected built kernel file location.
-            File builtKernelDir = NodeFileManager.getBuiltKernelDirectory(this.configurations.getKernelSourceDirectory());
-            File builtKernel = NodeFileManager.getBuiltKernel(builtKernelDir);
-            if (builtKernel == null) {
-                return Result.unsuccessfulDueTo("Failed to find newly built kernel in directory: " + builtKernelDir.getAbsolutePath());
-            }
-
-            FileUtils.moveFile(builtKernel, this.configurations.getBuiltKernelFile());
-        }
-
-        if (this.configurations.isPreserveDatabaseSpecified()) {
-            return initAndPreserveDatabase(this.configurations.getBuiltKernelFile(), verbose);
-        } else {
-            return init(this.configurations.getBuiltKernelFile(), verbose);
-        }
-    }
-
-    private Result doUnconditionalBuild(boolean verbose) throws IOException, InterruptedException {
-        Result result = buildJavaKernel(verbose);
-        if (!result.isSuccess()) {
-            return result;
-        }
-
-        File builtKernelDir = NodeFileManager.getBuiltKernelDirectory(this.configurations.getKernelSourceDirectory());
-        File builtKernel = NodeFileManager.getBuiltKernel(builtKernelDir);
-        if (builtKernel == null) {
-            return Result.unsuccessfulDueTo("Failed to find newly built kernel in directory: " + builtKernelDir.getAbsolutePath());
-        }
-
-        if (this.configurations.isPreserveDatabaseSpecified()) {
-            return initAndPreserveDatabase(builtKernel, verbose);
-        } else {
-            return init(builtKernel, verbose);
-        }
-    }
-
-    private Result initAndPreserveDatabase(File kernelTarFile, boolean verbose) throws IOException, InterruptedException {
-        if (this.configurations == null) {
-            throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
-        }
-
-        File nodeDirectory = NodeFileManager.getNodeDirectory();
-        File kernelDatabaseDirectory = this.configurations.getDatabase();
-        File temporaryDatabaseDirectory = NodeFileManager.getTemporaryDatabase();
-
-        if (nodeDirectory.exists()) {
-            if (kernelDatabaseDirectory.exists()) {
-
-                // if preserved database directory already exist, delete it
-                if (temporaryDatabaseDirectory.exists()) {
-                    throw new IllegalStateException("there is already a database at " + temporaryDatabaseDirectory);
-                }
-
-                // move the kernel database
-                FileUtils.moveDirectory(kernelDatabaseDirectory, temporaryDatabaseDirectory);
-
-                // delete node directory
-                FileUtils.deleteDirectory(nodeDirectory);
-
-                if (!nodeDirectory.mkdir()) {
-                    throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
-                }
-
-                // move the preserved database back to the node directory
-                FileUtils.moveDirectory(temporaryDatabaseDirectory, kernelDatabaseDirectory);
-            }
-
-        } else {
-            if (!nodeDirectory.mkdir()) {
-                throw new IllegalStateException("Failed to make directory: " + nodeDirectory);
-            }
-        }
-
-        return untarAndSetupKernel(kernelTarFile, verbose);
-    }
-
-    private Result init(File kernelTarFile, boolean verbose) throws IOException, InterruptedException {
-        if (this.configurations == null) {
-            throw new IllegalStateException("Node has not been configured yet! Cannot initialize kernel.");
-        }
-
-        File nodeDestination = NodeFileManager.getNodeDirectory();
-        if (nodeDestination.exists()) {
-            throw new IllegalStateException("node directory already exists.");
-        }
-
-        if (!nodeDestination.mkdir()) {
-            throw new IllegalStateException("Failed to make directory: " + nodeDestination);
-        }
-
-        return untarAndSetupKernel(kernelTarFile, verbose);
-    }
-
-    private Result untarAndSetupKernel(File kernelTarFile, boolean verbose) throws IOException, InterruptedException {
-        System.out.println(Assumptions.LOGGER_BANNER + "Fetching the built kernel...");
-
-        File tarDestination = new File(NodeFileManager.getNodeDirectory().getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
-        Files.copy(kernelTarFile.toPath(), tarDestination.toPath());
-
-        if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Unzipping Java Kernel tar file using command: tar xvjf");
-        }
-
-        ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
-            .directory(tarDestination.getParentFile());
-
-        if (verbose) {
-            builder.inheritIO();
-        }
-
-        int untarStatus = builder.start().waitFor();
-        tarDestination.delete();
-
-        if (!this.logManager.setupLogFiles().isSuccess()) {
-            return Result.unsuccessfulDueTo("Failed to set up log files!");
-        }
-
-        return (untarStatus == 0)
-            ? Result.successful()
-            : Result.unsuccessfulDueTo("Failed to prepare the kernel");
-    }
-
-    /**
-     * Builds the Java Kernel from source and places its built tar.bz2 file in the specified built
-     * kernel file location.
-     *
-     * @param verbose Whether or not to display the I/O.
-     * @return the result of this build attempt.
-     */
-    private Result buildJavaKernel(boolean verbose) throws IOException, InterruptedException {
-        if (this.configurations == null) {
-            throw new IllegalStateException("Node has not been configured yet! Cannot build kernel.");
-        }
-
-        System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
-
-        File sourceDirectory = this.configurations.getKernelSourceDirectory();
-
-        if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
-            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: " + sourceDirectory);
-        }
-
-        ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
-            .directory(sourceDirectory);
-
-        if (verbose) {
-            builder.inheritIO();
-        }
-
-        return (builder.start().waitFor() == 0)
-            ? Result.successful()
-            : Result.unsuccessfulDueTo("An error occurred building the kernel!");
     }
 
     /**

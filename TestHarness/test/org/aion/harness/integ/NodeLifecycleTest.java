@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
  * Tests the various aspects of a node's lifecycle.
  */
 public class NodeLifecycleTest {
-    private static File nodeDirectory = NodeFileManager.getNodeDirectory();
+    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private LocalNode node;

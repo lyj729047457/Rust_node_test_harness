@@ -15,9 +15,9 @@ public class NodeFileManager {
     private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
     private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
     private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
-    private static final File TEMPORARY_DATABASE = new File(WORKING_DIR + File.separator + "database");
+    private static final File TEMPORARY_DATABASE = new File(WORKING_DIR + File.separator + "temporary_database");
 
-    public static File getNodeDirectory() {
+    public static File getNodeSandboxDirectory() {
         return NODE_DIR;
     }
 
@@ -41,7 +41,7 @@ public class NodeFileManager {
         return TEMPORARY_DATABASE;
     }
 
-    public static File getBuiltKernelDirectory(File kernelSourceDirectory) {
+    public static File getDirectoryOfBuiltTarFile(File kernelSourceDirectory) {
         if (kernelSourceDirectory == null) {
             throw new NullPointerException("Cannot get built kernel directory from a null source directory.");
         }
@@ -49,7 +49,7 @@ public class NodeFileManager {
         return new File(kernelSourceDirectory.getAbsolutePath() + File.separator + "pack");
     }
 
-    public static File getBuiltKernel(File directory) {
+    public static File findKernelTarFile(File directory) {
         if (directory == null) {
             throw new NullPointerException("Cannot find a file in a null directory.");
         }
