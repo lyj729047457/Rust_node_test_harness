@@ -92,7 +92,8 @@ public final class LogManager {
 
         for (File entry : logEntries) {
             if (entry.isFile()) {
-                FileUtils.moveFileToDirectory(entry, NodeFileManager.getLogArchiveDirectory(), true);
+                File destination = findUniqueArchiveDestinationName(entry.getName());
+                FileUtils.moveFileToDirectory(entry, destination, true);
             }
         }
     }
@@ -133,6 +134,30 @@ public final class LogManager {
             + String.format("%02d", calendar.get(Calendar.MINUTE)) + ":"
             + String.format("%02d", calendar.get(Calendar.SECOND)) + "-"
             + postfix + ".txt";
+    }
+
+    /**
+     * Returns a file such that this file does not exist in the archive directory but its name is
+     * derived from the provided filename.
+     *
+     * If the provided filename already exists in the archive directory then this method simply
+     * appends a second postfix to the name to make it unique and continues to do so until it arrives
+     * at a unique name for the file.
+     */
+    private File findUniqueArchiveDestinationName(String filename) throws IOException {
+        String filenameExtension = filename.substring(filename.lastIndexOf('.'));
+        String filenameWithoutExtension = filename.substring(0, filename.lastIndexOf('.'));
+        String canonicalName = NodeFileManager.getLogsArchiveDirectory().getCanonicalPath() + File.separator + filenameWithoutExtension;
+
+        int number = 1;
+        File file = new File(canonicalName + filenameExtension);
+
+        while (file.exists()) {
+            file = new File(canonicalName + "(" + number + ")" + filenameExtension);
+            number++;
+        }
+
+        return file;
     }
 
 }

@@ -33,7 +33,7 @@ public class NodeFileManager {
         return LOG_DIR;
     }
 
-    public static File getLogArchiveDirectory() {
+    public static File getLogsArchiveDirectory() {
         return LOG_ARCHIVE_DIR;
     }
 
