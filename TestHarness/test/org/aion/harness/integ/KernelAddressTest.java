@@ -35,7 +35,7 @@ import java.security.spec.InvalidKeySpecException;
 import static org.junit.Assert.*;
 
 public class KernelAddressTest {
-    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
+    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static PrivateKey preminedPrivateKey;
     private static Address destination;

@@ -137,7 +137,7 @@ public final class NodeInitializer {
      * will be reinstalled so as to preserve it.
      */
     private Result createSandboxAndExtractTarFilePreservingDatabase(boolean verbose) throws IOException, InterruptedException {
-        File sandbox = NodeFileManager.getNodeSandboxDirectory();
+        File sandbox = new File(NodeFileManager.getSandboxPath());
         File database = this.configurations.getDatabase();
         File temporaryDatabase = NodeFileManager.getTemporaryDatabase();
 
@@ -182,7 +182,7 @@ public final class NodeInitializer {
      * same state in which it was prior to invoking this method.
      */
     private Result createSandboxAndExtractTarFile(boolean verbose) throws IOException, InterruptedException {
-        File sandbox = NodeFileManager.getNodeSandboxDirectory();
+        File sandbox = new File(NodeFileManager.getSandboxPath());
         if (sandbox.exists()) {
             return Result.unsuccessfulDueTo("An old node build currently exists at: " + sandbox.getAbsolutePath() + ". Cannot re-initialize.");
         }
@@ -208,7 +208,7 @@ public final class NodeInitializer {
     private Result extractKernelTarFileIntoSandbox(boolean verbose) throws IOException, InterruptedException {
         System.out.println(Assumptions.LOGGER_BANNER + "Extracting the built kernel...");
 
-        File tarDestination = new File(NodeFileManager.getNodeSandboxDirectory().getPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
+        File tarDestination = new File(NodeFileManager.getSandboxPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
         Files.copy(this.configurations.getBuiltKernelTarFile().toPath(), tarDestination.toPath());
 
         if (verbose) {
@@ -239,7 +239,7 @@ public final class NodeInitializer {
      * 2. Deletes the temporary database directory.
      */
     private void cleanup() throws IOException {
-        FileUtils.deleteDirectory(NodeFileManager.getNodeSandboxDirectory());
+        FileUtils.deleteDirectory(new File(NodeFileManager.getSandboxPath()));
         FileUtils.deleteDirectory(NodeFileManager.getTemporaryDatabase());
     }
 

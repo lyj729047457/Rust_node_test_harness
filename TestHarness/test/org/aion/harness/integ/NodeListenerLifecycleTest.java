@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class NodeListenerLifecycleTest {
-    private static File nodeDirectory = NodeFileManager.getNodeSandboxDirectory();
+    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
     private static File kernelDirectory = NodeFileManager.getKernelDirectory();
 
     private LocalNode node;

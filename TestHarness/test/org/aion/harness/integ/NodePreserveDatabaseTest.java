@@ -1,5 +1,6 @@
 package org.aion.harness.integ;
 
+import java.io.File;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
@@ -54,8 +55,9 @@ public class NodePreserveDatabaseTest {
     }
 
     private static void deleteInitializationDirectories() throws IOException {
-        if (NodeFileManager.getNodeSandboxDirectory().exists()) {
-            FileUtils.deleteDirectory(NodeFileManager.getNodeSandboxDirectory());
+        File sandbox = new File(NodeFileManager.getSandboxPath());
+        if (sandbox.exists()) {
+            FileUtils.deleteDirectory(sandbox);
         }
         if (NodeFileManager.getKernelDirectory().exists()) {
             FileUtils.deleteDirectory(NodeFileManager.getKernelDirectory());

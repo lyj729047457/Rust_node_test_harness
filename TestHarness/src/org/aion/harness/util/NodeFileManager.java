@@ -10,35 +10,35 @@ import org.aion.harness.misc.Assumptions;
 public class NodeFileManager {
     public static final String WORKING_DIR = System.getProperty("user.dir");
 
-    private static final File NODE_DIR = new File(WORKING_DIR + File.separator + "node");
-    private static final File KERNEL_DIR = new File(NODE_DIR + File.separator + "aion");
-    private static final File EXECUTABLE_DIR = new File(KERNEL_DIR.getAbsolutePath() + "/rt/bin/java");
-    private static final File LOG_DIR = new File(WORKING_DIR + File.separator + "logs");
-    private static final File LOG_ARCHIVE_DIR = new File(LOG_DIR.getAbsolutePath() + File.separator + "archive");
-    private static final File TEMPORARY_DATABASE = new File(WORKING_DIR + File.separator + "temporary_database");
+    private static final String SANDBOX_DIR = WORKING_DIR + File.separator + "node";
+    private static final String KERNEL_DIR = SANDBOX_DIR + File.separator + "aion";
+    private static final String EXECUTABLE_DIR = KERNEL_DIR + File.separator + "rt" + File.separator + "bin" + File.separator + "java";
+    private static final String LOG_DIR = WORKING_DIR + File.separator + "logs";
+    private static final String LOG_ARCHIVE_DIR = LOG_DIR + File.separator + "archive";
+    private static final String TEMPORARY_DATABASE = WORKING_DIR + File.separator + "temporary_database";
 
-    public static File getNodeSandboxDirectory() {
-        return NODE_DIR;
+    public static String getSandboxPath() {
+        return SANDBOX_DIR;
     }
 
     public static File getKernelDirectory() {
-        return KERNEL_DIR;
+        return new File(KERNEL_DIR);
     }
 
     public static File getDirectoryOfExecutableKernel() {
-        return EXECUTABLE_DIR;
+        return new File(EXECUTABLE_DIR);
     }
 
     public static File getLogsDirectory() {
-        return LOG_DIR;
+        return new File(LOG_DIR);
     }
 
     public static File getLogsArchiveDirectory() {
-        return LOG_ARCHIVE_DIR;
+        return new File(LOG_ARCHIVE_DIR);
     }
 
     public static File getTemporaryDatabase() {
-        return TEMPORARY_DATABASE;
+        return new File(TEMPORARY_DATABASE);
     }
 
     public static File getDirectoryOfBuiltTarFile(File kernelSourceDirectory) {
