@@ -2,8 +2,7 @@ package org.aion.harness.main.impl.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import org.aion.harness.main.Node;
+import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
@@ -25,81 +24,79 @@ public final class NodeInitializer {
         this.configurations = configurations;
     }
 
-    /**
-     * Attempts to build the kernel from source and then set up the new build for the {@link Node}
-     * to launch directly from.
-     *
-     * If the build kernel already exists then this method does not build the kernel from source.
-     * Instead, it simply untars the built kernel and puts its contents in the expected place.
-     *
-     * Otherwise, if no build exists in the specified location, this method builds the kernel from
-     * source and puts the new tar file in the location of the build file, so that next time it can
-     * skip this step, and then extracts the built assets from the tar file into the newly created
-     * sandbox.
-     *
-     * Note that if there is no specification to preserve the database and there exists a sandbox
-     * directory then this method will fail.
-     */
-    public Result doConditionalBuild(boolean verbose) throws IOException, InterruptedException {
-
-        // If the built tar file does not exist, then build from source.
-        if (!this.configurations.getBuiltKernelTarFile().exists()) {
-            Result result = buildFromSource(verbose);
-            if (!result.isSuccess()) {
-                return result;
-            }
-        }
-
-        if (this.configurations.isPreserveDatabaseSpecified()) {
-            return createSandboxAndExtractTarFilePreservingDatabase(verbose);
+    public Result initializeJavaKernel(boolean verbose) throws IOException, InterruptedException {
+        if (this.configurations.alwaysBuildFromSource()) {
+            return buildFromSource(verbose);
         } else {
-            return createSandboxAndExtractTarFile(verbose);
+            return useExistingBuild();
         }
     }
 
     /**
-     * Always builds the kernel from source and puts the new tar file in the location of the build
-     * file, so that next time it can skip this step, and then extracts the built assets from the
-     * tar file into the newly created sandbox.
+     * Builds the kernel from the source files in the provided directory and extracts the contents
+     * of this build into a new sandbox directory.
      *
-     * Note that if there is no specification to preserve the database and there exists a sandbox
-     * directory then this method will fail.
-     */
-    public Result doUnconditionalBuild(boolean verbose) throws IOException, InterruptedException {
-        Result result = buildFromSource(verbose);
-        if (!result.isSuccess()) {
-            return result;
-        }
-
-        if (this.configurations.isPreserveDatabaseSpecified()) {
-            return createSandboxAndExtractTarFilePreservingDatabase(verbose);
-        } else {
-            return createSandboxAndExtractTarFile(verbose);
-        }
-    }
-
-    /**
-     * Builds the kernel from source and moves the new tar file to the built kernel location.
-     *
-     * ASSUMPTION: the built kernel location is empty.
+     * If the sandbox directory exists prior to this call, it will be destroyed.
      */
     private Result buildFromSource(boolean verbose) throws IOException, InterruptedException {
 
-        // If building the java kernel fails then return immediately.
+        // 1. Build the kernel from source.
         Result result = buildJavaKernel(verbose);
         if (!result.isSuccess()) {
             return result;
         }
 
-        // Move the newly built kernel to the expected built kernel file location.
-        File builtKernelDir = NodeFileManager.getDirectoryOfBuiltTarFile(this.configurations.getKernelSourceDirectory());
-        File builtKernel = NodeFileManager.findKernelTarFile(builtKernelDir);
-        if (builtKernel == null) {
-            return Result.unsuccessfulDueTo("Failed to find newly built kernel in directory: " + builtKernelDir.getAbsolutePath());
+        // 2. Destroy the sandbox if it exists.
+        destroySandbox();
+
+        // 3. Create the sandbox directory.
+        result = createSandbox();
+        if (!result.isSuccess()) {
+            return result;
         }
 
-        FileUtils.moveFile(builtKernel, this.configurations.getBuiltKernelTarFile());
+        // 4. Locate the tar file and move it into the sandbox temporarily.
+        result = moveTarFileToSandbox();
+        if (!result.isSuccess()) {
+            cleanup();
+            return result;
+        }
+
+        // 5. Extract the contents of the tar file and delete it.
+        result = extractTarFile(verbose);
+        if (!result.isSuccess()) {
+            cleanup();
+        }
+
+        destroyTemporaryTarFile();
         return result;
+    }
+
+    /**
+     * Uses an existing built kernel.
+     *
+     * If database preservation is not specified then the database corresponding to the current
+     * network is deleted.
+     *
+     * This method does not make use of the sandbox directory at all, but whatever directory the
+     * build currently resides in.
+     *
+     * If the build does not exist then this method is unsuccessful.
+     */
+    private Result useExistingBuild() throws IOException {
+        if (!this.configurations.getDirectoryOfBuiltKernel().exists()) {
+            return Result.unsuccessfulDueTo("Could not find built kernel directory at location: " + this.configurations.getDirectoryOfBuiltKernel().getAbsolutePath());
+        }
+        if (!this.configurations.getDirectoryOfBuiltKernel().isDirectory()) {
+            return Result.unsuccessfulDueTo("Found the built kernel, but it is not a directory! Path: " + this.configurations.getDirectoryOfBuiltKernel().getAbsolutePath());
+        }
+
+        // If no database preservation specified then delete database if it exists
+        if (!this.configurations.preserveDatabase()) {
+            destroyDatabaseOf(this.configurations.getDirectoryOfBuiltKernel(), this.configurations.getNetwork());
+        }
+
+        return Result.successful();
     }
 
     /**
@@ -113,6 +110,12 @@ public final class NodeInitializer {
         System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
         File sourceDirectory = this.configurations.getKernelSourceDirectory();
+        if (!sourceDirectory.exists()) {
+            return Result.unsuccessfulDueTo("Could not find source directory: " + this.configurations.getKernelSourceDirectory());
+        }
+        if (!sourceDirectory.isDirectory()) {
+            return Result.unsuccessfulDueTo("Found source but it is not a directory: " + this.configurations.getKernelSourceDirectory());
+        }
 
         if (verbose) {
             System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
@@ -131,103 +134,50 @@ public final class NodeInitializer {
             : Result.unsuccessfulDueTo("An error occurred building the kernel!");
     }
 
-    /**
-     * Checks first if there already exists a sandboxed node and if so preserves its directory.
-     * The sandbox will be destroyed and re-built using the built tar file assets and the database
-     * will be reinstalled so as to preserve it.
-     */
-    private Result createSandboxAndExtractTarFilePreservingDatabase(boolean verbose) throws IOException, InterruptedException {
-        File sandbox = new File(NodeFileManager.getSandboxPath());
-        File database = this.configurations.getDatabase();
-        File temporaryDatabase = NodeFileManager.getTemporaryDatabase();
-
-        if (temporaryDatabase.exists()) {
-            throw new IllegalStateException("Cannot create the temporary directory to preserve the database, it already exists at: "
-                + temporaryDatabase.getAbsolutePath());
-        }
-
-        // Then there is no database to preserve.
-        if (!sandbox.exists()) {
-            return createSandboxAndExtractTarFile(verbose);
-        }
-
-        // Move the database out of the sandbox and destroy the sandbox.
-        FileUtils.moveDirectory(database, temporaryDatabase);
-        FileUtils.deleteDirectory(sandbox);
-
-        // Create the sandbox and extract the built assets into it.
-        Result result = createSandboxAndExtractTarFile(verbose);
-        if (!result.isSuccess()) {
-            cleanup();
-            return result;
-        }
-
-        // Reinstall the database.
-        FileUtils.moveDirectory(temporaryDatabase, database);
-        return result;
-    }
-
-    /**
-     * Attempts to extract the contents of the kernel tar file to the sandbox directory so that a
-     * node can be launched.
-     *
-     * This method is unsuccessful only if one of the following is true:
-     *
-     * 1. An old node already exists in the sandbox.
-     * 2. This method fails to create the sandbox directory.
-     * 3. The tar file extraction fails.
-     * 4. The log manager fails to set up the log files.
-     *
-     * If this method fails due to any of the above reasons, it will leave the file system in the
-     * same state in which it was prior to invoking this method.
-     */
-    private Result createSandboxAndExtractTarFile(boolean verbose) throws IOException, InterruptedException {
-        File sandbox = new File(NodeFileManager.getSandboxPath());
-        if (sandbox.exists()) {
-            return Result.unsuccessfulDueTo("An old node build currently exists at: " + sandbox.getAbsolutePath() + ". Cannot re-initialize.");
-        }
-
-        if (!sandbox.mkdir()) {
-            return Result.unsuccessfulDueTo("Failed to make sandboxed node directory: " + sandbox.getAbsolutePath());
-        }
-
-        Result result = extractKernelTarFileIntoSandbox(verbose);
-        if (!result.isSuccess()) {
-            cleanup();
-        }
-        return result;
-    }
-
-    /**
-     * Attempts to extract the contents of the kernel tar file to the sandbox directory so that a
-     * node can be launched.
-     *
-     * This method is unsuccessful only if either the extracting itself fails or the log manager
-     * fails to set up the log files for the node.
-     */
-    private Result extractKernelTarFileIntoSandbox(boolean verbose) throws IOException, InterruptedException {
+    private Result extractTarFile(boolean verbose) throws IOException, InterruptedException {
         System.out.println(Assumptions.LOGGER_BANNER + "Extracting the built kernel...");
-
-        File tarDestination = new File(NodeFileManager.getSandboxPath() + File.separator + Assumptions.NEW_KERNEL_TAR_NAME);
-        Files.copy(this.configurations.getBuiltKernelTarFile().toPath(), tarDestination.toPath());
-
         if (verbose) {
             System.out.println(Assumptions.LOGGER_BANNER + "Extracting contents of Java Kernel tar.bz2 file using command: tar xvjf");
         }
 
-        ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", tarDestination.getName())
-            .directory(tarDestination.getParentFile());
+        File temporaryTarFile = NodeFileManager.getTemporaryTarFile();
+        ProcessBuilder builder = new ProcessBuilder("tar", "xvjf", temporaryTarFile.getName())
+            .directory(temporaryTarFile.getParentFile());
 
         if (verbose) {
             builder.inheritIO();
         }
 
         int status = builder.start().waitFor();
-        tarDestination.delete();
 
         return (status == 0)
             ? Result.successful()
             : Result.unsuccessfulDueTo("Failed to extract the built assets from the tar.bz2 file. Tar command exit code: " + status);
+    }
+
+    private Result moveTarFileToSandbox() throws IOException {
+        File builtKernel = grabKernelTarFile();
+        if (builtKernel == null) {
+            return Result.unsuccessfulDueTo("Failed to find newly built kernel in specified source directory: "
+                + this.configurations.getKernelSourceDirectory().getAbsolutePath());
+        }
+
+        File temporaryTarFile = NodeFileManager.getTemporaryTarFile();
+        FileUtils.moveFile(builtKernel, temporaryTarFile);
+        return Result.successful();
+    }
+
+    private File grabKernelTarFile() {
+        File builtKernelDir = NodeFileManager.getDirectoryOfBuiltTarFile(this.configurations.getKernelSourceDirectory());
+        return NodeFileManager.findKernelTarFile(builtKernelDir);
+    }
+
+    private Result createSandbox() {
+        if (!new File(NodeFileManager.getSandboxPath()).mkdir()) {
+            return Result.unsuccessfulDueTo("Failed to create the sandbox directory to host the built kernel at location: "
+                + NodeFileManager.getSandboxPath());
+        }
+        return Result.successful();
     }
 
     /**
@@ -239,8 +189,20 @@ public final class NodeInitializer {
      * 2. Deletes the temporary database directory.
      */
     private void cleanup() throws IOException {
-        FileUtils.deleteDirectory(new File(NodeFileManager.getSandboxPath()));
+        destroySandbox();
         FileUtils.deleteDirectory(NodeFileManager.getTemporaryDatabase());
+    }
+
+    private void destroyDatabaseOf(File builtKernelDirectory, Network network) throws IOException {
+        FileUtils.deleteDirectory(NodeFileManager.getDatabaseOf(builtKernelDirectory, network));
+    }
+
+    private void destroyTemporaryTarFile() {
+        NodeFileManager.getTemporaryTarFile().delete();
+    }
+
+    private void destroySandbox() throws IOException {
+        FileUtils.deleteDirectory(new File(NodeFileManager.getSandboxPath()));
     }
 
 }

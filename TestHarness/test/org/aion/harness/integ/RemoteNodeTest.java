@@ -1,14 +1,13 @@
 package org.aion.harness.integ;
 
 import org.aion.harness.integ.resources.LogWriter;
-import org.aion.harness.integ.resources.TarFileFinder;
+import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.result.FutureResult;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
 
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
@@ -27,31 +26,26 @@ import static org.junit.Assert.*;
 
 
 public class RemoteNodeTest {
-    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
-    private static File kernelDirectory = NodeFileManager.getKernelDirectory();
-
-    private LocalNode localNode;
     private GenericRemoteNode remoteNode;
+    private LocalNode localNode;
 
     @Before
-    public void setup() throws IOException {
-        deleteInitializationDirectories();
+    public void setup() throws IOException, InterruptedException {
         this.remoteNode = NodeFactory.getNewGenericRemoteNodeInstance(NodeType.JAVA_NODE);
-        this.localNode = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-
-        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
-        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
-
-        this.localNode.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
+        this.localNode = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
+        assertTrue(this.localNode.initialize().isSuccess());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException, InterruptedException {
         shutdownNodeIfRunning();
-        deleteInitializationDirectories();
-        deleteLogs();
         this.remoteNode = null;
         this.localNode = null;
+    }
+
+    @AfterClass
+    public static void tearDownAfterAllTests() throws IOException {
+        deleteLogs();
     }
 
     @Test (expected = NullPointerException.class)
@@ -60,22 +54,21 @@ public class RemoteNodeTest {
     }
 
     @Test (expected = IllegalArgumentException.class)
-    public void testConnectFileNotExist() {
-        File fileNotExist = new File(NodeFileManager.getLogsDirectory().getAbsolutePath() + File.separator + "notExist");
+    public void testConnectFileNotExist() throws IOException {
+        File fileNotExist = new File(NodeFileManager.getLogsDirectory().getCanonicalPath() + File.separator + "notExist");
         this.remoteNode.connect(fileNotExist);
     }
 
     @Test (expected = IllegalArgumentException.class)
     public void testConnectLogIsNotAFile() {
         File notAFile = new File(NodeFileManager.getLogsDirectory().getAbsolutePath() + File.separator + "newDirectory");
-        notAFile.mkdir();
+        assertTrue(notAFile.mkdir());
 
         this.remoteNode.connect(notAFile);
     }
 
     @Test
     public void testConnectRemoteNodeToLocalNodeLogFile() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.localNode.start();
         System.out.println("Start result = " + result);
 
@@ -85,6 +78,7 @@ public class RemoteNodeTest {
         // get the log file and connect with remote node
         File localNodeLogFile = null;
         File[] logFiles = NodeFileManager.getLogsDirectory().listFiles();
+        assertNotNull(logFiles);
         for (File file: logFiles) {
             if (file.getName().contains("out")) {
                 localNodeLogFile = file;
@@ -186,7 +180,6 @@ public class RemoteNodeTest {
         String message = "my message";
 
         // start local node
-        initializeNodeWithChecks();
         Result result = this.localNode.start();
         System.out.println("Start result = " + result);
 
@@ -288,8 +281,8 @@ public class RemoteNodeTest {
     }
 
     private File createRemoteLogFile() throws IOException {
-        File logDirectory = new File(NodeFileManager.getLogsDirectory().getAbsolutePath());
-        File outputLogFile = new File(NodeFileManager.getLogsDirectory().getAbsolutePath() + File.separator + "testRemoteNode.txt");
+        File logDirectory = NodeFileManager.getLogsDirectory();
+        File outputLogFile = new File(NodeFileManager.getLogsDirectory() + File.separator + "testRemoteNode.txt");
         if (!logDirectory.exists()) {
             assertTrue(logDirectory.mkdir());
         }
@@ -299,31 +292,6 @@ public class RemoteNodeTest {
         }
 
         return outputLogFile;
-    }
-
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = this.localNode.initialize();
-        assertTrue(result.isSuccess());
-
-        // verify the node directory was created.
-        assertTrue(nodeDirectory.exists());
-        assertTrue(nodeDirectory.isDirectory());
-
-        // veirfy the node directory contains the aion directory.
-        File[] nodeDirectoryEntries = nodeDirectory.listFiles();
-        assertNotNull(nodeDirectoryEntries);
-        assertEquals(1, nodeDirectoryEntries.length);
-        assertEquals(kernelDirectory, nodeDirectoryEntries[0]);
-        assertTrue(nodeDirectoryEntries[0].isDirectory());
-    }
-
-    private static void deleteInitializationDirectories() throws IOException {
-        if (nodeDirectory.exists()) {
-            FileUtils.deleteDirectory(nodeDirectory);
-        }
-        if (kernelDirectory.exists()) {
-            FileUtils.deleteDirectory(kernelDirectory);
-        }
     }
 
     private static void deleteLogs() throws IOException {

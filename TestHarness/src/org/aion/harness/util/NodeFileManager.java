@@ -1,6 +1,8 @@
 package org.aion.harness.util;
 
 import java.io.File;
+import java.io.IOException;
+import org.aion.harness.main.Network;
 import org.aion.harness.misc.Assumptions;
 
 /**
@@ -10,23 +12,14 @@ import org.aion.harness.misc.Assumptions;
 public class NodeFileManager {
     public static final String WORKING_DIR = System.getProperty("user.dir");
 
-    private static final String SANDBOX_DIR = WORKING_DIR + File.separator + "node";
-    private static final String KERNEL_DIR = SANDBOX_DIR + File.separator + "aion";
-    private static final String EXECUTABLE_DIR = KERNEL_DIR + File.separator + "rt" + File.separator + "bin" + File.separator + "java";
+    private static final String SANDBOX_DIR = WORKING_DIR + File.separator + "sandbox";
     private static final String LOG_DIR = WORKING_DIR + File.separator + "logs";
     private static final String LOG_ARCHIVE_DIR = LOG_DIR + File.separator + "archive";
     private static final String TEMPORARY_DATABASE = WORKING_DIR + File.separator + "temporary_database";
+    private static final String TEMPORARY_TAR_FILE = SANDBOX_DIR + File.separator + "temporary_tar.tar.bz2";
 
     public static String getSandboxPath() {
         return SANDBOX_DIR;
-    }
-
-    public static File getKernelDirectory() {
-        return new File(KERNEL_DIR);
-    }
-
-    public static File getDirectoryOfExecutableKernel() {
-        return new File(EXECUTABLE_DIR);
     }
 
     public static File getLogsDirectory() {
@@ -39,6 +32,24 @@ public class NodeFileManager {
 
     public static File getTemporaryDatabase() {
         return new File(TEMPORARY_DATABASE);
+    }
+
+    public static File getTemporaryTarFile() {
+        return new File(TEMPORARY_TAR_FILE);
+    }
+
+    /**
+     * Returns the path to the database for the given network and root directory of the built kernel.
+     */
+    public static File getDatabaseOf(File builtKernelDirectory, Network network) throws IOException {
+        return new File(builtKernelDirectory.getCanonicalPath() + File.separator + network.string() + File.separator + "database");
+    }
+
+    /**
+     * Returns the directory of the executable for the given built kernel root directory.
+     */
+    public static String getExecutableDirectoryOf(File builtKernelDirectory) throws IOException {
+        return builtKernelDirectory.getCanonicalPath() + File.separator + "rt/bin/java";
     }
 
     public static File getDirectoryOfBuiltTarFile(File kernelSourceDirectory) {

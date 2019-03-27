@@ -13,42 +13,36 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
+import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.main.LocalNode;
-import org.aion.harness.integ.resources.TarFileFinder;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
-import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
 public class NodeListenerLifecycleTest {
-    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
-    private static File kernelDirectory = NodeFileManager.getKernelDirectory();
-
     private LocalNode node;
 
     @Before
-    public void setup() throws IOException {
-        deleteInitializationDirectories();
-        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-
-        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
-        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
-
-        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
+    public void setup() throws IOException, InterruptedException {
+        this.node = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
+        assertTrue(this.node.initialize().isSuccess());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException, InterruptedException {
         shutdownNodeIfRunning();
-        deleteInitializationDirectories();
-        deleteLogs();
         this.node = null;
+    }
+
+    @AfterClass
+    public static void tearDownAfterAllTests() throws IOException {
+        deleteLogs();
     }
 
     @Test
@@ -64,8 +58,6 @@ public class NodeListenerLifecycleTest {
 
     @Test
     public void testNodeListenerAfterShuttingDownNode() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
-
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -98,8 +90,7 @@ public class NodeListenerLifecycleTest {
     @Test
     public void testDeletingLogFileWhileNodeIsRunning() throws IOException, InterruptedException {
 
-        // Initialize and start the node.
-        initializeNodeWithChecks();
+        // Start the node.
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -190,31 +181,6 @@ public class NodeListenerLifecycleTest {
 
         assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
-    }
-
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = this.node.initialize();
-        assertTrue(result.isSuccess());
-
-        // verify the node directory was created.
-        assertTrue(nodeDirectory.exists());
-        assertTrue(nodeDirectory.isDirectory());
-
-        // veirfy the node directory contains the aion directory.
-        File[] nodeDirectoryEntries = nodeDirectory.listFiles();
-        assertNotNull(nodeDirectoryEntries);
-        assertEquals(1, nodeDirectoryEntries.length);
-        assertEquals(kernelDirectory, nodeDirectoryEntries[0]);
-        assertTrue(nodeDirectoryEntries[0].isDirectory());
-    }
-
-    private static void deleteInitializationDirectories() throws IOException {
-        if (nodeDirectory.exists()) {
-            FileUtils.deleteDirectory(nodeDirectory);
-        }
-        if (kernelDirectory.exists()) {
-            FileUtils.deleteDirectory(kernelDirectory);
-        }
     }
 
     private static void deleteLogs() throws IOException {

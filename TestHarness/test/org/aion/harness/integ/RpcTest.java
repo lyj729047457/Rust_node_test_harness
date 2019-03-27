@@ -2,19 +2,16 @@ package org.aion.harness.integ;
 
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
-import org.aion.harness.integ.resources.TarFileFinder;
+import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.types.Block;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
-import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.misc.Assumptions;
@@ -28,7 +25,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
@@ -37,44 +33,39 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 public class RpcTest {
-    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
-    private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
-    private static Address preminedAddress;
     private static PrivateKey preminedPrivateKey;
     private static long energyLimit = 2_000_000;
     private static long energyPrice = 10_000_000_000L;
 
-    private RPC rpc;
     private LocalNode node;
+    private RPC rpc;
 
     @Before
-    public void setup() throws IOException, DecoderException, InvalidKeySpecException {
+    public void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
-        preminedAddress = preminedPrivateKey.getAddress();
-        deleteInitializationDirectories();
-        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 
-        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
-        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
-
-        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
+        this.node = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
         this.rpc = new RPC("127.0.0.1", "8545");
+
+        assertTrue(this.node.initialize().isSuccess());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException, InterruptedException {
         shutdownNodeIfRunning();
-        deleteInitializationDirectories();
-        deleteLogs();
         this.node = null;
         this.rpc = null;
     }
 
+    @AfterClass
+    public static void tearDownAfterAllTests() throws IOException {
+        deleteLogs();
+    }
+
     @Test
     public void testSendValueViaRPC() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -102,7 +93,6 @@ public class RpcTest {
 
     @Test
     public void testGetBalanceViaRPC() throws Exception {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -122,7 +112,6 @@ public class RpcTest {
 
     @Test
     public void testSendValueWithIncorrectNonceViaRPC() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -150,7 +139,6 @@ public class RpcTest {
 
     @Test
     public void testSendNegativeValueViaRPC() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -178,7 +166,6 @@ public class RpcTest {
 
     @Test
     public void testSendZeroValueViaRPC() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -206,7 +193,6 @@ public class RpcTest {
 
     @Test
     public void testSendMultipleValueTransfersViaRPC() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -260,7 +246,6 @@ public class RpcTest {
 
     @Test
     public void testSendValueToInvalidAddress() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -291,7 +276,6 @@ public class RpcTest {
         byte[] badKey = Hex.decodeHex("223f19370d95582055bd8072cf3ffd635d2712a7171e4888091a060b9f4f63d5");
         PrivateKey badPrivateKey = PrivateKey.fromBytes(badKey);
 
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -320,7 +304,6 @@ public class RpcTest {
 
     @Test
     public void testBalanceTransferAndCheck() throws Exception {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -347,7 +330,6 @@ public class RpcTest {
 
     @Test
     public void testBalanceTransferZeroBalanceAndCheck() throws Exception {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -376,7 +358,6 @@ public class RpcTest {
     public void testBalanceTransferNegativeBalanceAndCheck() throws Exception {
         // When someone tries to transfer a negative value(BigInteger), the positive representation of
         // that BigInteger will be the transfer value. This should be something handled by the server.
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -404,12 +385,13 @@ public class RpcTest {
 
     @Test
     public void testGetNonce() throws Exception {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
+
+        Address preminedAddress = preminedPrivateKey.getAddress();
 
         // check nonce before
         RpcResult<BigInteger> rpcResult = this.rpc.getNonce(preminedAddress);
@@ -433,7 +415,6 @@ public class RpcTest {
 
     @Test
     public void testGetTransactionReceipt() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -476,7 +457,7 @@ public class RpcTest {
         assertArrayEquals(transaction.getTransactionHash(), receipt.getTransactionHash());
         assertEquals(BigInteger.ONE, receipt.getBlockNumber());
         assertFalse(receipt.getAddressOfDeployedContract().isPresent());
-        assertEquals(preminedAddress, receipt.getTransactionSender());
+        assertEquals(preminedPrivateKey.getAddress(), receipt.getTransactionSender());
 
         Optional<Address> transactionDestination = receipt.getTransactionDestination();
         assertTrue(transactionDestination.isPresent());
@@ -491,7 +472,6 @@ public class RpcTest {
 
     @Test
     public void testGetTransactionReceiptFromContractDeploy() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -532,7 +512,7 @@ public class RpcTest {
         assertArrayEquals(transaction.getTransactionHash(), receipt.getTransactionHash());
         assertEquals(BigInteger.ONE, receipt.getBlockNumber());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
-        assertEquals(preminedAddress, receipt.getTransactionSender());
+        assertEquals(preminedPrivateKey.getAddress(), receipt.getTransactionSender());
         assertFalse(receipt.getTransactionDestination().isPresent());
 
         result = this.node.stop();
@@ -544,7 +524,6 @@ public class RpcTest {
 
     @Test
     public void testGetTransactionReceiptFromNonExistentReceiptHash() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -578,15 +557,9 @@ public class RpcTest {
      */
     @Test
     public void testSyncingToNetwork() throws IOException, InterruptedException {
-        NodeConfigurations configurations = new NodeConfigurationBuilder()
-            .network(Network.MAINNET)
-            .unconditionalBuild(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR)
-            .doNotPreserveDatabase()
-            .build();
+        this.node = TestHelper.configureDefaultLocalNodeForNetwork(Network.MAINNET);
+        assertTrue(this.node.initialize().isSuccess());
 
-        this.node.configure(configurations);
-
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -605,7 +578,6 @@ public class RpcTest {
 
     @Test
     public void testGetBlockByNumber() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -622,7 +594,6 @@ public class RpcTest {
 
     @Test
     public void testGetBlockByNumberWhenBlockDoesNotExist() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -662,31 +633,6 @@ public class RpcTest {
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return RawTransaction
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
-    }
-
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = this.node.initialize();
-        assertTrue(result.isSuccess());
-
-        // verify the node directory was created.
-        assertTrue(nodeDirectory.exists());
-        assertTrue(nodeDirectory.isDirectory());
-
-        // veirfy the node directory contains the aion directory.
-        File[] nodeDirectoryEntries = nodeDirectory.listFiles();
-        assertNotNull(nodeDirectoryEntries);
-        assertEquals(1, nodeDirectoryEntries.length);
-        assertEquals(kernelDirectory, nodeDirectoryEntries[0]);
-        assertTrue(nodeDirectoryEntries[0].isDirectory());
-    }
-
-    private static void deleteInitializationDirectories() throws IOException {
-        if (nodeDirectory.exists()) {
-            FileUtils.deleteDirectory(nodeDirectory);
-        }
-        if (kernelDirectory.exists()) {
-            FileUtils.deleteDirectory(kernelDirectory);
-        }
     }
 
     private static void deleteLogs() throws IOException {

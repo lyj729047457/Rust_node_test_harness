@@ -28,6 +28,7 @@ public final class JavaNode implements LocalNode {
     private final int ID;
 
     private NodeInitializer initializer;
+    private boolean isInitialized = false;
 
     // The running instance of the kernel.
     private Process runningKernel = null;
@@ -66,29 +67,27 @@ public final class JavaNode implements LocalNode {
 
     @Override
     public Result initializeVerbose() throws IOException, InterruptedException {
-        Result result = (this.configurations.isConditionalBuildSpecified())
-            ? this.initializer.doConditionalBuild(true)
-            : this.initializer.doUnconditionalBuild(true);
+        Result result = this.initializer.initializeJavaKernel(true);
 
         // If initialization was successful then set up the log files.
         if (result.isSuccess()) {
             result = this.logManager.setupLogFiles();
         }
 
+        this.isInitialized = true;
         return result;
     }
 
     @Override
     public Result initialize() throws IOException, InterruptedException {
-        Result result = (this.configurations.isConditionalBuildSpecified())
-            ? this.initializer.doConditionalBuild(false)
-            : this.initializer.doUnconditionalBuild(false);
+        Result result = this.initializer.initializeJavaKernel(false);
 
         // If initialization was successful then set up the log files.
         if (result.isSuccess()) {
             result = this.logManager.setupLogFiles();
         }
 
+        this.isInitialized = true;
         return result;
     }
 
@@ -105,15 +104,14 @@ public final class JavaNode implements LocalNode {
         if (isAlive()) {
             throw new IllegalStateException("there is already a kernel running.");
         }
-
-        if (!NodeFileManager.getKernelDirectory().exists()) {
-            throw new IllegalStateException("there is no kernel directory!");
+        if (!this.isInitialized) {
+            throw new IllegalStateException("This node has not been initialized yet!");
         }
 
         System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
 
         ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
-            .directory(NodeFileManager.getKernelDirectory());
+            .directory(this.configurations.getActualBuildLocation());
 
         File outputLog = this.logManager.getCurrentOutputLogFile();
 
@@ -134,10 +132,7 @@ public final class JavaNode implements LocalNode {
      * Stops the node if it is currently running.
      */
     @Override
-    public Result stop() throws InterruptedException {
-        if (this.configurations == null) {
-            throw new IllegalStateException("Node has not been configured yet! Cannot stop kernel.");
-        }
+    public Result stop() throws IOException, InterruptedException {
 
         Result result;
 
@@ -157,13 +152,15 @@ public final class JavaNode implements LocalNode {
             result = Result.unsuccessfulDueTo("Node is not currently alive!");
         }
 
-        // Finds the kernel and kills it (above we are killing the aion.sh script,
-        // which is not guaranteed to kill the kernel). We find these processes because we know the
-        // directory of the executable, so we can hunt it down precisely.
-        String executableDir = NodeFileManager.getDirectoryOfExecutableKernel().getAbsolutePath();
-        ProcessHandle.allProcesses()
-            .filter(process -> process.info().command().toString().contains(executableDir))
-            .forEach(kernel -> kernel.destroy());
+        if (this.isInitialized) {
+            // Finds the kernel and kills it (above we are killing the aion.sh script,
+            // which is not guaranteed to kill the kernel). We find these processes because we know the
+            // directory of the executable, so we can hunt it down precisely.
+            String executableDir = NodeFileManager.getExecutableDirectoryOf(this.configurations.getActualBuildLocation());
+            ProcessHandle.allProcesses()
+                .filter(process -> process.info().command().toString().contains(executableDir))
+                .forEach(kernel -> kernel.destroy());
+        }
 
         return result;
     }
@@ -189,9 +186,8 @@ public final class JavaNode implements LocalNode {
         if (isAlive()){
             throw new IllegalStateException("Cannot reset state while the node is running.");
         }
-
-        if (!NodeFileManager.getKernelDirectory().exists()) {
-            throw new IllegalStateException("there is no kernel directory!");
+        if (!this.isInitialized) {
+            throw new IllegalStateException("Node has not been initialized yet!");
         }
 
         System.out.println(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");

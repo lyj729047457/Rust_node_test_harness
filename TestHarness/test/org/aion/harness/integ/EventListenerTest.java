@@ -1,16 +1,13 @@
 package org.aion.harness.integ;
 
-import java.io.File;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.aion.harness.integ.resources.TarFileFinder;
+import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.util.NodeConfigurationBuilder;
-import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -24,8 +21,9 @@ import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.Assert;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,47 +32,40 @@ import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class EventListenerTest {
-    private static File nodeDirectory = new File(NodeFileManager.getSandboxPath());
-    private static File kernelDirectory = NodeFileManager.getKernelDirectory();
     private static Address destination;
     private static PrivateKey preminedPrivateKey;
-    private static String ip = "127.0.0.1";
-    private static String port = "8545";
 
-    private RPC rpc;
     private LocalNode node;
+    private RPC rpc;
 
     @Before
-    public void setup() throws IOException, DecoderException, InvalidKeySpecException {
+    public void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
-        deleteInitializationDirectories();
-        this.node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
 
-        File packDir = TarFileFinder.getPackDirectory(NodeConfigurationBuilder.DEFAULT_KERNEL_SOURCE_DIR);
-        String builtKernel = packDir.getAbsolutePath() + File.separator + "javaKernel.tar.bz2";
+        this.node = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
+        this.rpc = new RPC("127.0.0.1", "8545");
 
-        this.node.configure(NodeConfigurationBuilder.defaultConditionalBuildConfigurations(builtKernel,false));
-        this.rpc = new RPC(ip, port);
+        assertTrue(this.node.initialize().isSuccess());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException, InterruptedException {
         shutdownNodeIfRunning();
-        deleteInitializationDirectories();
-        deleteLogs();
         this.node = null;
         this.rpc = null;
     }
 
+    @AfterClass
+    public static void tearDownAfterAllTests() throws IOException {
+        deleteLogs();
+    }
+
     @Test
     public void testWaitForMinersToStart() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
-
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -239,7 +230,6 @@ public class EventListenerTest {
 
     @Test
     public void testFutureResultBlocksOnGet() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -267,7 +257,6 @@ public class EventListenerTest {
 
     @Test
     public void testListenForDoesNotBlock() throws IOException, InterruptedException {
-        initializeNodeWithChecks();
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
@@ -301,31 +290,6 @@ public class EventListenerTest {
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return RawTransaction
             .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
-    }
-
-    private void initializeNodeWithChecks() throws IOException, InterruptedException {
-        Result result = this.node.initialize();
-        assertTrue(result.isSuccess());
-
-        // verify the node directory was created.
-        assertTrue(nodeDirectory.exists());
-        assertTrue(nodeDirectory.isDirectory());
-
-        // veirfy the node directory contains the aion directory.
-        File[] nodeDirectoryEntries = nodeDirectory.listFiles();
-        assertNotNull(nodeDirectoryEntries);
-        assertEquals(1, nodeDirectoryEntries.length);
-        assertEquals(kernelDirectory, nodeDirectoryEntries[0]);
-        assertTrue(nodeDirectoryEntries[0].isDirectory());
-    }
-
-    private static void deleteInitializationDirectories() throws IOException {
-        if (nodeDirectory.exists()) {
-            FileUtils.deleteDirectory(nodeDirectory);
-        }
-        if (kernelDirectory.exists()) {
-            FileUtils.deleteDirectory(kernelDirectory);
-        }
     }
 
     private static void deleteLogs() throws IOException {
