@@ -97,7 +97,7 @@ public class BulkBalanceTransferTest {
 
     @AfterClass
     public static void tearDownAfterAllTests() throws IOException {
-        destroyLogs();
+        //destroyLogs();
     }
 
     @Test
