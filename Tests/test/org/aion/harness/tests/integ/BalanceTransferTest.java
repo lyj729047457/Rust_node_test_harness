@@ -39,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -61,7 +62,7 @@ public class BalanceTransferTest {
 
         this.preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
 
-        NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.AVMTESTNET, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
+        NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
 
         this.node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
         this.node.configure(configurations);
