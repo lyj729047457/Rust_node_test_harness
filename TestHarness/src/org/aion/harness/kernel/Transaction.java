@@ -12,15 +12,22 @@ import org.apache.commons.codec.binary.Hex;
  */
 public class Transaction {
     private final Address to;
+    private final byte[] data;
 
     /** Constructor */
-    public Transaction(Address to) {
+    public Transaction(Address to, byte[] data) {
         this.to = to;
+        this.data = data;
     }
 
     /** @return <code>to</code> field of transaction */
     public Address getTo() {
         return to;
+    }
+
+    /** @return <code>data</code> field of transaction */
+    public byte[] getData() {
+        return data;
     }
 
     /**
@@ -32,9 +39,12 @@ public class Transaction {
      * that instead.
      */
     public String jsonString() {
-        return String.format(
-            "{\"to\" : \"%s\"}",
-            Hex.encodeHexString(getTo().getAddressBytes())
+        return String.format("{"
+                + "\"to\" : \"%s\","
+                + "\"data\" : \"%s\""
+                + "}",
+            Hex.encodeHexString(getTo().getAddressBytes()),
+            getData() != null? Hex.encodeHexString(getData()) : "null"
         );
     }
 }
