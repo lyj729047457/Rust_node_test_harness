@@ -1,7 +1,5 @@
 package org.aion.harness.main.tools;
 
-import com.google.gson.JsonObject;
-
 /**
  * A class that holds the payload for an RPC call. The payload for an RPC call is simply the data
  * to that call (following the --data option).
@@ -11,7 +9,7 @@ import com.google.gson.JsonObject;
  *
  * An rpc payload is immutable.
  */
-public class RpcPayload {
+public final class RpcPayload {
     public final String payload;
 
     public RpcPayload(String payload) {
