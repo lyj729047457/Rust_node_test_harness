@@ -16,7 +16,9 @@ public enum RpcMethod {
 
     IS_SYNCED("eth_syncing"),
 
-    GET_NONCE("eth_getTransactionCount");
+    GET_NONCE("eth_getTransactionCount"),
+
+    CALL("eth_call");
 
     private String method;
 

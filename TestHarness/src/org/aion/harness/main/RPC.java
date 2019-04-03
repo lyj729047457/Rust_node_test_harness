@@ -1,5 +1,6 @@
 package org.aion.harness.main;
 
+import com.google.gson.JsonParser;
 import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
@@ -38,6 +40,33 @@ public final class RPC {
 
     public RPC(String ip, String port) {
         this.rpc = new RpcCaller(ip, port);
+    }
+
+    /**
+     * Perform <code>eth_call</code> RPC method (synchronous).
+     *
+     * @param tx transaction to call
+     * @return the bytes returned by the <code>eth_call</code>
+     */
+    public byte[] call(Transaction tx) throws InterruptedException {
+        RpcPayload payload = new RpcPayload(String.format(
+            "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[%s,\"latest\"],\"id\":1}",
+            tx.jsonString()
+        ));
+
+        System.out.println("-->" + payload.payload);
+        InternalRpcResult response = rpc.call(payload, false);
+        System.out.println("<--" + response.output);
+
+
+        String rpcResult = new JsonParser().
+            parse(response.output).getAsJsonObject().get("result").getAsString();
+        try {
+            String resultHex = rpcResult.replace("0x", "");
+            return Hex.decodeHex(resultHex);
+        } catch (DecoderException dx) {
+            throw new IllegalStateException("eth_call result from kernel could not be hex decoded.  result was:" + rpcResult);
+        }
     }
 
     /**

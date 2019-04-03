@@ -49,7 +49,7 @@ public final class RpcPayloadBuilder {
     }
 
     /**
-     * Builds the RPC payload.
+     * Builds the RPC payload
      *
      * @return an rpc payload.
      */
