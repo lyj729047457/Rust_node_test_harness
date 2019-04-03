@@ -91,7 +91,7 @@ public class BalanceTransferTest {
 
     @AfterClass
     public static void tearDownAfterAllTests() throws IOException {
-        destroyLogs();
+        //destroyLogs();
     }
 
     /**
