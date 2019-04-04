@@ -32,13 +32,16 @@ import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
+import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.ByteArrayHolder;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -52,35 +55,36 @@ public class AvmTxSmokeTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
-    private LocalNode node;
-    private RPC rpc;
-    private NodeListener listener;
-    private PrivateKey preminedPrivateKey;
+    private static LocalNode node;
+    private static RPC rpc;
+    private static NodeListener listener;
+    private static PrivateKey preminedPrivateKey;
 
-    @Before
-    public void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
-        this.preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
+        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
 
         NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
 
-        this.node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        this.node.configure(configurations);
+        node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
+        node.configure(configurations);
+        Result result = node.initialize();
+        System.out.println(result);
+        assertTrue(result.isSuccess());
+        assertTrue(node.start().isSuccess());
+        assertTrue(node.isAlive());
 
-        assertTrue(this.node.initialize().isSuccess());
-        assertTrue(this.node.start().isSuccess());
-        assertTrue(this.node.isAlive());
-
-        this.rpc = new RPC("127.0.0.1", "8545");
-        this.listener = NodeListener.listenTo(this.node);
+        rpc = new RPC("127.0.0.1", "8545");
+        listener = NodeListener.listenTo(node);
     }
 
-    @After
-    public void tearDown() throws IOException, InterruptedException {
-        assertTrue(this.node.stop().isSuccess());
-        assertFalse(this.node.isAlive());
-        this.node = null;
-        this.rpc = null;
-        this.listener = null;
+    @AfterClass
+    public static void tearDown() throws IOException, InterruptedException {
+        assertTrue(node.stop().isSuccess());
+        assertFalse(node.isAlive());
+        node = null;
+        rpc = null;
+        listener = null;
 
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.

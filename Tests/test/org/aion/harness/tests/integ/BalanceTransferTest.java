@@ -36,9 +36,8 @@ import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -50,48 +49,48 @@ public class BalanceTransferTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
-    private LocalNode node;
-    private RPC rpc;
-    private NodeListener listener;
-    private PrivateKey preminedPrivateKey;
+    private static LocalNode node;
+    private static RPC rpc;
+    private static NodeListener listener;
+    private static PrivateKey preminedPrivateKey;
 
-    @Before
-    public void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
         disclaimer();
 
-        this.preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
+        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
 
         NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
 
-        this.node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        this.node.configure(configurations);
-        Result result = this.node.initialize();
+        node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
+        node.configure(configurations);
+        Result result = node.initialize();
         System.out.println(result);
         assertTrue(result.isSuccess());
-        assertTrue(this.node.start().isSuccess());
-        assertTrue(this.node.isAlive());
+        assertTrue(node.start().isSuccess());
+        assertTrue(node.isAlive());
 
-        this.rpc = new RPC("127.0.0.1", "8545");
-        this.listener = NodeListener.listenTo(this.node);
+        rpc = new RPC("127.0.0.1", "8545");
+        listener = NodeListener.listenTo(node);
     }
 
-    @After
-    public void tearDown() throws IOException, InterruptedException {
-        assertTrue(this.node.stop().isSuccess());
-        assertFalse(this.node.isAlive());
-        this.node = null;
-        this.rpc = null;
-        this.listener = null;
+    @AfterClass
+    public static void tearDown() throws IOException, InterruptedException {
+        assertTrue(node.stop().isSuccess());
+        assertFalse(node.isAlive());
+        node = null;
+        rpc = null;
+        listener = null;
 
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     }
 
-    @AfterClass
-    public static void tearDownAfterAllTests() throws IOException {
-        //destroyLogs();
-    }
+//    @AfterClass
+//    public static void tearDownAfterAllTests() throws IOException {
+//        //destroyLogs();
+//    }
 
     /**
      * Tests making a CREATE transaction in which funds are transferred as well.
@@ -251,13 +250,13 @@ public class BalanceTransferTest {
     }
 
     private BigInteger getPreminedBalance() throws InterruptedException {
-        RpcResult<BigInteger> balanceResult = this.rpc.getBalance(this.preminedPrivateKey.getAddress());
+        RpcResult<BigInteger> balanceResult = rpc.getBalance(preminedPrivateKey.getAddress());
         assertTrue(balanceResult.isSuccess());
         return balanceResult.getResult();
     }
 
     private BigInteger getBalance(Address address) throws InterruptedException {
-        RpcResult<BigInteger> balanceResult = this.rpc.getBalance(address);
+        RpcResult<BigInteger> balanceResult = rpc.getBalance(address);
         assertTrue(balanceResult.isSuccess());
         return balanceResult.getResult();
     }
@@ -267,11 +266,11 @@ public class BalanceTransferTest {
         IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
         IEvent contractPrintln = new Event("I'm a pretty dull contract.");
         IEvent event = Event.and(transactionIsSealed, contractPrintln);
-        FutureResult<LogEventResult> future = this.listener.listenForEvent(event, 5, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> future = listener.listenForEvent(event, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
         System.out.println("Sending the avm call transaction...");
-        RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -282,7 +281,7 @@ public class BalanceTransferTest {
 
         ReceiptHash hash = sendResult.getResult();
 
-        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(hash);
+        RpcResult<TransactionReceipt> receiptResult = rpc.getTransactionReceipt(hash);
         assertTrue(receiptResult.isSuccess());
         return receiptResult.getResult();
     }
@@ -290,11 +289,11 @@ public class BalanceTransferTest {
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> future = listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -305,14 +304,14 @@ public class BalanceTransferTest {
 
         ReceiptHash hash = sendResult.getResult();
 
-        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(hash);
+        RpcResult<TransactionReceipt> receiptResult = rpc.getTransactionReceipt(hash);
         assertTrue(receiptResult.isSuccess());
         return receiptResult.getResult();
     }
 
     private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignAvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             contract,
             new byte[]{ 0x1, 0x2, 0x3 }, // we give a non-empty array here so that we actually invoke the main method.
@@ -326,7 +325,7 @@ public class BalanceTransferTest {
 
     private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             account,
             new byte[0],
@@ -340,7 +339,7 @@ public class BalanceTransferTest {
 
     private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             contract,
             getPayableFunctionCallEncoding(),
@@ -354,7 +353,7 @@ public class BalanceTransferTest {
 
     private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             contract,
             getNonPayableFunctionCallEncoding(),
@@ -372,7 +371,7 @@ public class BalanceTransferTest {
 
     private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             null,
             getFvmContractBytes(),
@@ -390,7 +389,7 @@ public class BalanceTransferTest {
 
     private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignAvmTransaction(
-            this.preminedPrivateKey,
+            preminedPrivateKey,
             getNonce(),
             null,
             getAvmContractBytes(),
@@ -435,7 +434,7 @@ public class BalanceTransferTest {
     }
 
     private BigInteger getNonce() throws InterruptedException {
-        RpcResult<BigInteger> nonceResult = this.rpc.getNonce(this.preminedPrivateKey.getAddress());
+        RpcResult<BigInteger> nonceResult = rpc.getNonce(preminedPrivateKey.getAddress());
         assertTrue(nonceResult.isSuccess());
         return nonceResult.getResult();
     }
