@@ -39,7 +39,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -192,6 +191,7 @@ public class BalanceTransferTest {
      * avm contract.
      */
     @Test
+    @org.junit.Ignore // because avm contracts not yet enabled in master-pre-merge
     public void testTransferBalanceToAvmContractAfterCreation() throws InterruptedException {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(2_384_956));
 
