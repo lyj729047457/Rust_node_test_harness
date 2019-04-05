@@ -350,6 +350,7 @@ public final class TransactionReceiptBuilder {
         this.deployedContractAddress = null;
         this.sender = null;
         this.destination = null;
+        this.status = -1;
     }
 
 }
