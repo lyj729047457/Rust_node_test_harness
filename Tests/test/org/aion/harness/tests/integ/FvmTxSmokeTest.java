@@ -7,6 +7,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
@@ -35,6 +36,7 @@ import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -77,6 +79,7 @@ public class FvmTxSmokeTest {
         node = null;
         rpc = null;
         listener = null;
+        destroyLogs();
 
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.
@@ -220,4 +223,7 @@ public class FvmTxSmokeTest {
         return receiptResult.getResult();
     }
 
+    private static void destroyLogs() throws IOException {
+        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
+    }
 }

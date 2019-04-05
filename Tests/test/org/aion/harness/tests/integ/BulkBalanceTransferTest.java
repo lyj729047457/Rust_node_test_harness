@@ -95,6 +95,7 @@ public class BulkBalanceTransferTest {
         node = null;
         rpc = null;
         listener = null;
+        destroyLogs();
 
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.
