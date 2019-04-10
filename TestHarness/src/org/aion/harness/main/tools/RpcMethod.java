@@ -18,7 +18,7 @@ public enum RpcMethod {
 
     GET_NONCE("eth_getTransactionCount"),
 
-    CALL("eth_call");
+    BLOCK_NUMBER("eth_blockNumber");
 
     private String method;
 

@@ -69,6 +69,35 @@ public final class RPC {
         }
     }
 
+    public RpcResult<Long> blockNumber() throws InterruptedException {
+        RpcPayload payload = new RpcPayloadBuilder().method(RpcMethod.BLOCK_NUMBER).build();
+
+        System.out.println("-->" + payload.payload);
+        InternalRpcResult internalResult = rpc.call(payload, false);
+        System.out.println("<--" + internalResult.output);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+
+            // This should never happen.
+            if (result == null) {
+                throw new IllegalStateException("No 'result' content to parse from: " + internalResult.output);
+            }
+
+            String rpcResult = new JsonParser().
+                parse(internalResult.output).getAsJsonObject().get("result").getAsString();
+
+            return RpcResult.successful(
+                Long.parseLong(rpcResult, 10),
+                internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                TimeUnit.NANOSECONDS);
+
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
+    }
+
     /**
      * Sends the specified transactions to the node.
      *
