@@ -131,7 +131,7 @@ public class JavaApiSmokeTest {
         assertThat("block details has incorrect block number",
             blockDetails.get(1).getNumber(), is(b0 + 1));
         assertThat("block details has incorrect block number",
-            blockDetails.get(2).getNumber(), is(bn));
+            blockDetails.get(2).getNumber(), is(b2));
 
         BlockDetails b0Details = blockDetails.get(0);
         assertThat("block details has incorrect number of transactions",
