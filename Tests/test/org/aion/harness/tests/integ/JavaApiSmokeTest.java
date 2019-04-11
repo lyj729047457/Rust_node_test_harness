@@ -36,6 +36,7 @@ import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -48,6 +49,8 @@ public class JavaApiSmokeTest {
     private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
+
+    private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.JavaApiSmokeTest");
 
     private static LocalNode node;
     private static RPC rpc;
@@ -63,7 +66,7 @@ public class JavaApiSmokeTest {
         node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
         node.configure(configurations);
         Result result = node.initialize();
-        System.out.println(result);
+        log.log(result);
         assertTrue(result.isSuccess());
         assertTrue(node.start().isSuccess());
         assertTrue(node.isAlive());
@@ -93,7 +96,7 @@ public class JavaApiSmokeTest {
         int tries = 0;
 
         while(connectionMsg.isError() && tries++ <= 10) {
-            System.out.println("trying again after 3 sec");
+            log.log("trying again after 3 sec");
             connectionMsg = api.connect("tcp://localhost:8547");
         }
         if(connectionMsg.isError()) {
@@ -101,7 +104,7 @@ public class JavaApiSmokeTest {
         }
 
         // send a transaction that deploys a simple contract and loads it with some funds
-        System.out.println("Sending a transaction");
+        log.log("Sending a transaction");
         BigInteger amount = BigInteger.TEN.pow(13).add(BigInteger.valueOf(2_938_652));
         RawTransaction transaction = buildTransactionToCreateAndTransferToFvmContract(amount);
         TransactionReceipt createReceipt = sendTransaction(transaction);
@@ -113,13 +116,13 @@ public class JavaApiSmokeTest {
 
         // wait for two more blocks
         while(bn < b2) {
-            System.err.println("current block number = " + bn + "; waiting to reach block number " + b2);
+            log.log("current block number = " + bn + "; waiting to reach block number " + b2);
             TimeUnit.SECONDS.sleep(10); // expected block time
             bn = rpc.blockNumber().getResult();
         }
 
 
-        System.out.println(String.format("Calling getBlockDetailsByRange(%d, %d)", b0, b2));
+        log.log(String.format("Calling getBlockDetailsByRange(%d, %d)", b0, b2));
         ApiMsg blockDetailsMsg = api.getAdmin().getBlockDetailsByRange(b0, b2);
         assertThat(blockDetailsMsg.isError(), is(false));
 
@@ -154,15 +157,15 @@ public class JavaApiSmokeTest {
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        System.out.println("Sending the transaction...");
+        log.log("Sending the transaction...");
         RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        System.out.println("Waiting for the transaction to process...");
+        log.log("Waiting for the transaction to process...");
         LogEventResult listenResult = future.get();
         assertTrue(listenResult.eventWasObserved());
-        System.out.println("Transaction was sealed into a block.");
+        log.log("Transaction was sealed into a block.");
 
         ReceiptHash hash = sendResult.getResult();
 

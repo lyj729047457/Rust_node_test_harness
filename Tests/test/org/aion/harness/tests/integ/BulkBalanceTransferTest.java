@@ -43,6 +43,7 @@ import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.statistics.DurationStatistics;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -63,6 +64,8 @@ public class BulkBalanceTransferTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
+    private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.BulkBalanceTransferTest");
+
     private static LocalNode node;
     private static RPC rpc;
     private static NodeListener listener;
@@ -79,7 +82,7 @@ public class BulkBalanceTransferTest {
         node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
         node.configure(configurations);
         Result result = node.initialize();
-        System.out.println(result);
+        log.log(result);
         assertTrue(result.isSuccess());
         assertTrue(node.start().isSuccess());
         assertTrue(node.isAlive());
@@ -217,27 +220,27 @@ public class BulkBalanceTransferTest {
         List<FutureResult<LogEventResult>> futures = this.listener.listenForEvents(transactionIsSealedEvents, 30, TimeUnit.MINUTES);
 
         // Send the transactions off.
-        System.out.println("Sending the " + transactions.size() + " transactions...");
+        log.log("Sending the " + transactions.size() + " transactions...");
         List<RpcResult<ReceiptHash>> sendResults = this.rpc.sendTransactions(transactions);
         BulkResult<ReceiptHash> bulkHashes = TestHarnessHelper.extractRpcResults(sendResults);
         assertTrue(bulkHashes.isSuccess());
 
         // Wait on the futures to complete and ensure we saw the transactions get sealed.
-        System.out.println("Waiting for the transactions to process...");
+        log.log("Waiting for the transactions to process...");
         TestHarnessHelper.waitOnFutures(futures);
         BulkResult<LogEventResult> bulkEventResults = TestHarnessHelper.extractFutureResults(futures);
         assertTrue(bulkEventResults.isSuccess());
-        System.out.println("All transactions were sealed into blocks.");
+        log.log("All transactions were sealed into blocks.");
 
         List<ReceiptHash> hashes = bulkHashes.getResults();
 
-        System.out.println("Getting the transaction receipts...");
+        log.log("Getting the transaction receipts...");
         List<RpcResult<TransactionReceipt>> receiptResults = this.rpc.getTransactionReceipts(hashes);
-        System.out.println("Got all transaction receipts.");
+        log.log("Got all transaction receipts.");
         BulkResult<TransactionReceipt> bulkReceipts = TestHarnessHelper.extractRpcResults(receiptResults);
         assertTrue(bulkReceipts.isSuccess());
 
-        System.out.println("Some statistics...");
+        log.log("Some statistics...");
         DurationStatistics.from(sendResults, bulkEventResults.getResults()).printStatistics(10);
         return bulkReceipts.getResults();
     }

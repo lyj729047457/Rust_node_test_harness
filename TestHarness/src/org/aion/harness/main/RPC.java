@@ -24,6 +24,7 @@ import org.aion.harness.main.types.internal.TransactionReceiptBuilder;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
@@ -36,9 +37,11 @@ import org.apache.commons.codec.binary.Hex;
  * This class is not thread-safe.
  */
 public final class RPC {
+    private final SimpleLog log;
     private final RpcCaller rpc;
 
     public RPC(String ip, String port) {
+        this.log = new SimpleLog(getClass().getName());
         this.rpc = new RpcCaller(ip, port);
     }
 
@@ -54,9 +57,9 @@ public final class RPC {
             tx.jsonString()
         ));
 
-        System.out.println("-->" + payload.payload);
+        log.log("-->" + payload.payload);
         InternalRpcResult response = rpc.call(payload, false);
-        System.out.println("<--" + response.output);
+        log.log("<--" + response.output);
 
 
         String rpcResult = new JsonParser().
@@ -72,9 +75,9 @@ public final class RPC {
     public RpcResult<Long> blockNumber() throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder().method(RpcMethod.BLOCK_NUMBER).build();
 
-        System.out.println("-->" + payload.payload);
+        log.log("-->" + payload.payload);
         InternalRpcResult internalResult = rpc.call(payload, false);
-        System.out.println("<--" + internalResult.output);
+        log.log("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -575,9 +578,9 @@ public final class RPC {
 
     private void broadcastSyncUpdate(boolean waitingToConnect, BigInteger currentBlock, BigInteger highestBlock) {
         if (waitingToConnect) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
+            log.log(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
         } else {
-            System.out.println(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
+            log.log(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
                 + NumberFormat.getIntegerInstance().format(currentBlock)
                 + " of " + NumberFormat.getIntegerInstance().format(highestBlock) + " }");
         }

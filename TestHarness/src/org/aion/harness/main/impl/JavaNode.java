@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
  * A JavaNode is not thread-safe.
  */
 public final class JavaNode implements LocalNode {
+    private final SimpleLog log;
     private NodeConfigurations configurations = null;
     private LogReader logReader;
     private LogManager logManager;
@@ -34,6 +35,7 @@ public final class JavaNode implements LocalNode {
     private Process runningKernel = null;
 
     public JavaNode() {
+        this.log = new SimpleLog(getClass().getName());
         this.logReader = new LogReader();
         this.logManager = new LogManager();
         this.ID = SingletonFactory.singleton().nodeWatcher().addReader(this.logReader);
@@ -108,7 +110,7 @@ public final class JavaNode implements LocalNode {
             throw new IllegalStateException("This node has not been initialized yet!");
         }
 
-        System.out.println(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
+        log.log(Assumptions.LOGGER_BANNER + "Starting Java kernel node...");
 
         ProcessBuilder builder = new ProcessBuilder("./aion.sh", "-n", this.configurations.getNetwork().string())
             .directory(this.configurations.getActualBuildLocation());
@@ -137,7 +139,7 @@ public final class JavaNode implements LocalNode {
         Result result;
 
         if (isAlive()) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Stopping Java kernel node...");
+            log.log(Assumptions.LOGGER_BANNER + "Stopping Java kernel node...");
 
             this.runningKernel.destroy();
             boolean shutdown = this.runningKernel.waitFor(1, TimeUnit.MINUTES);
@@ -146,7 +148,7 @@ public final class JavaNode implements LocalNode {
 
             result = (shutdown) ? Result.successful() : Result.unsuccessfulDueTo("Timed out waiting for node to shut down!");
 
-            System.out.println(Assumptions.LOGGER_BANNER + "Java kernel node stopped.");
+            log.log(Assumptions.LOGGER_BANNER + "Java kernel node stopped.");
 
         } else {
             result = Result.unsuccessfulDueTo("Node is not currently alive!");
@@ -190,7 +192,7 @@ public final class JavaNode implements LocalNode {
             throw new IllegalStateException("Node has not been initialized yet!");
         }
 
-        System.out.println(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");
+        log.log(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");
 
         File database = this.configurations.getDatabase();
         if (database.exists()) {

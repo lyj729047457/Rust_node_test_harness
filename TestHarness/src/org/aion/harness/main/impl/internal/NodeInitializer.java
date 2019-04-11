@@ -7,6 +7,7 @@ import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -14,9 +15,11 @@ import org.apache.commons.io.FileUtils;
  * usage).
  */
 public final class NodeInitializer {
+    private final SimpleLog log;
     private final NodeConfigurations configurations;
 
     public NodeInitializer(NodeConfigurations configurations) {
+        log = new SimpleLog(getClass().getName());
         if (configurations == null) {
             throw new NullPointerException("Cannot construct NodeInitializer with null configurations.");
         }
@@ -107,7 +110,7 @@ public final class NodeInitializer {
      * @return the result of this build attempt.
      */
     private Result buildJavaKernel(boolean verbose) throws IOException, InterruptedException {
-        System.out.println(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
+        log.log(Assumptions.LOGGER_BANNER + "Building the Java kernel from source...");
 
         File sourceDirectory = this.configurations.getKernelSourceDirectory();
         if (!sourceDirectory.exists()) {
@@ -118,8 +121,8 @@ public final class NodeInitializer {
         }
 
         if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
-            System.out.println(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: " + sourceDirectory);
+            log.log(Assumptions.LOGGER_BANNER + "Building Java Kernel from command: ./gradlew clean pack");
+            log.log(Assumptions.LOGGER_BANNER + "Building Java Kernel at location: " + sourceDirectory);
         }
 
         ProcessBuilder builder = new ProcessBuilder("./gradlew", "clean", "pack")
@@ -135,9 +138,9 @@ public final class NodeInitializer {
     }
 
     private Result extractTarFile(boolean verbose) throws IOException, InterruptedException {
-        System.out.println(Assumptions.LOGGER_BANNER + "Extracting the built kernel...");
+        log.log(Assumptions.LOGGER_BANNER + "Extracting the built kernel...");
         if (verbose) {
-            System.out.println(Assumptions.LOGGER_BANNER + "Extracting contents of Java Kernel tar.bz2 file using command: tar xvjf");
+            log.log(Assumptions.LOGGER_BANNER + "Extracting contents of Java Kernel tar.bz2 file using command: tar xvjf");
         }
 
         File temporaryTarFile = NodeFileManager.getTemporaryTarFile();

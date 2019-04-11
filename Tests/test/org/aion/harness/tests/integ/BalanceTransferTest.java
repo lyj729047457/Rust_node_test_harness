@@ -33,6 +33,7 @@ import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -50,6 +51,8 @@ public class BalanceTransferTest {
     private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
+
+    private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.BalanceTransferTest");
 
     private static LocalNode node;
     private static RPC rpc;
@@ -70,7 +73,7 @@ public class BalanceTransferTest {
         node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
         node.configure(configurations);
         Result result = node.initialize();
-        System.out.println(result);
+        log.log(result);
         assertTrue(result.isSuccess());
         assertTrue(node.start().isSuccess());
         assertTrue(node.isAlive());
@@ -127,7 +130,7 @@ public class BalanceTransferTest {
         BigInteger amount = BigInteger.TEN.pow(11).add(BigInteger.valueOf(237_645));
 
         // Build and send the transaction off, grab its receipt.
-        System.out.println("Creating the fvm contract...");
+        log.log("Creating the fvm contract...");
         RawTransaction transaction = buildTransactionToCreateFvmContract();
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
@@ -137,7 +140,7 @@ public class BalanceTransferTest {
         BigInteger originalBalance = getPreminedBalance();
 
         // Attempt to transfer funds to a non-payable function in the contract.
-        System.out.println("Attempting to transfer funds to the contract...");
+        log.log("Attempting to transfer funds to the contract...");
         transaction = buildTransactionToTransferFundsToNonPayableFunction(contract, amount);
         TransactionReceipt transferReceipt = sendTransaction(transaction);
 
@@ -149,7 +152,7 @@ public class BalanceTransferTest {
         assertEquals(BigInteger.ZERO, getBalance(contract));
 
         // Now attempt to transfer funds to a payable function in the contract.
-        System.out.println("Using correct (payable) method to transfer funds...");
+        log.log("Using correct (payable) method to transfer funds...");
         transaction = buildTransactionToTransferFundsToPayableFunction(contract, amount);
         transferReceipt = sendTransaction(transaction);
 
@@ -170,7 +173,7 @@ public class BalanceTransferTest {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(298_365_712));
 
-        System.out.println("Creating the avm contract...");
+        log.log("Creating the avm contract...");
         RawTransaction transaction = buildTransactionToCreateAndTransferToAvmContract(amount);
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
@@ -196,7 +199,7 @@ public class BalanceTransferTest {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(2_384_956));
 
         // Create the contract.
-        System.out.println("Creating the avm contract...");
+        log.log("Creating the avm contract...");
         RawTransaction transaction = buildTransactionToCreateAvmContract();
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
@@ -204,7 +207,7 @@ public class BalanceTransferTest {
         Address contract = createReceipt.getAddressOfDeployedContract().get();
 
         // Now transfer funds to the contract.
-        System.out.println("Transferring funds to the contract...");
+        log.log("Transferring funds to the contract...");
         BigInteger originalBalance = getPreminedBalance();
         transaction = buildTransactionToTransferFundsToAvmContract(contract, amount);
         TransactionReceipt transferReceipt = sendCallToAvmContract(transaction);
@@ -231,7 +234,7 @@ public class BalanceTransferTest {
         Address regularAccount = PrivateKey.random().getAddress();
 
         // Transfer the funds.
-        System.out.println("Transferring funds to the account...");
+        log.log("Transferring funds to the account...");
         RawTransaction transaction = buildTransactionToTransferFundsToAccount(regularAccount, amount);
         TransactionReceipt transferReceipt = sendTransaction(transaction);
 
@@ -270,15 +273,15 @@ public class BalanceTransferTest {
         FutureResult<LogEventResult> future = listener.listenForEvent(event, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        System.out.println("Sending the avm call transaction...");
+        log.log("Sending the avm call transaction...");
         RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        System.out.println("Waiting for the avm call transaction to process...");
+        log.log("Waiting for the avm call transaction to process...");
         LogEventResult listenResult = future.get();
         assertTrue(listenResult.eventWasObserved());
-        System.out.println("Transaction was sealed into a block & we observed the println statement.");
+        log.log("Transaction was sealed into a block & we observed the println statement.");
 
         ReceiptHash hash = sendResult.getResult();
 
@@ -293,15 +296,15 @@ public class BalanceTransferTest {
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        System.out.println("Sending the transaction...");
+        log.log("Sending the transaction...");
         RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        System.out.println("Waiting for the transaction to process...");
+        log.log("Waiting for the transaction to process...");
         LogEventResult listenResult = future.get();
         assertTrue(listenResult.eventWasObserved());
-        System.out.println("Transaction was sealed into a block.");
+        log.log("Transaction was sealed into a block.");
 
         ReceiptHash hash = sendResult.getResult();
 

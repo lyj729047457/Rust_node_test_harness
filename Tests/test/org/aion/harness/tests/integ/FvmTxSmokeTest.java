@@ -34,6 +34,7 @@ import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
+import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -50,6 +51,8 @@ public class FvmTxSmokeTest {
     private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
+
+    private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.FvmTxSmokeTest");
 
     private static LocalNode node;
     private static RPC rpc;
@@ -68,7 +71,7 @@ public class FvmTxSmokeTest {
         node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
         node.configure(configurations);
         Result result = node.initialize();
-        System.out.println(result);
+        log.log(result);
         assertTrue(result.isSuccess());
         assertTrue(node.start().isSuccess());
         assertTrue(node.isAlive());
@@ -211,15 +214,15 @@ public class FvmTxSmokeTest {
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        System.out.println("Sending the transaction...");
+        log.log("Sending the transaction...");
         RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
         assertTrue(sendResult.isSuccess());
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        System.out.println("Waiting for the transaction to process...");
+        log.log("Waiting for the transaction to process...");
         LogEventResult listenResult = future.get();
         assertTrue(listenResult.eventWasObserved());
-        System.out.println("Transaction was sealed into a block.");
+        log.log("Transaction was sealed into a block.");
 
         ReceiptHash hash = sendResult.getResult();
 
