@@ -108,17 +108,19 @@ public class JavaApiSmokeTest {
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
         final long b0 = createReceipt.getBlockNumber().longValue();
+        final long b2 = b0 + 2;
         long bn = b0;
 
         // wait for two more blocks
-        while(bn < b0 + 2) {
-            System.err.println("current block number = " + bn + "; waiting to reach block number " + (b0 + 2));
+        while(bn < b2) {
+            System.err.println("current block number = " + bn + "; waiting to reach block number " + b2);
             TimeUnit.SECONDS.sleep(10); // expected block time
             bn = rpc.blockNumber().getResult();
         }
 
-        System.out.println(String.format("Calling getBlockDetailsByRange(%d, %d)", b0, bn));
-        ApiMsg blockDetailsMsg = api.getAdmin().getBlockDetailsByRange(b0, bn);
+
+        System.out.println(String.format("Calling getBlockDetailsByRange(%d, %d)", b0, b2));
+        ApiMsg blockDetailsMsg = api.getAdmin().getBlockDetailsByRange(b0, b2);
         assertThat(blockDetailsMsg.isError(), is(false));
 
         List<BlockDetails> blockDetails = blockDetailsMsg.getObject();
@@ -138,7 +140,6 @@ public class JavaApiSmokeTest {
             b0Details.getTxDetails().get(0).getContract(), is(not(nullValue())));
         assertThat("block details' tx details incorrect value",
             b0Details.getTxDetails().get(0).getValue().equals(amount), is(true));
-
     }
 
     private BigInteger getNonce() throws InterruptedException {
