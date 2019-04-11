@@ -38,7 +38,9 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 /**
  * This test uses an avmtestnet build.
@@ -53,6 +55,9 @@ public class BalanceTransferTest {
     private static RPC rpc;
     private static NodeListener listener;
     private static PrivateKey preminedPrivateKey;
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(200);
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {

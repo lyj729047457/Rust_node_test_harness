@@ -41,7 +41,9 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class FvmTxSmokeTest {
     private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";
@@ -53,6 +55,9 @@ public class FvmTxSmokeTest {
     private static RPC rpc;
     private static NodeListener listener;
     private static PrivateKey preminedPrivateKey;
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(200);
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
