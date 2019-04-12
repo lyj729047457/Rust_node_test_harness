@@ -633,7 +633,9 @@ public final class RPC {
             .useLatestBlock()
             .build();
 
+        log.log("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        log.log("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
