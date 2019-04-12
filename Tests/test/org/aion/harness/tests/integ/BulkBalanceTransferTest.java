@@ -1,5 +1,6 @@
 package org.aion.harness.tests.integ;
 
+import static org.aion.harness.util.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -263,13 +264,13 @@ public class BulkBalanceTransferTest {
 
     private BigInteger getNonce(Address address) throws InterruptedException {
         RpcResult<BigInteger> nonceResult = this.rpc.getNonce(address);
-        assertTrue(nonceResult.isSuccess());
+        assertRpcSuccess(nonceResult);
         return nonceResult.getResult();
     }
 
     private BigInteger getBalance(Address address) throws InterruptedException {
         RpcResult<BigInteger> balanceResult = this.rpc.getBalance(address);
-        assertTrue(balanceResult.isSuccess());
+        assertRpcSuccess(balanceResult);
         return balanceResult.getResult();
     }
 

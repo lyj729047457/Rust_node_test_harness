@@ -1,5 +1,6 @@
 package org.aion.harness.tests.integ;
 
+import static org.aion.harness.util.Assertions.assertRpcSuccess;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.not;
@@ -165,7 +166,7 @@ public class AvmTxSmokeTest {
 
     private BigInteger getNonce() throws InterruptedException {
         RpcResult<BigInteger> nonceResult = this.rpc.getNonce(this.preminedPrivateKey.getAddress());
-        assertTrue(nonceResult.isSuccess());
+        assertRpcSuccess(nonceResult);
         return nonceResult.getResult();
     }
 
@@ -177,7 +178,7 @@ public class AvmTxSmokeTest {
         // Send the transaction off.
         log.log("Sending the transaction...");
         RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
-        assertTrue(sendResult.isSuccess());
+        assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the transaction to process...");
@@ -188,7 +189,7 @@ public class AvmTxSmokeTest {
         ReceiptHash hash = sendResult.getResult();
 
         RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(hash);
-        assertTrue(receiptResult.isSuccess());
+        assertRpcSuccess(receiptResult);
         return receiptResult.getResult();
     }
 

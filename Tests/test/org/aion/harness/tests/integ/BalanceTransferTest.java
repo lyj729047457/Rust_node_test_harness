@@ -1,5 +1,6 @@
 package org.aion.harness.tests.integ;
 
+import static org.aion.harness.util.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
+import org.aion.harness.util.Assertions;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -255,13 +257,13 @@ public class BalanceTransferTest {
 
     private BigInteger getPreminedBalance() throws InterruptedException {
         RpcResult<BigInteger> balanceResult = rpc.getBalance(preminedPrivateKey.getAddress());
-        assertTrue(balanceResult.isSuccess());
+        assertRpcSuccess(balanceResult);
         return balanceResult.getResult();
     }
 
     private BigInteger getBalance(Address address) throws InterruptedException {
         RpcResult<BigInteger> balanceResult = rpc.getBalance(address);
-        assertTrue(balanceResult.isSuccess());
+        assertRpcSuccess(balanceResult);
         return balanceResult.getResult();
     }
 
@@ -275,7 +277,7 @@ public class BalanceTransferTest {
         // Send the transaction off.
         log.log("Sending the avm call transaction...");
         RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
-        assertTrue(sendResult.isSuccess());
+        assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the avm call transaction to process...");
@@ -286,7 +288,7 @@ public class BalanceTransferTest {
         ReceiptHash hash = sendResult.getResult();
 
         RpcResult<TransactionReceipt> receiptResult = rpc.getTransactionReceipt(hash);
-        assertTrue(receiptResult.isSuccess());
+        assertRpcSuccess(receiptResult);
         return receiptResult.getResult();
     }
 
@@ -298,7 +300,7 @@ public class BalanceTransferTest {
         // Send the transaction off.
         log.log("Sending the transaction...");
         RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
-        assertTrue(sendResult.isSuccess());
+        assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the transaction to process...");
@@ -309,7 +311,7 @@ public class BalanceTransferTest {
         ReceiptHash hash = sendResult.getResult();
 
         RpcResult<TransactionReceipt> receiptResult = rpc.getTransactionReceipt(hash);
-        assertTrue(receiptResult.isSuccess());
+        assertRpcSuccess(receiptResult);
         return receiptResult.getResult();
     }
 
@@ -439,7 +441,7 @@ public class BalanceTransferTest {
 
     private BigInteger getNonce() throws InterruptedException {
         RpcResult<BigInteger> nonceResult = rpc.getNonce(preminedPrivateKey.getAddress());
-        assertTrue(nonceResult.isSuccess());
+        assertRpcSuccess(nonceResult);
         return nonceResult.getResult();
     }
 
