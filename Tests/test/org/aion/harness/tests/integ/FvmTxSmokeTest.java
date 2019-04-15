@@ -39,9 +39,7 @@ import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,17 +72,17 @@ public class FvmTxSmokeTest {
         Result result = node.initialize();
         log.log(result);
         assertTrue(result.isSuccess());
-        assertTrue(node.start().isSuccess());
+        Result startResult = node.start();
+        assertTrue("Kernel startup error: " + startResult.getError(),
+            startResult.isSuccess());
         assertTrue(node.isAlive());
-
         rpc = new RPC("127.0.0.1", "8545");
         listener = NodeListener.listenTo(node);
     }
 
     @AfterClass
     public static void tearDown() throws IOException, InterruptedException {
-        assertTrue(node.stop().isSuccess());
-        assertFalse(node.isAlive());
+        System.out.println("Node stop: " + node.stop());
         node = null;
         rpc = null;
         listener = null;

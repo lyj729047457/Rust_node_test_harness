@@ -1,14 +1,21 @@
 package org.aion.harness.main.impl;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.event.OrEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.main.impl.internal.NodeInitializer;
 import org.aion.harness.misc.Assumptions;
+import org.aion.harness.result.FutureResult;
+import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.*;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +47,11 @@ public final class JavaNode implements LocalNode {
         this.logManager = new LogManager();
         this.ID = SingletonFactory.singleton().nodeWatcher().addReader(this.logReader);
     }
+
+    private final Set<String> STARTUP_ERRORS = Set.of(
+        "Shutdown due to failure to initialize repository",
+        "Address already in use"
+    );
 
     @Override
     public int getID() {
@@ -127,7 +139,7 @@ public final class JavaNode implements LocalNode {
 
         this.runningKernel = builder.start();
 
-        return waitForRpcServerToStart(outputLog);
+        return waitForRpcReadyOrError(outputLog);
     }
 
     /**
@@ -215,9 +227,9 @@ public final class JavaNode implements LocalNode {
     }
 
     /**
-     * Waits for the RPC server to start before returning.
+     * Block until logs indicate that either RPC server started or an error happened
      */
-    private Result waitForRpcServerToStart(File outputLog) throws InterruptedException {
+    private Result waitForRpcReadyOrError(File outputLog) throws InterruptedException {
         // We wait for the rpc event to know we are ok to return. There is a chance that we will miss
         // this event and start listening too late. That is why we timeout after 20 seconds, which
         // should be more than sufficient for the server to activate, and then we check if the node
@@ -233,10 +245,40 @@ public final class JavaNode implements LocalNode {
                 return result;
             }
 
-            NodeListener.listenTo(this).listenForEvent(rpcEvent, 20, TimeUnit.SECONDS).get();        }
+            try {
+                NodeListener.listenTo(this)
+                    .listenForEvent(rpcEvent, 20, TimeUnit.SECONDS)
+                    .get(20, TimeUnit.SECONDS);
+            } catch (TimeoutException te) {
+                log.log("RPC Server did not start.");
+                Optional<String> maybeError = findError(outputLog);
+                if(maybeError.isPresent()) {
+                    return Result.unsuccessfulDueTo(maybeError.get());
+                } else {
+                    return Result.unsuccessfulDueTo(
+                        "Did not see RPC started message in logs, but also could not find any error message.");
+                }
+            }
 
-        return (isAlive())
-            ? Result.successful()
-            : Result.unsuccessfulDueTo("Node failed to start!");
+            return Result.successful();
+        } else {
+            return Result.unsuccessfulDueTo("Node failed to start!");
+        }
+    }
+
+    private Optional<String> findError(File file) {
+        try {
+            if(FileUtils.sizeOf(file) > FileUtils.ONE_MB) {
+                log.log("Will not try to find error because error file size too large");
+                return Optional.empty();
+            } else {
+                return FileUtils.readLines(file, "UTF-8").stream().filter(
+                    line -> STARTUP_ERRORS.stream().anyMatch(err -> line.contains(err))
+                ).findFirst();
+            }
+        } catch (IOException ioe) {
+            log.log("Will not try to find error because error file could not be opened");
+            return Optional.empty();
+        }
     }
 }

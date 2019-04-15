@@ -3,6 +3,7 @@ package org.aion.harness.result;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A non-cancelling implementation of {@link Future}.
@@ -85,8 +86,10 @@ public class FutureResult<V> implements Future {
      * @return the result.
      */
     @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException {
-        this.resultLatch.await(timeout, unit);
+    public V get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        if(!this.resultLatch.await(timeout, unit)) {
+            throw new TimeoutException();
+        }
         return this.result;
     }
 
