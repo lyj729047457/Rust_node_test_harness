@@ -46,6 +46,8 @@ ciTest.dependsOn copyCustomConfig
 ciTest.dependsOn waitForPorts
 ciTest.dependsOn test
 
+build.dependsOn.remove(test)
+
 test.mustRunAfter copyCustomConfig
 test.mustRunAfter waitForPorts
 test.outputs.upToDateWhen {false} // make test target always run even if source didn't change
