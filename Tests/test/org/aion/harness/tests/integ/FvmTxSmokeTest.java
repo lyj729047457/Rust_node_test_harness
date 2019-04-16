@@ -4,14 +4,12 @@ import static org.aion.harness.util.Assertions.assertRpcSuccess;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
@@ -25,6 +23,7 @@ import org.aion.harness.main.NodeConfigurations.DatabaseOption;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.PrepackagedLogEvents;
@@ -62,7 +61,8 @@ public class FvmTxSmokeTest {
     public Timeout globalTimeout = Timeout.seconds(200);
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
+    public static void setup() throws Exception {
+        ProhibitConcurrentHarness.acquireTestLock();
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
 
         NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
@@ -81,7 +81,7 @@ public class FvmTxSmokeTest {
     }
 
     @AfterClass
-    public static void tearDown() throws IOException, InterruptedException {
+    public static void tearDown() throws Exception {
         System.out.println("Node stop: " + node.stop());
         node = null;
         rpc = null;
@@ -91,6 +91,7 @@ public class FvmTxSmokeTest {
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        ProhibitConcurrentHarness.acquireTestLock();
     }
 
     /**

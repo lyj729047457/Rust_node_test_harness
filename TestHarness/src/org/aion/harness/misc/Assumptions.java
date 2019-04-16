@@ -29,4 +29,6 @@ public final class Assumptions {
 
     public static final String PREMINED_PRIVATE_KEY = "223f19377d95582055bd8972cf3ffd635d2712a7171e4888091a066b9f4f63d5";
 
+    public static final String TEST_HARNESS_LOCK_NAME = "TestHarness";
+
 }

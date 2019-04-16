@@ -1,5 +1,6 @@
 package org.aion.harness.tests.integ;
 
+import static org.aion.harness.main.ProhibitConcurrentHarness.acquireTestLock;
 import static org.aion.harness.util.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,6 +31,7 @@ import org.aion.harness.main.NodeConfigurations.DatabaseOption;
 import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.PrepackagedLogEvents;
@@ -71,7 +73,8 @@ public class BulkBalanceTransferTest {
     private static PrivateKey preminedPrivateKey;
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, DecoderException, InvalidKeySpecException {
+    public static void setup() throws Exception {
+        ProhibitConcurrentHarness.acquireTestLock();
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
 
         NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
@@ -90,7 +93,7 @@ public class BulkBalanceTransferTest {
     }
 
     @AfterClass
-    public static void tearDown() throws IOException, InterruptedException {
+    public static void tearDown() throws Exception {
         System.out.println("Node stop: " + node.stop());
         node = null;
         rpc = null;
@@ -100,6 +103,7 @@ public class BulkBalanceTransferTest {
         // If we close and reopen the DB too quickly we get an error... this sleep tries to avoid
         // this issue so that the DB lock is released in time.
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        ProhibitConcurrentHarness.releaseTestLock();
     }
 
     @Test
