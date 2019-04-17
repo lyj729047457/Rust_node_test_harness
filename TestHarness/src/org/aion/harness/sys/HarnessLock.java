@@ -3,14 +3,11 @@ package org.aion.harness.sys;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileLockInterruptionException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.util.SimpleLog;
 
@@ -83,27 +80,25 @@ public class HarnessLock {
     /**
      * Try to acquire lock (non-blocking) and return true if acquired or false otherwise.
      *
-     * If already acquired, no work is done and returns {@link #isAcquired()}
+     * If already acquired, no work is done and returns true.
      *
      * @return whether lock acquired
      * @throws IOException if error with lock file
      */
     public boolean tryAcquire() throws IOException {
-        boolean isAcquired = isAcquired();
-        if(! isAcquired()) {
+        if (!isAcquired()) {
             RandomAccessFile file = getLockFileIfFilesystemOk(fsPrefix, name);
-            try {
-                FileChannel chan = file.getChannel();
-                lock = chan.tryLock();
-                if(lock != null) {
-                    channel = chan;
-                }
-            } catch(IOException ioe) {
-                throw new RuntimeException();
+            FileChannel chan = file.getChannel();
+            lock = chan.tryLock();
+            if (lock != null) {
+                channel = chan;
+                return true;
+            } else {
+                return false;
             }
+        } else {
+            return true;
         }
-
-        return isAcquired();
     }
 
     /**
@@ -157,40 +152,6 @@ public class HarnessLock {
         }
 
         return isAcquired();
-
-
-        // old impl has a race condition where the timer
-        // could send interrupt to main thread when it's
-        // no konger waiting on lock
-
-//        Thread harness = Thread.currentThread();
-//        Timer t = new Timer();
-//        t.schedule(
-//            new TimerTask() {
-//                @Override public void run() {
-//                    harness.interrupt();
-//                }
-//            },
-//            unit.toMillis(duration)
-//        );
-//
-//        try {
-//            if (!isAcquired()) {
-//                file = getLockFileIfFilesystemOk(FS_PREFIX, name);
-//                channel = file.getChannel();
-//                lock = channel.lock();
-//            }
-//        } catch (FileLockInterruptionException flie) {
-//            log.log("Interrupted while awaiting lock: " + name);
-//            Thread.interrupted();
-//        } catch (ClosedChannelException cce) {
-//            cce.printStackTrace();
-//        } catch (IOException ioe) {
-//            throw new RuntimeException(ioe);
-//        } finally {
-//            t.cancel();
-//        }
-//        return isAcquired();
     }
 
     /**
@@ -202,10 +163,13 @@ public class HarnessLock {
                 lock.release(); // releasing multiple times has no effect
             }
         } catch(IOException ioe) {
-            ioe.printStackTrace();
             log.log(
-                "Error while releasing lock (will continue, but lock file may be in broken state)");
+                "Error while releasing lock (lock file may be in broken state)");
+            throw ioe;
         } finally {
+            // if release() threw, presume it's actually either released or
+            // that channel closing below will succeed (which will release
+            // the lock at the OS level).
             lock = null;
         }
 
@@ -214,9 +178,9 @@ public class HarnessLock {
                 channel.close(); // closing multiple times has no effect
             }
         } catch(IOException ioe) {
-            ioe.printStackTrace();
             log.log(
-                    "Error while closing channel (will continue, but lock file may be in broken state)");
+                    "Error while closing channel (lock file may be in broken state)");
+            throw ioe;
         } finally {
             channel = null;
         }
@@ -236,7 +200,12 @@ public class HarnessLock {
         return fsPrefix;
     }
 
-    private static RandomAccessFile
+    /**
+     * @implNote synchronized in case someone tries to call acquire() from multiple
+     * threads -- not the correct way to use this class, but avoid doing bad
+     * operations to the filesystem just in case it happens.
+     */
+    private static synchronized RandomAccessFile
     getLockFileIfFilesystemOk(String prefix, String name) throws IOException  {
         File tmp = new File(prefix);
         if(! tmp.exists()) {

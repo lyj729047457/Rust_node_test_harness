@@ -3,7 +3,8 @@ package org.aion.harness.main;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -11,8 +12,6 @@ import org.aion.harness.sys.HarnessLock;
 import org.aion.harness.sys.LockHolder;
 import org.aion.harness.util.SimpleLog;
 import org.aion.util.bytes.ByteUtil;
-import org.apache.commons.codec.binary.StringUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 /**
@@ -75,7 +74,7 @@ public class HarnessLockTest {
 
         // kill otherProgram, now the thread should continue
         otherProgram.destroyForcibly();
-        Thread.sleep(500); // kind of wonky, but give some time to let the thread run
+        otherProgram.waitFor();
         if(otherProgram.isAlive()) {
             throw new RuntimeException("Test error: could not kill spawned program");
         }

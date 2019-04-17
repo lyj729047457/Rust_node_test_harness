@@ -32,7 +32,8 @@ public class ProhibitConcurrentHarness {
                 "Waiting to acquire test harness lock. [waited so far: ~%s min, limit: ~%s min]",
                 TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - t0),
                 TimeUnit.NANOSECONDS.toMinutes(MAX_WAIT)));
-            acquired = lock.tryAcquire(30, TimeUnit.SECONDS);
+            TimeUnit.SECONDS.sleep(30);
+            acquired = lock.tryAcquire();
         }
         if(!acquired) {
             throw new RuntimeException("Failed to obtain lock.  Giving up.");
