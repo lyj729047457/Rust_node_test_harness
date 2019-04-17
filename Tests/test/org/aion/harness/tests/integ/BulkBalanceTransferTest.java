@@ -1,7 +1,6 @@
 package org.aion.harness.tests.integ;
 
-import static org.aion.harness.main.ProhibitConcurrentHarness.acquireTestLock;
-import static org.aion.harness.util.Assertions.assertRpcSuccess;
+import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -390,7 +389,7 @@ public class BulkBalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToTransferToRegularAccount(PrivateKey sender, Address account, BigInteger amount, BigInteger nonce) {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             sender,
             nonce,
             account,
@@ -404,7 +403,7 @@ public class BulkBalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToCreateAndTransferToFvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) throws DecoderException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             sender,
             nonce,
             null,
@@ -418,10 +417,9 @@ public class BulkBalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToCreateAndTransferToAvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) {
-        TransactionResult result = RawTransaction.buildAndSignAvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
             sender,
             nonce,
-            null,
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,

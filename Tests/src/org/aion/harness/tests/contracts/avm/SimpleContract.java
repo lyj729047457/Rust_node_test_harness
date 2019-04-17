@@ -1,11 +1,11 @@
 package org.aion.harness.tests.contracts.avm;
 
-import org.aion.avm.api.BlockchainRuntime;
+import avm.Blockchain;
 
 public class SimpleContract {
 
     public static byte[] main() {
-        BlockchainRuntime.println("I'm a pretty dull contract.");
+        Blockchain.println("I'm a pretty dull contract.");
         return null;
     }
 

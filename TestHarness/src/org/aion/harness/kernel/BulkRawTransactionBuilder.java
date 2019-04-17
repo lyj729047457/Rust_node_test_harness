@@ -423,12 +423,10 @@ public final class BulkRawTransactionBuilder {
             BigInteger value = (this.value == null) ? this.values.get(i) : this.value;
 
             // Construct the appropriate transaction based on the type.
-            if (type.equals(TransactionType.AVM)) {
-                result = RawTransaction
-                    .buildAndSignAvmTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
+            if ((type == TransactionType.AVM) && (destination == null)) {
+                result = RawTransaction.buildAndSignAvmCreateTransaction(key, senderNonce, data, energyLimit, energyPrice, value);
             } else {
-                result = RawTransaction
-                    .buildAndSignFvmTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
+                result = RawTransaction.buildAndSignGeneralTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
             }
 
             // If the transaction was made, add it to the list, otherwise fail immediately.

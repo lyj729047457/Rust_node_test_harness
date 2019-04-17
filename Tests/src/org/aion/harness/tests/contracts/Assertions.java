@@ -1,4 +1,4 @@
-package org.aion.harness.util;
+package org.aion.harness.tests.contracts;
 
 import static org.junit.Assert.assertTrue;
 

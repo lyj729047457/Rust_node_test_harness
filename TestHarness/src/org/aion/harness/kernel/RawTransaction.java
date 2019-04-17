@@ -53,9 +53,9 @@ public final class RawTransaction {
      * Constructs a new transaction that is sent from the address corresponding to the provided
      * private key.
      *
-     * This transaction can be used to deploy Fvm contracts or call pre-compiled contracts.
-     *
-     * If deploying an Avm contract, use the {@code buildAndSignAvmTransaction()} method instead.
+     * This transaction must be used to send any kind of transaction except for an Avm contract
+     * creation transaction, in which case {@code buildAndSignAvmCreateTransaction()} should be
+     * used.
      *
      * @param senderPrivateKey Private key of the sender.
      * @param nonce Nonce of the sender.
@@ -66,7 +66,7 @@ public final class RawTransaction {
      * @param value Amount of value to transfer to destination from sender.
      * @return The signed transaction.
      */
-    public static TransactionResult buildAndSignFvmTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
+    public static TransactionResult buildAndSignGeneralTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
         Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
 
         try {
@@ -80,25 +80,23 @@ public final class RawTransaction {
      * Constructs a new transaction that is sent from the address corresponding to the provided
      * private key.
      *
-     * This transaction can be used to deploy Avm contracts.
-     *
-     * If deploying an Fvm contract or calling a pre-compiled contract, use the
-     * {@code buildAndSignTransaction()} method instead.
+     * This transaction must be used to deploy Avm contracts. However, it should not be used for any
+     * other kind of transaction, including calling Avm contracts. For all other transactions, use
+     * the {@code buildAndSignGeneralTransaction()} method.
      *
      * @param senderPrivateKey Private key of the sender.
      * @param nonce Nonce of the sender.
-     * @param destination Destination address.
      * @param data Transaction data.
      * @param energyLimit Maximum amount of energy to use.
      * @param energyPrice Price per unit of energy used.
      * @param value Amount of value to transfer to destination from sender.
      * @return The signed transaction.
      */
-    public static TransactionResult buildAndSignAvmTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
-        Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
+    public static TransactionResult buildAndSignAvmCreateTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
+        byte[] data, long energyLimit, long energyPrice, BigInteger value) {
 
         try {
-            return TransactionResult.successful(new RawTransaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, true));
+            return TransactionResult.successful(new RawTransaction(senderPrivateKey, nonce, null, data, energyLimit, energyPrice, value, true));
         } catch (Exception e) {
             return TransactionResult.unsuccessful((e.getMessage() == null) ? e.toString() : e.getMessage());
         }

@@ -1,6 +1,6 @@
 package org.aion.harness.tests.integ;
 
-import static org.aion.harness.util.Assertions.assertRpcSuccess;
+import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -315,7 +315,7 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignAvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             contract,
@@ -329,7 +329,7 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             account,
@@ -343,7 +343,7 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             contract,
@@ -357,7 +357,7 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             contract,
@@ -375,7 +375,7 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             null,
@@ -393,10 +393,9 @@ public class BalanceTransferTest {
     }
 
     private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignAvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
             preminedPrivateKey,
             getNonce(),
-            null,
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,

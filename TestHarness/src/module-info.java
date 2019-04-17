@@ -4,7 +4,6 @@ module aion.node.harness {
     requires offline.signer;
     requires gson;
     requires ed25519;
-    requires junit;
 
     exports org.aion.harness.statistics;
     exports org.aion.harness.result;

@@ -1,6 +1,6 @@
 package org.aion.harness.tests.integ;
 
-import static org.aion.harness.util.Assertions.assertRpcSuccess;
+import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.not;
@@ -100,10 +100,9 @@ public class AvmTxSmokeTest {
     @Test
     public void test() throws Exception {
         // build contract deployment Tx
-        TransactionResult deploy = RawTransaction.buildAndSignAvmTransaction(
+        TransactionResult deploy = RawTransaction.buildAndSignAvmCreateTransaction(
             this.preminedPrivateKey,
             getNonce(),
-            null,
             new CodeAndArguments(
                 JarBuilder.buildJarForMainAndClasses(ByteArrayHolder.class), new byte[0])
                 .encodeToBytes(),
@@ -129,7 +128,7 @@ public class AvmTxSmokeTest {
         // set "data" field of the contract
         byte[] newData1 = new byte[] { 0x21, 0x00, 0x01, 0x61 };
         TransactionResult tx1 =
-            RawTransaction.buildAndSignAvmTransaction(this.preminedPrivateKey, getNonce(), contract,
+            RawTransaction.buildAndSignGeneralTransaction(this.preminedPrivateKey, getNonce(), contract,
                 newData1, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         if(! tx1.isSuccess()) {
             throw new IllegalStateException("failed to construct transaction 1 for setting data");
@@ -146,7 +145,7 @@ public class AvmTxSmokeTest {
         // set "data" field of the contract
         byte[] newData2 = new byte[] { 0x21, 0x00, 0x04, 0x41, 0x53, 0x44, 0x46 };
         TransactionResult tx2 =
-            RawTransaction.buildAndSignAvmTransaction(this.preminedPrivateKey, getNonce(), contract,
+            RawTransaction.buildAndSignGeneralTransaction(this.preminedPrivateKey, getNonce(), contract,
                 newData2, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         if(! tx2.isSuccess()) {
             throw new IllegalStateException("failed to construct transaction 2 for setting data");

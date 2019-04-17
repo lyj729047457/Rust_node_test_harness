@@ -1,6 +1,6 @@
 package org.aion.harness.tests.integ;
 
-import static org.aion.harness.util.Assertions.assertRpcSuccess;
+import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -10,7 +10,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
@@ -181,7 +180,7 @@ public class JavaApiSmokeTest {
     }
 
     private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InterruptedException {
-        TransactionResult result = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             preminedPrivateKey,
             getNonce(),
             null,

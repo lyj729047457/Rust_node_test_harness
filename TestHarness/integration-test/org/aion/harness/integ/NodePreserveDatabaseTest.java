@@ -127,7 +127,7 @@ public class NodePreserveDatabaseTest {
 
     private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
         return RawTransaction
-            .buildAndSignFvmTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .buildAndSignGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private void shutdownNodeIfRunning() throws IOException, InterruptedException {

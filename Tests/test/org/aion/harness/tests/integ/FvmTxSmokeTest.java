@@ -1,6 +1,6 @@
 package org.aion.harness.tests.integ;
 
-import static org.aion.harness.util.Assertions.assertRpcSuccess;
+import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.not;
@@ -133,7 +133,7 @@ public class FvmTxSmokeTest {
     @Test
     public void test() throws Exception {
         // build contract deployment Tx
-        TransactionResult deploy = RawTransaction.buildAndSignFvmTransaction(
+        TransactionResult deploy = RawTransaction.buildAndSignGeneralTransaction(
             this.preminedPrivateKey,
             getNonce(),
             null,
@@ -163,7 +163,7 @@ public class FvmTxSmokeTest {
 
         // set "data" field of the contract
         TransactionResult tx1 =
-            RawTransaction.buildAndSignFvmTransaction(this.preminedPrivateKey, getNonce(), contract,
+            RawTransaction.buildAndSignGeneralTransaction(this.preminedPrivateKey, getNonce(), contract,
                 SET_DATA_1, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         if(! tx1.isSuccess()) {
             throw new IllegalStateException("failed to construct transaction 1 for setting data");
@@ -183,7 +183,7 @@ public class FvmTxSmokeTest {
 
         // set "data" field of the contract
         TransactionResult tx2 =
-            RawTransaction.buildAndSignFvmTransaction(this.preminedPrivateKey, getNonce(), contract,
+            RawTransaction.buildAndSignGeneralTransaction(this.preminedPrivateKey, getNonce(), contract,
                 SET_DATA_2, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         if(! tx2.isSuccess()) {
             throw new IllegalStateException("failed to construct transaction 1 for setting data");
