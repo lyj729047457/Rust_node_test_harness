@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
