@@ -170,6 +170,7 @@ public class BalanceTransferTest {
      * Tests making a CREATE transaction in which funds are transferred as well.
      */
     @Test
+    @org.junit.Ignore // because avm contracts not yet enabled in master-pre-merge
     public void testTransferBalanceToAvmContractUponCreation() throws InterruptedException {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(298_365_712));
