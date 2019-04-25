@@ -25,7 +25,7 @@ public class ProhibitConcurrentHarness {
     }
 
     public static synchronized void acquireTestLock() throws Exception {
-        boolean acquired = false;
+        boolean acquired = lock.tryAcquire();
         long t0 = System.nanoTime();
         while(! acquired && System.nanoTime() - t0 < MAX_WAIT) {
             log.log(String.format(
