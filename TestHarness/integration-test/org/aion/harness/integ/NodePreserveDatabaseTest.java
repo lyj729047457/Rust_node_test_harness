@@ -6,6 +6,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.LocalNode;
+import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.result.FutureResult;
@@ -39,7 +40,10 @@ public class NodePreserveDatabaseTest {
 
     @Before
     public void setup() throws DecoderException, InvalidKeySpecException {
-        destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
+        destination =
+                new Address(
+                        Hex.decodeHex(
+                                "a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         this.rpc = new RPC("127.0.0.1", "8545");
     }
@@ -63,7 +67,9 @@ public class NodePreserveDatabaseTest {
 
     @Test
     public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
-        this.node = TestHelper.configureDefaultLocalNodeToPreserveDatabase();
+        Network testingNetowrk = Network.CUSTOM;
+        this.node =
+                TestHelper.configureDefaultLocalNodeToPreserveDatabaseForNetwork(testingNetowrk);
 
         // initialize and run node to generate a database, then shutdown the node
         assertTrue(this.node.initialize().isSuccess());
@@ -71,14 +77,20 @@ public class NodePreserveDatabaseTest {
         // start the node
         assertTrue(this.node.start().isSuccess());
 
+        // Check balance before transfer
+        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
+        assertTrue(rpcResult.isSuccess());
+        BigInteger balanceBefore = rpcResult.getResult();
+
         // transfer and wait
         BigInteger transferValue = BigInteger.valueOf(50);
         doBalanceTransfer(transferValue);
 
         // check balance of destination address
-        RpcResult<BigInteger> rpcResult = this.rpc.getBalance(destination);
+        rpcResult = this.rpc.getBalance(destination);
+        assertTrue(rpcResult.isSuccess());
         BigInteger balanceAfter = rpcResult.getResult();
-        assertEquals(transferValue, balanceAfter);
+        assertEquals(balanceBefore.add(transferValue), balanceAfter);
 
         // now stop the node
         Result result = this.node.stop();
@@ -88,7 +100,7 @@ public class NodePreserveDatabaseTest {
         assertFalse(this.node.isAlive());
 
         // Verify that the database exists. Also wait some time so we no longer have the db lock..
-        assertTrue(TestHelper.getDefaultDatabaseLocation().exists());
+        assertTrue(TestHelper.getDatabaseLocationByNetwork(testingNetowrk).exists());
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
         // start the node
@@ -98,7 +110,7 @@ public class NodePreserveDatabaseTest {
         // check that the transfer is still present
         rpcResult = this.rpc.getBalance(destination);
         BigInteger balanceAfter2 = rpcResult.getResult();
-        assertEquals(transferValue, balanceAfter2);
+        assertEquals(balanceBefore.add(transferValue), balanceAfter2);
 
         // check that the balance has not changed
         assertEquals(balanceAfter, balanceAfter2);
@@ -125,9 +137,16 @@ public class NodePreserveDatabaseTest {
         assertFalse(database.exists());
     }
 
-    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return RawTransaction
-            .buildAndSignGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+    private TransactionResult constructTransaction(
+            PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
+        return RawTransaction.buildAndSignGeneralTransaction(
+                senderPrivateKey,
+                nonce,
+                destination,
+                new byte[0],
+                2_000_000,
+                10_000_000_000L,
+                value);
     }
 
     private void shutdownNodeIfRunning() throws IOException, InterruptedException {
@@ -141,18 +160,20 @@ public class NodePreserveDatabaseTest {
     }
 
     private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
-        TransactionResult transactionResult = constructTransaction(
-            preminedPrivateKey,
-            destination,
-            transferValue,
-            BigInteger.ZERO);
+
+        RpcResult<BigInteger> nonce = this.rpc.getNonce(preminedPrivateKey.getAddress());
+        System.out.println("Rpc getNonce = " + nonce);
+        assertTrue(nonce.isSuccess());
+
+        TransactionResult transactionResult =
+                constructTransaction(
+                        preminedPrivateKey, destination, transferValue, nonce.getResult());
 
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
-            transaction,
-            1,
-            TimeUnit.MINUTES);
+        FutureResult<LogEventResult> futureResult =
+                NodeListener.listenTo(this.node)
+                        .listenForTransactionToBeProcessed(transaction, 1, TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);
@@ -171,5 +192,4 @@ public class NodePreserveDatabaseTest {
             FileUtils.deleteDirectory(TestHelper.getDefaultDatabaseLocation());
         }
     }
-
 }

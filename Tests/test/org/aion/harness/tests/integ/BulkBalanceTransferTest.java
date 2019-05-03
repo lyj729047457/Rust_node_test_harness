@@ -53,10 +53,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * This test uses an avmtestnet build.
- */
-@org.junit.Ignore // because there is an known bug that is not yet patched in master-pre-merge.
 public class BulkBalanceTransferTest {
     private static final int NUMBER_OF_TRANSACTIONS = 25;
     private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";

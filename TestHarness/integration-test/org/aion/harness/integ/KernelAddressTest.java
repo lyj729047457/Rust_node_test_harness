@@ -7,6 +7,7 @@ import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
 import org.aion.harness.main.LocalNode;
+import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.result.FutureResult;
@@ -44,7 +45,7 @@ public class KernelAddressTest {
         preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(Assumptions.PREMINED_PRIVATE_KEY));
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
-        this.node = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
+        this.node = TestHelper.configureDefaultLocalNodeForNetwork(Network.CUSTOM);
         this.rpc = new RPC("127.0.0.1", "8545");
 
         assertTrue(this.node.initialize().isSuccess());

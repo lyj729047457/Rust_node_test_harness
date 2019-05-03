@@ -48,7 +48,6 @@ import org.junit.Test;
  * Simple smoke test using eth_sendSignedTransaction (deployment, method call) and eth_call
  * on an AVM contract.
  */
-@org.junit.Ignore // because avm contracts not yet enabled in master-pre-merge
 public class AvmTxSmokeTest {
 
     private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";

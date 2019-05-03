@@ -13,6 +13,7 @@ import org.aion.harness.integ.resources.Eavesdropper;
 import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.main.LocalNode;
+import org.aion.harness.main.Network;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.io.FileUtils;
@@ -29,7 +30,9 @@ public class MultipleListenerThreadsTest {
 
     @Before
     public void setup() throws IOException, InterruptedException {
-        this.node = TestHelper.configureDefaultLocalNodeAndDoNotPreserveDatabase();
+
+        this.node =
+                TestHelper.configureDefaultLocalNodeToPreserveDatabaseForNetwork(Network.CUSTOM);
         assertTrue(this.node.initialize().isSuccess());
     }
 
@@ -45,7 +48,8 @@ public class MultipleListenerThreadsTest {
     }
 
     @Test
-    public void testMultipleThreadsRequestingHeartbeatEvents() throws IOException, InterruptedException {
+    public void testMultipleThreadsRequestingHeartbeatEvents()
+            throws IOException, InterruptedException {
         // Start the node.
         Result result = this.node.start();
         System.out.println("Start result = " + result);
@@ -58,7 +62,8 @@ public class MultipleListenerThreadsTest {
 
         List<Eavesdropper> eavesdroppers = new ArrayList<>();
         for (int i = 0; i < NUM_THREADS; i++) {
-            eavesdroppers.add(Eavesdropper.createEavesdropperThatListensFor(Gossip.HEARTBEAT, i, this.node));
+            eavesdroppers.add(
+                    Eavesdropper.createEavesdropperThatListensFor(Gossip.HEARTBEAT, i, this.node));
         }
 
         // Start running all of our eavesdropping threads.
@@ -97,5 +102,4 @@ public class MultipleListenerThreadsTest {
             assertFalse(this.node.isAlive());
         }
     }
-
 }

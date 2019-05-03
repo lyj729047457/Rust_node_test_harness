@@ -90,7 +90,7 @@ public class RemoteNodeTest {
         assertTrue(result.isSuccess());
 
         NodeListener nodeListener = NodeListener.listenTo(this.remoteNode);
-        FutureResult<LogEventResult> future = nodeListener.listenForEvent(new Event("DEBUG"), 30, TimeUnit.SECONDS);
+        FutureResult<LogEventResult> future = nodeListener.listenForEvent(new Event("DEBUG"), 60, TimeUnit.SECONDS);
 
         LogEventResult waitResult = future.get();
         System.out.println("Listener result = " + future.toString());
