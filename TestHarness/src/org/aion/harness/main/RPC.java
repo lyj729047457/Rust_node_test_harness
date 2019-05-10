@@ -630,7 +630,6 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.SEND_RAW_TRANSACTION)
             .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
-            .useLatestBlock()
             .build();
 
         log.log("-->" + payload.payload);
@@ -702,7 +701,9 @@ public final class RPC {
             .useLatestBlock()
             .build();
 
+        log.log("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        log.log("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -731,10 +732,11 @@ public final class RPC {
         RpcPayload payload = new RpcPayloadBuilder()
             .method(RpcMethod.GET_TRANSACTION_RECEIPT)
             .params(Hex.encodeHexString(receiptHash.getHash()))
-            .useLatestBlock()
             .build();
 
+        log.log("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        log.log("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);

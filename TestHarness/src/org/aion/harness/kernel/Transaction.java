@@ -39,12 +39,19 @@ public class Transaction {
      * that instead.
      */
     public String jsonString() {
+        final String dataVal;
+        if(getData() == null) {
+            dataVal = "null";
+        } else {
+            dataVal = String.format("\"0x%s\"", Hex.encodeHexString(getData()));
+        }
+
         return String.format("{"
-                + "\"to\" : \"%s\","
-                + "\"data\" : \"%s\""
+                + "\"to\" : \"0x%s\","
+                + "\"data\" : %s"
                 + "}",
             Hex.encodeHexString(getTo().getAddressBytes()),
-            getData() != null? Hex.encodeHexString(getData()) : "null"
+            getData() != null? dataVal : "null"
         );
     }
 }

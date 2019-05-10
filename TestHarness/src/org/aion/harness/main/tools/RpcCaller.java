@@ -1,5 +1,7 @@
 package org.aion.harness.main.tools;
 
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.MalformedJsonException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,7 +44,7 @@ public final class RpcCaller {
      */
     public InternalRpcResult call(RpcPayload payload, boolean verbose) throws InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder()
-            .command("curl", "-X", "POST", "--data", payload.payload, this.ip + ":" + this.port);
+            .command("curl", "-X", "POST", "-H", "Content-type: application/json", "--data", payload.payload, this.ip + ":" + this.port);
 
         if (verbose) {
             processBuilder.inheritIO();
@@ -70,7 +72,13 @@ public final class RpcCaller {
                 return InternalRpcResult.unsuccessful("unknown error");
             }
 
-            JsonStringParser outputParser = new JsonStringParser(output);
+
+            final JsonStringParser outputParser;
+            try {
+                outputParser = new JsonStringParser(output);
+            } catch (JsonSyntaxException mje) {
+                throw new RuntimeException("Error parsing json: " + output);
+            }
 
             // This is only successful if the RPC Process exited successfully, and the RPC output
             // contained no 'error' content and it does contain 'result' content.
