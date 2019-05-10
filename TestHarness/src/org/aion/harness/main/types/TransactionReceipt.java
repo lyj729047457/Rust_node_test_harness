@@ -182,6 +182,15 @@ public final class TransactionReceipt {
         return (this.destination == null) ? Optional.empty() : Optional.of(this.destination);
     }
 
+    /**
+     * Returns {@code true} if the transaction was successful. Otherwise {@code false}.
+     *
+     * @return whether or not the transaction was successful.
+     */
+    public boolean transactionWasSuccessful() {
+        return this.status == 1;
+    }
+
     @Override
     public String toString() {
         return "TransactionReceipt { energy limit = " + this.energyLimit
