@@ -3,11 +3,13 @@
 
     <property name="workspace" value="."/>
     <property name="source" value="${workspace}/src"/>
-    <property name="test" value="${workspace}/test"/>
+    <property name="unit-test" value="${workspace}/test"/>
+    <property name="integ-test" value="${workspace}/integration-test"/>
     <property name="dependencies" value="${workspace}/lib"/>
     <property name="build-dir" value="${workspace}/build"/>
     <property name="built-sources" value="${build-dir}/main"/>
-    <property name="built-tests" value="${build-dir}/test"/>
+    <property name="built-unit-tests" value="${build-dir}/test"/>
+    <property name="built-integ-tests" value="${build-dir}/integration-test"/>
     <property name="built-jar" value="${workspace}/dist"/>
     <property name="test-reports" value="${workspace}/reports"/>
     <property name="jar-name" value="node-test-harness"/>
@@ -52,27 +54,57 @@
         <echo message="Newly built jar can be found at: ${built-jar}/${jar-name}.jar"/>
     </target>
 
-    <target name="test" depends="test_build">
+    <target name="test" depends="unit_test, integ_test"/>
+
+    <target name="unit_test" depends="unit_test_build">
         <mkdir dir="${test-reports}"/>
         <junit printsummary="on" haltonfailure="true" fork="true" dir="${workspace}">
             <classpath>
                 <pathelement location="${built-sources}"/>
-                <pathelement location="${built-tests}"/>
+                <pathelement location="${built-unit-tests}"/>
                 <path refid="classpath-tests"/>
             </classpath>
             <formatter type="plain" usefile="false"/>
             <formatter type="xml"/>
             <batchtest todir="${test-reports}">
-                <fileset dir="${test}" includes="**/*Test.java"/>
+                <fileset dir="${unit-test}" includes="**/*Test.java"/>
             </batchtest>
         </junit>
     </target>
 
-    <target name="test_build" depends="clean_build">
-        <mkdir dir="${built-tests}"/>
+    <target name="unit_test_build" depends="clean_build">
+        <mkdir dir="${built-unit-tests}"/>
 
         <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="10"
-            srcdir="${test}" destdir="${built-tests}" includes="**/*.java,module-info.java">
+            srcdir="${unit-test}" destdir="${built-unit-tests}" includes="**/*.java,module-info.java">
+            <classpath>
+                <pathelement location="${built-sources}"/>
+                <path refid="classpath-tests"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="integ_test" depends="integ_test_build">
+        <mkdir dir="${test-reports}"/>
+        <junit printsummary="on" haltonfailure="true" fork="true" dir="${workspace}">
+            <classpath>
+                <pathelement location="${built-sources}"/>
+                <pathelement location="${built-integ-tests}"/>
+                <path refid="classpath-tests"/>
+            </classpath>
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${test-reports}">
+                <fileset dir="${integ-test}" includes="**/*Test.java"/>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="integ_test_build" depends="clean_build">
+        <mkdir dir="${built-integ-tests}"/>
+
+        <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="10"
+            srcdir="${integ-test}" destdir="${built-integ-tests}" includes="**/*.java,module-info.java">
             <classpath>
                 <pathelement location="${built-sources}"/>
                 <path refid="classpath-tests"/>
