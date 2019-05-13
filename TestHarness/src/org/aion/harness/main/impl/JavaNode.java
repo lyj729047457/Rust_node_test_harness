@@ -131,7 +131,10 @@ public final class JavaNode implements LocalNode {
         File outputLog = this.logManager.getCurrentOutputLogFile();
 
         if (outputLog == null) {
-            this.logManager.setupLogFiles();
+            Result logSetupResult = this.logManager.setupLogFiles();
+            if (!logSetupResult.isSuccess()) {
+                return logSetupResult;
+            }
             outputLog = this.logManager.getCurrentOutputLogFile();
         }
 
