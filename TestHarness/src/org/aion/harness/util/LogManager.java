@@ -93,7 +93,7 @@ public final class LogManager {
         for (File entry : logEntries) {
             if (entry.isFile()) {
                 File destination = findUniqueArchiveDestinationName(entry.getName());
-                FileUtils.moveFileToDirectory(entry, destination, true);
+                FileUtils.moveFile(entry, destination);
             }
         }
     }
