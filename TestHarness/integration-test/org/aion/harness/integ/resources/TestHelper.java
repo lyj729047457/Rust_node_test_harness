@@ -7,10 +7,11 @@ import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.main.NodeConfigurations.DatabaseOption;
 import org.aion.harness.main.NodeFactory;
+import org.apache.commons.io.FileUtils;
 
 public class TestHelper {
-    public static final String EXPECTED_BUILD_LOCATION =
-            System.getProperty("user.dir") + File.separator + "aion";
+    private static final String WORKING_DIR = System.getProperty("user.dir");
+    public static final String EXPECTED_BUILD_LOCATION = WORKING_DIR + File.separator + "aion";
     public static final Network DEFAULT_NETWORK = Network.CUSTOM;
 
     public static File getDefaultDatabaseLocation() {
@@ -80,10 +81,24 @@ public class TestHelper {
             throw new IOException("Failed to find expected built kernel for test!");
         }
 
+        // Overwrites the config, fork and genesis files of each network.
+        FileUtils.copyDirectory(new File(WORKING_DIR + "/resources/config"), new File(EXPECTED_BUILD_LOCATION + "/config"));
+        overwriteIfTargetDirExists(new File(WORKING_DIR + "/resources/config/avmtestnet"), new File(EXPECTED_BUILD_LOCATION + "/avmtestnet/config"));
+        overwriteIfTargetDirExists(new File(WORKING_DIR + "/resources/config/conquest"), new File(EXPECTED_BUILD_LOCATION + "/conquest/config"));
+        overwriteIfTargetDirExists(new File(WORKING_DIR + "/resources/config/custom"), new File(EXPECTED_BUILD_LOCATION + "/custom/config"));
+        overwriteIfTargetDirExists(new File(WORKING_DIR + "/resources/config/mastery"), new File(EXPECTED_BUILD_LOCATION + "/mastery/config"));
+        overwriteIfTargetDirExists(new File(WORKING_DIR + "/resources/config/mainnet"), new File(EXPECTED_BUILD_LOCATION + "/mainnet/config"));
+
         LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
         node.configure(
                 NodeConfigurations.alwaysUseBuiltKernel(
                         network, EXPECTED_BUILD_LOCATION, databaseOption));
         return node;
+    }
+
+    private static void overwriteIfTargetDirExists(File source, File target) throws IOException {
+        if (target.exists()) {
+            FileUtils.copyDirectory(source, target);
+        }
     }
 }
