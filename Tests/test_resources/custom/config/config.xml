@@ -72,7 +72,7 @@
 		<!--Sets the physical location on disk where log files will be stored.-->
 		<log-path>log</log-path>
 		<GEN>INFO</GEN>
-		<TX>TRACE</TX>
+		<TX>TRACE</TX>		<!-- The test harness relies on TX being set to TRACE! -->
 		<ROOT>WARN</ROOT>
 		<VM>ERROR</VM>
 		<GUI>INFO</GUI>
