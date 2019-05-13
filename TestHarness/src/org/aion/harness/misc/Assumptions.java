@@ -8,24 +8,11 @@ import java.util.regex.Pattern;
  */
 public final class Assumptions {
 
-    // Other assumptions about the system include:
-    // Genesis node has the appropriate pre-mined account set in 'mastery'
-    // Config has all peers removed from 'mastery'
-    // Config has mining enabled, RPC enabled on port 8545
-    // Config has the TX log set to TRACE
-    // AionBlockchainImpl broadcasts all transactions, by hash, when successfully sealed into block
-    // aion project is in same directory as this project
-    // mainnet rpc channel is set active (used by tests)
-    // RPC get-receipt knows how to handle Avm addresses
-    // aion project must be using node_test_harness branch [ this branch meets all these criteria ]
-
     public static final Pattern KERNEL_TAR_PATTERN = Pattern.compile("^aion-v(.|\\s)+\\.tar\\.bz2$");
 
     // Not really an assumption, should eventually be moved some place more meaningful, but no kind
     // of global data class exists yet.
     public static final String LOGGER_BANNER = "TESTING-HARNESS: ";
-
-    public static final String NEW_KERNEL_TAR_NAME = "kernel.tar.bz2";
 
     public static final String PREMINED_PRIVATE_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
 
