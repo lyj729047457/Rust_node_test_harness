@@ -11,7 +11,7 @@ import org.aion.harness.main.NodeFactory;
 public class TestHelper {
     public static final String EXPECTED_BUILD_LOCATION =
             System.getProperty("user.dir") + File.separator + "aion";
-    public static final Network DEFAULT_NETWORK = Network.MASTERY;
+    public static final Network DEFAULT_NETWORK = Network.CUSTOM;
 
     public static File getDefaultDatabaseLocation() {
         return new File(

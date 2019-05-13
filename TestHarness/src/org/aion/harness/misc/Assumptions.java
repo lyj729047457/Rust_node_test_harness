@@ -27,7 +27,7 @@ public final class Assumptions {
 
     public static final String NEW_KERNEL_TAR_NAME = "kernel.tar.bz2";
 
-    public static final String PREMINED_PRIVATE_KEY = "223f19377d95582055bd8972cf3ffd635d2712a7171e4888091a066b9f4f63d5";
+    public static final String PREMINED_PRIVATE_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
 
     public static final String TEST_HARNESS_LOCK_NAME = "TestHarness";
 
