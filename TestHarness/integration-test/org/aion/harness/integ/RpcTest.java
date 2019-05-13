@@ -567,8 +567,15 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
+        // Wait a bit so that we actually start syncing, otherwise RPC will tell us we are done.
+        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+
         Result syncResult = this.rpc.waitForSyncToComplete(40, TimeUnit.SECONDS);
         System.out.println("Sync result: " + syncResult);
+
+        // Since we are syncing fresh from mainnet we really should timeout after 40 seconds!
+        assertFalse(syncResult.isSuccess());
+        assertEquals("Timed out waiting for sync to finish.", syncResult.getError());
 
         result = this.node.stop();
         System.out.println("Stop result = " + result);
