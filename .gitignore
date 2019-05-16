@@ -1,8 +1,27 @@
+#General
+*.class
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+.idea/
 *.iml
+*.iws
+
+# Build
 *ant-targets-build.xml
 *out
-.idea
-TestHarness/build
+build
 TestHarness/dist
 TestHarness/aion
+TestHarness/reports
+TestHarness/logs
+Tests/aion
+Tests/config
+Tests/logs
 Tests/lib/kernel.tar.bz2
+.gradle/
+report/
