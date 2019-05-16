@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.sys.HarnessLock;
 import org.aion.harness.sys.LockHolder;
 import org.aion.harness.util.SimpleLog;
-import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
 
 /**
@@ -22,8 +21,7 @@ public class HarnessLockTest {
 
     @Test(timeout = 90_000 /* 1.5 min */)
     public void test() throws Exception {
-        String lockName =  "locktest_" +
-            ByteUtil.toHexString(ByteUtil.longToBytes(new Random().nextLong()));
+        String lockName =  "locktest_" + new Random().nextLong();
         lockName = lockName.substring(0, Math.min(16, lockName.length()));
         log.log("Doing lock test with lock name: " + lockName);
 
