@@ -1,5 +1,6 @@
 package org.aion.harness.tests.integ.concurrent;
 
+import org.aion.harness.tests.integ.AvmFailuresTest;
 import org.aion.harness.tests.integ.AvmTxSmokeTest;
 import org.aion.harness.tests.integ.BalanceTransferTest;
 import org.aion.harness.tests.integ.BulkBalanceTransferTest;
@@ -18,6 +19,7 @@ import org.junit.runners.Suite;
     AvmTxSmokeTest.class,
     FvmTxSmokeTest.class,
     JavaApiSmokeTest.class
+    , AvmFailuresTest.class
 })
 public class ConcurrentSuite {
     /**
