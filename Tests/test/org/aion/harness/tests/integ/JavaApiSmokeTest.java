@@ -6,26 +6,18 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.api.type.BlockDetails;
-import org.aion.harness.kernel.PrivateKey;
+import org.aion.api.type.TxDetails;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
-import org.aion.harness.main.NodeConfigurations.DatabaseOption;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeFactory.NodeType;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.PrepackagedLogEvents;
@@ -33,61 +25,34 @@ import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
+import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
+import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(SequentialRunner.class)
 public class JavaApiSmokeTest {
-    private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";
-    private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
     private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.JavaApiSmokeTest");
 
-    private static LocalNode node;
-    private static RPC rpc;
-    private static NodeListener listener;
-    private static PrivateKey preminedPrivateKey;
+    private static RPC rpc = new RPC("127.0.0.1", "8545");
+    
+    @Rule
+    private PreminedAccount preminedAccount = new PreminedAccount(BigInteger.valueOf(1_000_000_000_000_000_000L));
+    
+    @Rule
+    private LocalNodeListener listener = new LocalNodeListener();
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        ProhibitConcurrentHarness.acquireTestLock();
-        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
-
-        NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
-
-        node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        node.configure(configurations);
-        Result result = node.initialize();
-        log.log(result);
-        assertTrue(result.isSuccess());
-        Result startResult = node.start();
-        assertTrue("Kernel startup error: " + startResult.getError(),
-            startResult.isSuccess());
-        assertTrue(node.isAlive());
-        rpc = new RPC("127.0.0.1", "8545");
-        listener = NodeListener.listenTo(node);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        System.out.println("Node stop: " + node.stop());
-        node = null;
-        rpc = null;
-        listener = null;
-        destroyLogs();
-        ProhibitConcurrentHarness.releaseTestLock();
-    }
-
-    @Test(timeout = 300_000 /* millis */)
+    @Test
     public void testGetBlockDetailsByRange() throws Exception {
         IAionAPI api = AionAPIImpl.inst();
         ApiMsg connectionMsg = api.connect("tcp://localhost:8547");
@@ -134,19 +99,29 @@ public class JavaApiSmokeTest {
         assertThat("block details has incorrect block number",
             blockDetails.get(2).getNumber(), is(b2));
 
-        BlockDetails b0Details = blockDetails.get(0);
-        assertThat("block details has incorrect number of transactions",
-            b0Details.getTxDetails().size(), is(1));
-        assertThat("block details' tx details incorrect contract address",
-            b0Details.getTxDetails().get(0).getContract(), is(not(nullValue())));
-        assertThat("block details' tx details incorrect value",
-            b0Details.getTxDetails().get(0).getValue().equals(amount), is(true));
+        long blockNumberOfTransaction = createReceipt.getBlockNumber().longValueExact();
+
+        if (blockNumberOfTransaction == b0) {
+            verifyTransactionDetailsOfBlock(blockDetails.get(0), createReceipt.getTransactionHash(), amount);
+        } else if (blockNumberOfTransaction == b0 + 1) {
+            verifyTransactionDetailsOfBlock(blockDetails.get(1), createReceipt.getTransactionHash(), amount);
+        } else if (blockNumberOfTransaction == b2) {
+            verifyTransactionDetailsOfBlock(blockDetails.get(2), createReceipt.getTransactionHash(), amount);
+        } else {
+            fail("Expected block number to be in range [" + b0 + ", " + b2 + "], but was: " + blockNumberOfTransaction);
+        }
     }
 
-    private BigInteger getNonce() throws InterruptedException {
-        RpcResult<BigInteger> nonceResult = this.rpc.getNonce(this.preminedPrivateKey.getAddress());
-        assertRpcSuccess(nonceResult);
-        return nonceResult.getResult();
+    private void verifyTransactionDetailsOfBlock(BlockDetails blockDetails, byte[] transactionHash, BigInteger amount) {
+        boolean foundTransaction = false;
+        for (TxDetails transactionDetails : blockDetails.getTxDetails()) {
+            if (Arrays.equals(transactionDetails.getTxHash().toBytes(), transactionHash)) {
+                assertThat("block details' tx details incorrect contract address", transactionDetails.getContract(), is(not(nullValue())));
+                assertThat("block details' tx details incorrect value", transactionDetails.getValue().equals(amount), is(true));
+                foundTransaction = true;
+            }
+        }
+        assertTrue(foundTransaction);
     }
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
@@ -156,7 +131,7 @@ public class JavaApiSmokeTest {
 
         // Send the transaction off.
         log.log("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -167,19 +142,15 @@ public class JavaApiSmokeTest {
 
         ReceiptHash hash = sendResult.getResult();
 
-        RpcResult<TransactionReceipt> receiptResult = this.rpc.getTransactionReceipt(hash);
+        RpcResult<TransactionReceipt> receiptResult = rpc.getTransactionReceipt(hash);
         assertRpcSuccess(receiptResult);
         return receiptResult.getResult();
     }
 
-    private static void destroyLogs() throws IOException {
-        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
-    }
-
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InterruptedException {
+    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             null,
             getFvmContractBytes(),
             ENERGY_LIMIT,

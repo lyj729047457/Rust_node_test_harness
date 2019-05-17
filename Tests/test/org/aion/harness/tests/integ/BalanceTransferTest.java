@@ -4,8 +4,6 @@ import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
@@ -14,14 +12,6 @@ import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
-import org.aion.harness.main.NodeConfigurations.DatabaseOption;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeFactory.NodeType;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
@@ -30,66 +20,33 @@ import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
+import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
+import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.runner.RunWith;
 
-
+@RunWith(SequentialRunner.class)
 public class BalanceTransferTest {
-    private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";
-    private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
     private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.BalanceTransferTest");
 
-    private static LocalNode node;
-    private static RPC rpc;
-    private static NodeListener listener;
-    private static PrivateKey preminedPrivateKey;
+    private static RPC rpc = new RPC("127.0.0.1", "8545");
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(200);
+    private PreminedAccount preminedAccount = new PreminedAccount(BigInteger.valueOf(1_000_000_000_000_000_000L));
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        ProhibitConcurrentHarness.acquireTestLock();
-        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
-
-        NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
-
-        node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        node.configure(configurations);
-        Result result = node.initialize();
-        log.log(result);
-        assertTrue(result.isSuccess());
-        Result startResult = node.start();
-        assertTrue("Kernel startup error: " + startResult.getError(),
-            startResult.isSuccess());
-        assertTrue(node.isAlive());
-        rpc = new RPC("127.0.0.1", "8545");
-        listener = NodeListener.listenTo(node);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        System.out.println("Node stop: " + node.stop());
-        node = null;
-        rpc = null;
-        listener = null;
-        destroyLogs();
-        ProhibitConcurrentHarness.releaseTestLock();
-    }
+    @Rule
+    private LocalNodeListener listener = new LocalNodeListener();
 
     /**
      * Tests making a CREATE transaction in which funds are transferred as well.
@@ -134,6 +91,8 @@ public class BalanceTransferTest {
         Address contract = createReceipt.getAddressOfDeployedContract().get();
         BigInteger originalBalance = getPreminedBalance();
 
+        this.preminedAccount.incrementNonce();
+
         // Attempt to transfer funds to a non-payable function in the contract.
         log.log("Attempting to transfer funds to the contract...");
         transaction = buildTransactionToTransferFundsToNonPayableFunction(contract, amount);
@@ -145,6 +104,8 @@ public class BalanceTransferTest {
 
         assertEquals(expectedBalance, getPreminedBalance());
         assertEquals(BigInteger.ZERO, getBalance(contract));
+
+        this.preminedAccount.incrementNonce();
 
         // Now attempt to transfer funds to a payable function in the contract.
         log.log("Using correct (payable) method to transfer funds...");
@@ -200,6 +161,8 @@ public class BalanceTransferTest {
 
         Address contract = createReceipt.getAddressOfDeployedContract().get();
 
+        this.preminedAccount.incrementNonce();
+
         // Now transfer funds to the contract.
         log.log("Transferring funds to the contract...");
         BigInteger originalBalance = getPreminedBalance();
@@ -248,7 +211,7 @@ public class BalanceTransferTest {
     }
 
     private BigInteger getPreminedBalance() throws InterruptedException {
-        RpcResult<BigInteger> balanceResult = rpc.getBalance(preminedPrivateKey.getAddress());
+        RpcResult<BigInteger> balanceResult = rpc.getBalance(this.preminedAccount.getAddress());
         assertRpcSuccess(balanceResult);
         return balanceResult.getResult();
     }
@@ -307,10 +270,10 @@ public class BalanceTransferTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InterruptedException {
+    private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             contract,
             new byte[]{ 0x1, 0x2, 0x3 }, // we give a non-empty array here so that we actually invoke the main method.
             ENERGY_LIMIT,
@@ -321,10 +284,10 @@ public class BalanceTransferTest {
         return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InterruptedException {
+    private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             account,
             new byte[0],
             ENERGY_LIMIT,
@@ -335,10 +298,10 @@ public class BalanceTransferTest {
         return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
+    private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             contract,
             getPayableFunctionCallEncoding(),
             ENERGY_LIMIT,
@@ -349,10 +312,10 @@ public class BalanceTransferTest {
         return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InterruptedException {
+    private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             contract,
             getNonPayableFunctionCallEncoding(),
             ENERGY_LIMIT,
@@ -363,14 +326,14 @@ public class BalanceTransferTest {
         return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateFvmContract() throws DecoderException, InterruptedException {
+    private RawTransaction buildTransactionToCreateFvmContract() throws DecoderException {
         return buildTransactionToCreateAndTransferToFvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InterruptedException {
+    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             null,
             getFvmContractBytes(),
             ENERGY_LIMIT,
@@ -381,14 +344,14 @@ public class BalanceTransferTest {
         return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateAvmContract() throws InterruptedException {
+    private RawTransaction buildTransactionToCreateAvmContract() {
         return buildTransactionToCreateAndTransferToAvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InterruptedException {
+    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) {
         TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
@@ -425,25 +388,4 @@ public class BalanceTransferTest {
     private byte[] getPayableFunctionCallEncoding() throws DecoderException {
         return Hex.decodeHex("4a6a7407");   // calls the function named 'payableFunction'
     }
-
-    private static void destroyLogs() throws IOException {
-        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
-    }
-
-    private BigInteger getNonce() throws InterruptedException {
-        RpcResult<BigInteger> nonceResult = rpc.getNonce(preminedPrivateKey.getAddress());
-        assertRpcSuccess(nonceResult);
-        return nonceResult.getResult();
-    }
-
-    private static void disclaimer() {
-        System.err.println("------------------------------------------------------------------------");
-        System.err.println("This is a disclaimer to exonerate me of all charges ");
-        System.err.println();
-        System.err.println("Unpack the avmtestnet build so that its root (aion) directory is located at: " + BUILT_KERNEL);
-        System.err.println("Run in standalone mode (this way you don't need the eth_syncing fix)");
-        System.err.println("Set the TX log level to TRACE (be careful of the double config file nonsense..)");
-        System.err.println("------------------------------------------------------------------------");
-    }
-
 }

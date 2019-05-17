@@ -4,8 +4,6 @@ import static org.aion.harness.tests.contracts.Assertions.assertRpcSuccess;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -16,16 +14,7 @@ import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
-import org.aion.harness.main.NodeConfigurations.DatabaseOption;
-import org.aion.harness.main.NodeFactory;
-import org.aion.harness.main.NodeFactory.NodeType;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
@@ -34,72 +23,42 @@ import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.AvmCrossCallDispatcher;
+import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
+import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.runner.RunWith;
 
+@RunWith(SequentialRunner.class)
 public class CrossCallTest {
-    private static final String BUILT_KERNEL = System.getProperty("user.dir") + "/aion";
-    private static final String PREMINED_KEY = "4c3c8a7c0292bc55d97c50b4bdabfd47547757d9e5c194e89f66f25855baacd0";
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
-    private static LocalNode node;
-    private static RPC rpc;
-    private static NodeListener listener;
-    private static PrivateKey preminedPrivateKey;
+    private static RPC rpc = new RPC("127.0.0.1", "8545");
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(200);
+    private PreminedAccount preminedAccount = new PreminedAccount(BigInteger.valueOf(1_000_000_000_000_000_000L));
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        ProhibitConcurrentHarness.acquireTestLock();
-
-        preminedPrivateKey = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
-
-        NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, BUILT_KERNEL, DatabaseOption.PRESERVE_DATABASE);
-        node = NodeFactory.getNewLocalNodeInstance(NodeType.JAVA_NODE);
-        node.configure(configurations);
-
-        Result result = node.initialize();
-        System.out.println("Initialize result: " + result);
-        assertTrue(result.isSuccess());
-
-        result = node.start();
-        System.out.println("Start result: " + result);
-        assertTrue(node.isAlive());
-
-        rpc = new RPC("127.0.0.1", "8545");
-        listener = NodeListener.listenTo(node);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        System.out.println("Stop result: " + node.stop());
-        node = null;
-        rpc = null;
-        listener = null;
-        destroyLogs();
-        ProhibitConcurrentHarness.releaseTestLock();
-    }
+    @Rule
+    private LocalNodeListener listener = new LocalNodeListener();
 
     @Test
     public void testCallingFvmContractFromAvm() throws Exception {
         System.out.println("Deploying fvm contract...");
         Address fvmContract = deployFvmContract();
+
         System.out.println("Deploying avm contract...");
+        this.preminedAccount.incrementNonce();
         Address avmContract = deployAvmDispatcherContract();
+
         System.out.println("Calling avm contract...");
+        this.preminedAccount.incrementNonce();
         callAvmDispatcher(avmContract, fvmContract);
     }
 
@@ -110,7 +69,9 @@ public class CrossCallTest {
 
         System.out.println("Deploying avm contract...");
         Address avmContract = deployAvmDispatcherContract();
+
         System.out.println("Calling avm contract...");
+        this.preminedAccount.incrementNonce();
         callAvmDispatcher(avmContract, precompiledContract);
     }
 
@@ -118,16 +79,20 @@ public class CrossCallTest {
     public void testCallingAvmContractFromFvm() throws Exception {
         System.out.println("Deploying avm contract...");
         Address avmContract = deployAvmDispatcherContract();
+
         System.out.println("Deploying fvm contract...");
+        this.preminedAccount.incrementNonce();
         Address fvmContract = deployFvmContract();
+
         System.out.println("Calling fvm contract...");
+        this.preminedAccount.incrementNonce();
         callFvmDispatcher(fvmContract, avmContract);
     }
 
     private void callFvmDispatcher(Address dispatcher, Address target) throws InterruptedException, DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             dispatcher,
             getFvmCallDispatcherBytes(target),
             ENERGY_LIMIT,
@@ -140,8 +105,8 @@ public class CrossCallTest {
 
     private void callAvmDispatcher(Address dispatcher, Address target) throws InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             dispatcher,
             getAvmCallDispatcherBytes(target),
             ENERGY_LIMIT,
@@ -154,8 +119,8 @@ public class CrossCallTest {
 
     private Address deployAvmDispatcherContract() throws InterruptedException {
         TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
@@ -168,8 +133,8 @@ public class CrossCallTest {
 
     private Address deployFvmContract() throws InterruptedException, DecoderException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
-            preminedPrivateKey,
-            getNonce(),
+            this.preminedAccount.getPrivateKey(),
+            this.preminedAccount.getNonce(),
             null,
             getFvmContractBytes(),
             ENERGY_LIMIT,
@@ -312,15 +277,5 @@ public class CrossCallTest {
         byte[] array = Arrays.copyOf(array1, totalLength);
         System.arraycopy(array2, 0, array, array1.length, array2.length);
         return array;
-    }
-
-    private BigInteger getNonce() throws InterruptedException {
-        RpcResult<BigInteger> nonceResult = rpc.getNonce(preminedPrivateKey.getAddress());
-        assertRpcSuccess(nonceResult);
-        return nonceResult.getResult();
-    }
-
-    private static void destroyLogs() throws IOException {
-        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
     }
 }
