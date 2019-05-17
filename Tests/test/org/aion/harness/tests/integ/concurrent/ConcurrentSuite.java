@@ -1,0 +1,28 @@
+package org.aion.harness.tests.integ.concurrent;
+
+import org.aion.harness.tests.integ.AvmTxSmokeTest;
+import org.aion.harness.tests.integ.BalanceTransferTest;
+import org.aion.harness.tests.integ.BulkBalanceTransferTest;
+import org.aion.harness.tests.integ.CrossCallTest;
+import org.aion.harness.tests.integ.FvmTxSmokeTest;
+import org.aion.harness.tests.integ.JavaApiSmokeTest;
+import org.aion.harness.tests.integ.runner.ConcurrentRunner;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+
+@RunWith(ConcurrentRunner.class)
+@Suite.SuiteClasses({
+    BalanceTransferTest.class,
+    CrossCallTest.class,
+    BulkBalanceTransferTest.class,
+    AvmTxSmokeTest.class,
+    FvmTxSmokeTest.class,
+    JavaApiSmokeTest.class
+})
+public class ConcurrentSuite {
+    /**
+     * This class should have no logic, nothing in it gets run. It is merely here as an entry point
+     * for the concurrent runner, so that we can specify all of the tests that are to be included
+     * in the concurrent test execution.
+     */
+}

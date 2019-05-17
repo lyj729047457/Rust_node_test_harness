@@ -59,34 +59,43 @@ public final class SequentialRunner extends Runner {
             // Start up the local node before any tests are run.
             initializeAndStartNode();
 
-            boolean beforeClassFailed = true;
             try {
+                boolean beforeClassFailed = false;
+
                 // If the class has a @BeforeClass method then run it now.
-                runBeforeClassMethodsIfAnyExists();
-                beforeClassFailed = false;
-
-                // Run all of the test methods now. No exceptions will be thrown here.
-                runTests(runNotifier);
-
-                // If the class has a @AfterClass method then run it now.
-                runAfterClassMethodsIfAnyExists();
-
-            } catch (Throwable e) {
-
-                // Any exceptions that make it here occurred in the @BeforeClass or @AfterClass blocks.
-                if (beforeClassFailed) {
+                try {
+                    runBeforeClassMethodsIfAnyExists();
+                } catch (Throwable e) {
+                    // The @BeforeClass failed so mark every test as failed.
+                    beforeClassFailed = true;
                     for (Description description : this.testClassDescription.getChildren()) {
                         runNotifier.fireTestStarted(description);
                         runNotifier.fireTestFailure(new Failure(description, e));
                         runNotifier.fireTestFinished(description);
                     }
-                } else {
+                }
+
+                // Run all of the test methods now. No exceptions will be thrown here.
+                if (!beforeClassFailed) {
+                    runTests(runNotifier);
+                }
+
+                // If the class has a @AfterClass method then run it now.
+                try {
+                    if (!beforeClassFailed) {
+                        runAfterClassMethodsIfAnyExists();
+                    }
+                } catch (Throwable e) {
                     // Document the afterClass error as if the test class itself failed, so we can show the error.
                     runNotifier.fireTestStarted(this.testClassDescription);
                     runNotifier.fireTestFailure(new Failure(this.testClassDescription, e));
                     runNotifier.fireTestFinished(this.testClassDescription);
                 }
 
+            } catch (Throwable e) {
+                // We don't expect to see any exceptions here! But this is just in case and allows us to shut down the node in a finally.
+                e.printStackTrace();
+                throw e;
             } finally {
                 // Ensure that the node gets shut down properly.
                 stopNode();
