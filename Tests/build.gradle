@@ -41,6 +41,14 @@ task waitForPorts(type: Exec) {
     commandLine 'bash', "bin/wait-for-ports.sh"
 }
 
+test {
+	if ( project.hasProperty("sequential") ) {
+		exclude '**/integ/concurrent/ConcurrentSuite.class'
+	} else {
+		include '**/integ/concurrent/ConcurrentSuite.class'
+	}
+}
+
 task ciTest
 ciTest.dependsOn copyCustomConfig
 ciTest.dependsOn waitForPorts
