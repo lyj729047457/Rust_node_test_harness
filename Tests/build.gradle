@@ -42,6 +42,7 @@ task waitForPorts(type: Exec) {
 }
 
 test {
+	systemProperty "skipCleanLogs", project.getProperty("skipCleanLogs")
 	if ( project.hasProperty("sequential") ) {
 		exclude '**/integ/concurrent/ConcurrentSuite.class'
 	} else {
