@@ -78,48 +78,56 @@ public final class TestExecutor implements Runnable {
      */
     private void runTestMethodAndFinishFuture(FutureExecutionResult futureExecutionResult) {
         if (!futureExecutionResult.resultIsFinished()) {
-            // Grab the unique test class instance and method to be run for this test.
+
             TestClassAndMethodReference testInstance = this.testDescriptionToInstanceMap.get(futureExecutionResult.testDescription);
-            Object testClassInstance = testInstance.instanceOfTestClass;
-            Method testMethod = testInstance.instanceOfTestMethod;
+            TestResult result = runTest(testInstance, futureExecutionResult.testDescription);
 
-            try {
-                // 2. Run any @Before methods.
-                runBeforeMethodsIfAnyExist(testInstance.testClass, testClassInstance);
-
-                // 3. Initialize any @Rule fields.
-                initializeAllDeclaredRuleFields(testInstance.testClass, testClassInstance);
-
-                // 4. Run the test method.
-                testMethod.invoke(testClassInstance);
-
-            } catch (Throwable e) {
-
-                // Only mark the test failed if the exception thrown was not what it expected to see.
-                Class<? extends Throwable> expectedException = getExpectedException(testMethod);
-                if ((e.getCause() != null) && (!e.getCause().getClass().equals(expectedException))) {
-
-                    futureExecutionResult.markAsFailed(e.getCause());
-                }
-
-            } finally {
-                // Ensure that any @After methods get run.
-                try {
-                    runAfterMethodsIfAnyExist(testInstance.testClass, testClassInstance);
-                } catch (Throwable e) {
-                    // Only notify of a failure in the @After methods if we haven't already seen a failure yet.
-                    // Otherwise we might overwrite the original source of the error.
-                    if (!futureExecutionResult.resultIsFinished()) {
-                        futureExecutionResult.markAsFailed(e);
-                    }
-                }
-            }
-
-            // If the future has not been finished yet then there were no errors encountered, it was a success.
-            if (!futureExecutionResult.resultIsFinished()) {
+            if (result.success) {
                 futureExecutionResult.markAsSuccess();
+            } else {
+                futureExecutionResult.markAsFailed(result.error);
             }
         }
+    }
+
+    private TestResult runTest(TestClassAndMethodReference testInstance, Description testDescription) {
+        Object instanceOfTestClass = testInstance.instanceOfTestClass;
+        Method testMethod = testInstance.instanceOfTestMethod;
+
+        // Run any @Before methods.
+        try {
+            runBeforeMethodsIfAnyExist(testInstance.testClass, instanceOfTestClass);
+        } catch (Throwable e) {
+            return TestResult.failed(testDescription, e);
+        }
+
+        // Initialize any @Rule fields.
+        try {
+            initializeAllDeclaredRuleFields(testInstance.testClass, instanceOfTestClass);
+        } catch (Throwable e) {
+            return TestResult.failed(testDescription, e);
+        }
+
+        // Run the test.
+        try {
+            testMethod.invoke(instanceOfTestClass);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+
+            // Only mark the test failed if the exception thrown was not what it expected to see.
+            Class<? extends Throwable> expectedException = getExpectedException(testMethod);
+            if ((e.getCause() != null) && (!e.getCause().getClass().equals(expectedException))) {
+                return TestResult.failed(testDescription, e.getCause());
+            }
+        }
+
+        // Run any @After methods.
+        try {
+            runAfterMethodsIfAnyExist(testInstance.testClass, instanceOfTestClass);
+        } catch (Throwable e) {
+            return TestResult.failed(testDescription, e);
+        }
+
+        return TestResult.successful(testDescription);
     }
 
     private boolean isMethodIgnored(Method method) {
