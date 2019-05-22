@@ -6,7 +6,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +14,12 @@ import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationExc
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
 import org.aion.harness.tests.integ.runner.internal.FailedClass;
-import org.aion.harness.tests.integ.runner.internal.FutureExecutionResult;
-import org.aion.harness.tests.integ.runner.internal.PreminedAccountFunder;
-import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestExecutor;
+import org.aion.harness.tests.integ.runner.internal.PreminedAccountFunder;
+import org.aion.harness.tests.integ.runner.internal.TestAndResultQueueManager;
+import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
+import org.aion.harness.tests.integ.runner.internal.TestResult;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -121,9 +121,11 @@ public final class ConcurrentRunner extends Runner {
      */
     private void runAllTests(List<Class<?>> testClasses, RunNotifier runNotifier) {
         List<TestContext> allTestContexts = getTestContextsForAllTests(testClasses);
+        int numThreads = Math.min(MAX_NUM_THREADS, allTestContexts.size());
 
-        // Create the exeuctor threads and hand out all the tests between them.
-        List<TestExecutor> testExecutors = createExecutorsAndPartitionTests(allTestContexts);
+        TestAndResultQueueManager queueManager = new TestAndResultQueueManager(numThreads);
+
+        List<TestExecutor> testExecutors = createTestExecutors(numThreads, queueManager);
         List<Thread> executorThreads = createExecutorThreads(testExecutors);
 
         // Start the threads.
@@ -131,27 +133,27 @@ public final class ConcurrentRunner extends Runner {
             executorThread.start();
         }
 
-        // Collect the results and notify JUnit.
-        for (TestExecutor testExecutor : testExecutors) {
-            for (FutureExecutionResult future : testExecutor.getFutureExecutionResults()) {
-                try {
-                    if (future.ignored) {
-                        runNotifier.fireTestIgnored(future.testDescription);
-                    } else {
-                        runNotifier.fireTestStarted(future.testDescription);
+        // Dynamically dispatch all of the tests to the threads.
+        for (TestContext testContext : allTestContexts) {
+            queueManager.putTest(testContext);
+            runNotifier.fireTestStarted(testContext.testDescription);
+        }
 
-                        // Block until the future is ready and mark failed if necessary.
-                        future.waitUntilFinished();
-                        if (!future.wasSuccessful()) {
-                            runNotifier.fireTestFailure(new Failure(future.testDescription, future.getTestError()));
-                        }
+        // Close the queue to notify threads that all tests have been submitted.
+        queueManager.reportAllTestsSubmitted();
 
-                        runNotifier.fireTestFinished(future.testDescription);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+        // Collect the results of the tests and notify JUnit.
+        TestResult result = queueManager.takeResult();
+        while (result != null) {
+            if (result.ignored) {
+                runNotifier.fireTestIgnored(result.description);
+            } else {
+                if (!result.success) {
+                    runNotifier.fireTestFailure(new Failure(result.description, result.error));
                 }
+                runNotifier.fireTestFinished(result.description);
             }
+            result = queueManager.takeResult();
         }
 
         // Wait for all the threads to exit.
@@ -164,42 +166,20 @@ public final class ConcurrentRunner extends Runner {
         }
     }
 
+    private List<TestExecutor> createTestExecutors(int num, TestAndResultQueueManager queueManager) {
+        List<TestExecutor> threads = new ArrayList<>();
+        for (int i = 0; i < num; i++) {
+            threads.add(new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, queueManager));
+        }
+        return threads;
+    }
+
     private List<Thread> createExecutorThreads(List<TestExecutor> testExecutors) {
         List<Thread> threads = new ArrayList<>();
         for (TestExecutor testExecutor : testExecutors) {
             threads.add(new Thread(testExecutor));
         }
         return threads;
-    }
-
-    private List<TestExecutor> createExecutorsAndPartitionTests(List<TestContext> allTestContexts) {
-        List<TestExecutor> executors = new ArrayList<>();
-
-        if (allTestContexts.size() <= MAX_NUM_THREADS) {
-            // In this case we only use allTestContexts.size() number of threads.
-            for (TestContext testContext : allTestContexts) {
-                executors.add(new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, Collections.singletonList(testContext)));
-            }
-
-        } else {
-            // Create all but the last executor. All these receive the same amount of tasks: the ceiling of the average number to be distributed among the threads.
-            int numTestsForAllButFinalThread = (int) Math.ceil((((double) allTestContexts.size()) / MAX_NUM_THREADS));
-
-            for (int i = 0; i < (MAX_NUM_THREADS - 1); i++) {
-                // Note that our end index can be out of bounds on the last iteration if our ceiling is a natural number and things divide perfectly.
-                int startIndexOfSubset = i * numTestsForAllButFinalThread;
-                int endIndexOfSubset = Math.min(allTestContexts.size(), startIndexOfSubset + numTestsForAllButFinalThread);
-                executors.add(new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, allTestContexts.subList(startIndexOfSubset, endIndexOfSubset)));
-            }
-
-            // Last executor has to handle any remaining tests not already delegated to the other threads.
-            int numTestsAlreadyHandedOut = numTestsForAllButFinalThread * (MAX_NUM_THREADS - 1);
-            if (numTestsAlreadyHandedOut < allTestContexts.size()) {
-                executors.add(new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, allTestContexts.subList(numTestsAlreadyHandedOut, allTestContexts.size())));
-            }
-        }
-
-        return executors;
     }
 
     private List<TestContext> getTestContextsForAllTests(List<Class<?>> testClasses) {

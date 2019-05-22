@@ -5,13 +5,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
-import org.junit.runner.Description;
 
 /**
  * A dedicated thread for executing test methods.
@@ -34,78 +31,67 @@ import org.junit.runner.Description;
 public final class TestExecutor implements Runnable {
     private final TestNodeManager nodeManagerForTests;
     private final PreminedAccountFunder preminedDispatcher;
-    private final Map<Description, TestClassAndMethodReference> testDescriptionToInstanceMap = new HashMap<>();
-    private final List<FutureExecutionResult> futureResults = new ArrayList<>();
+    private final TestAndResultQueueManager queueManager;
+    private boolean alive;
 
-    public TestExecutor(TestNodeManager nodeManager, PreminedAccountFunder preminedDispatcher, List<TestContext> testContexts) {
+    public TestExecutor(TestNodeManager nodeManager, PreminedAccountFunder preminedDispatcher, TestAndResultQueueManager queueManager) {
         this.nodeManagerForTests = nodeManager;
         this.preminedDispatcher = preminedDispatcher;
-
-        // We initialize these TestInfo objects all at once here and set up the mapping to save time, there
-        // are a few situations where different pieces of information are needed or different related pieces, and
-        // this mapping helps us deal with that.
-        try {
-            this.testDescriptionToInstanceMap.putAll(produceDescriptionToInstanceMap(testContexts));
-            this.futureResults.addAll(createFutures(this.testDescriptionToInstanceMap));
-        } catch (Throwable e) {
-            // This means we were unable to instantiate the test class or grab its test method -- mark all tests as failed.
-            this.futureResults.addAll(createFuturesAllFailed(testContexts, e));
-        }
+        this.queueManager = queueManager;
+        this.alive = true;
     }
 
     @Override
     public void run() {
-        for (FutureExecutionResult executionResult : this.futureResults) {
-            runTestMethodAndFinishFuture(executionResult);
-        }
-    }
+        while (this.alive) {
+            TestContext testContext = this.queueManager.takeTest();
 
-    /**
-     * Returns a list of futures corresponding to all of the results this thread will be responsible
-     * for running.
-     */
-    public List<FutureExecutionResult> getFutureExecutionResults() {
-        return new ArrayList<>(this.futureResults);
-    }
-
-    /**
-     * Runs the test method corresponding to the given future, and finishes that future once the
-     * method has finished running, only if this future has not already been finished.
-     *
-     * If the future is already finished this method does nothing and returns immediately. The future
-     * may be finished if the test is marked @Ignore or if a fatal exception occurred initializing
-     * the test class or grabbing the test method reference, for example.
-     */
-    private void runTestMethodAndFinishFuture(FutureExecutionResult futureExecutionResult) {
-        if (!futureExecutionResult.resultIsFinished()) {
-
-            TestClassAndMethodReference testInstance = this.testDescriptionToInstanceMap.get(futureExecutionResult.testDescription);
-            TestResult result = runTest(testInstance, futureExecutionResult.testDescription);
-
-            if (result.success) {
-                futureExecutionResult.markAsSuccess();
+            if (testContext == null) {
+                // If the queue returned null then the producer has closed it down, there are no tests
+                // left to run, so this thread can exit.
+                this.alive = false;
             } else {
-                futureExecutionResult.markAsFailed(result.error);
+                // Run the test and place the result in the outbound queue.
+                this.queueManager.putResult(runTest(testContext));
             }
         }
+        this.queueManager.reportThreadIsFinished();
     }
 
-    private TestResult runTest(TestClassAndMethodReference testInstance, Description testDescription) {
-        Object instanceOfTestClass = testInstance.instanceOfTestClass;
-        Method testMethod = testInstance.instanceOfTestMethod;
+    private TestResult runTest(TestContext testContext) {
+        Object instanceOfTestClass;
+        Method testMethod;
+
+        // Create a unique instance of the test class to run this test against.
+        try {
+            instanceOfTestClass = testContext.testClass.getConstructor().newInstance();
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            return TestResult.failed(testContext.testDescription, e);
+        }
+
+        // Grab the test method to be run.
+        try {
+            testMethod = testContext.testClass.getDeclaredMethod(testContext.testDescription.getMethodName());
+        } catch (NoSuchMethodException e) {
+            return TestResult.failed(testContext.testDescription, e);
+        }
+
+        if (isMethodIgnored(testMethod)) {
+            return TestResult.ignored(testContext.testDescription);
+        }
 
         // Run any @Before methods.
         try {
-            runBeforeMethodsIfAnyExist(testInstance.testClass, instanceOfTestClass);
+            runBeforeMethodsIfAnyExist(testContext.testClass, instanceOfTestClass);
         } catch (Throwable e) {
-            return TestResult.failed(testDescription, e);
+            return TestResult.failed(testContext.testDescription, e);
         }
 
         // Initialize any @Rule fields.
         try {
-            initializeAllDeclaredRuleFields(testInstance.testClass, instanceOfTestClass);
+            initializeAllDeclaredRuleFields(testContext.testClass, instanceOfTestClass);
         } catch (Throwable e) {
-            return TestResult.failed(testDescription, e);
+            return TestResult.failed(testContext.testDescription, e);
         }
 
         // Run the test.
@@ -116,18 +102,18 @@ public final class TestExecutor implements Runnable {
             // Only mark the test failed if the exception thrown was not what it expected to see.
             Class<? extends Throwable> expectedException = getExpectedException(testMethod);
             if ((e.getCause() != null) && (!e.getCause().getClass().equals(expectedException))) {
-                return TestResult.failed(testDescription, e.getCause());
+                return TestResult.failed(testContext.testDescription, e.getCause());
             }
         }
 
         // Run any @After methods.
         try {
-            runAfterMethodsIfAnyExist(testInstance.testClass, instanceOfTestClass);
+            runAfterMethodsIfAnyExist(testContext.testClass, instanceOfTestClass);
         } catch (Throwable e) {
-            return TestResult.failed(testDescription, e);
+            return TestResult.failed(testContext.testDescription, e);
         }
 
-        return TestResult.successful(testDescription);
+        return TestResult.successful(testContext.testDescription);
     }
 
     private boolean isMethodIgnored(Method method) {
@@ -267,40 +253,5 @@ public final class TestExecutor implements Runnable {
                 throw new UnsupportedAnnotation("This custom runner does not allow a @After method to have any other annotations.");
             }
         }
-    }
-
-    private Map<Description, TestClassAndMethodReference> produceDescriptionToInstanceMap(List<TestContext> testContexts) throws NoSuchMethodException, InstantiationException, InvocationTargetException, IllegalAccessException {
-        Map<Description, TestClassAndMethodReference> descriptionToInfoMap = new HashMap<>();
-        for (TestContext testContext : testContexts) {
-            Object instanceOfTestClass = testContext.testClass.getConstructor().newInstance();
-            Method testMethod = testContext.testClass.getDeclaredMethod(testContext.testDescription.getMethodName());
-
-            descriptionToInfoMap.put(testContext.testDescription, new TestClassAndMethodReference(testContext.testClass, instanceOfTestClass, testMethod));
-        }
-        return descriptionToInfoMap;
-    }
-
-    private List<FutureExecutionResult> createFutures(Map<Description, TestClassAndMethodReference> testDescriptionToInfoMap) {
-        List<FutureExecutionResult> futures = new ArrayList<>();
-        for (Description testDescription : testDescriptionToInfoMap.keySet()) {
-
-            if (isMethodIgnored(testDescriptionToInfoMap.get(testDescription).instanceOfTestMethod)) {
-                futures.add(new FutureExecutionResult(testDescription, true));
-            } else {
-                futures.add(new FutureExecutionResult(testDescription, false));
-            }
-
-        }
-        return futures;
-    }
-
-    private List<FutureExecutionResult> createFuturesAllFailed(List<TestContext> testContexts, Throwable error) {
-        List<FutureExecutionResult> futures = new ArrayList<>();
-        for (TestContext testContext : testContexts) {
-            FutureExecutionResult futureExecutionResult = new FutureExecutionResult(testContext.testDescription, false);
-            futureExecutionResult.markAsFailed(error);
-            futures.add(futureExecutionResult);
-        }
-        return futures;
     }
 }

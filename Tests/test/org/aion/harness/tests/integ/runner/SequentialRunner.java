@@ -10,11 +10,12 @@ import java.util.List;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
-import org.aion.harness.tests.integ.runner.internal.FutureExecutionResult;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccountFunder;
+import org.aion.harness.tests.integ.runner.internal.TestAndResultQueueManager;
 import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestExecutor;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
+import org.aion.harness.tests.integ.runner.internal.TestResult;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -113,37 +114,44 @@ public final class SequentialRunner extends Runner {
     }
 
     private void runTests(RunNotifier runNotifier) {
-        List<TestContext> descriptions = new ArrayList<>();
+        List<TestContext> testContexts = new ArrayList<>();
         for (Description testDescription : this.testClassDescription.getChildren()) {
-            descriptions.add(new TestContext(this.testClass, testDescription));
+            testContexts.add(new TestContext(this.testClass, testDescription));
         }
 
+        TestAndResultQueueManager queueManager = new TestAndResultQueueManager(1);
+
         // Run all of the tests on a single thread.
-        TestExecutor testExecutor = new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, descriptions);
+        TestExecutor testExecutor = new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, queueManager);
         Thread executorThread = new Thread(testExecutor);
         executorThread.start();
 
-        try {
-            for (FutureExecutionResult future : testExecutor.getFutureExecutionResults()) {
-                if (future.ignored) {
-                    runNotifier.fireTestIgnored(future.testDescription);
-                } else {
+        // Dynamically dispatch all of the tests to the thread.
+        for (TestContext testContext : testContexts) {
+            queueManager.putTest(testContext);
+            runNotifier.fireTestStarted(testContext.testDescription);
+        }
 
-                    runNotifier.fireTestStarted(future.testDescription);
+        // Close the queue to notify threads that all tests have been submitted.
+        queueManager.reportAllTestsSubmitted();
 
-                    // Block until the future is ready.
-                    future.waitUntilFinished();
-                    if (!future.wasSuccessful()) {
-                        runNotifier.fireTestFailure(new Failure(future.testDescription, future.getTestError()));
-                    }
-
-                    runNotifier.fireTestFinished(future.testDescription);
+        // Collect the results of the tests and notify JUnit.
+        TestResult result = queueManager.takeResult();
+        while (result != null) {
+            if (result.ignored) {
+                runNotifier.fireTestIgnored(result.description);
+            } else {
+                if (!result.success) {
+                    runNotifier.fireTestFailure(new Failure(result.description, result.error));
                 }
+                runNotifier.fireTestFinished(result.description);
             }
+            result = queueManager.takeResult();
+        }
 
-            // Wait for the thread to finish now that we've collected all of its results.
+        // Wait for the thread to exit.
+        try {
             executorThread.join();
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
