@@ -5,6 +5,7 @@
     <property name="source" value="${workspace}/src"/>
     <property name="unit-test" value="${workspace}/test"/>
     <property name="integ-test" value="${workspace}/integration-test"/>
+    <property name="resources" value="${workspace}/src-resources"/>
     <property name="dependencies" value="${workspace}/lib"/>
     <property name="build-dir" value="${workspace}/build"/>
     <property name="built-sources" value="${build-dir}/main"/>
@@ -43,6 +44,7 @@
                 <pathelement location="${dependencies}/gson-2.8.5.jar"/>
             </modulepath>
         </javac>
+        <copydir src="${resources}" dest="${built-sources}" />
 
         <jar destfile="${built-sources}/${jar-name}.jar" filesetmanifest="mergewithoutmain" basedir="${built-sources}"/>
 

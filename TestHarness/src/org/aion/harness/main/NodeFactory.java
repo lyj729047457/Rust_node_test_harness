@@ -1,6 +1,7 @@
 package org.aion.harness.main;
 
 import java.util.NoSuchElementException;
+import org.aion.harness.main.impl.RustNodeWithMiner;
 import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.main.impl.GenericRemoteNode;
 import org.aion.harness.main.impl.KubernetesNode;
@@ -13,7 +14,7 @@ import org.aion.harness.main.impl.KubernetesNodeType;
  */
 public final class NodeFactory {
 
-    public enum NodeType { JAVA_NODE }
+    public enum NodeType { JAVA_NODE, RUST_NODE }
 
     public static LocalNode getNewLocalNodeInstance(NodeType node) {
         if (node == null) {
@@ -22,6 +23,7 @@ public final class NodeFactory {
 
         switch (node) {
             case JAVA_NODE: return new JavaNode();
+            case RUST_NODE: return new RustNodeWithMiner();
             default: throw new NoSuchElementException("The provided node type is not yet supported: " + node);
         }
     }

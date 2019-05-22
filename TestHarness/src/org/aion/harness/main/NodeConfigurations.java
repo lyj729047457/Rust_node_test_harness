@@ -2,12 +2,16 @@ package org.aion.harness.main;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.aion.harness.util.NodeFileManager;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 /**
  * A class that holds configuration details related to a node.
  *
  * This class is immutable.
+ *
  */
 public final class NodeConfigurations {
     private final Network network;
@@ -79,12 +83,43 @@ public final class NodeConfigurations {
     }
 
     /**
-     * Returns the database of the current network.
+     * Returns the database of the current network for Java kernel directory structure.
      *
-     * @return the database.
+     * @return the database dir for Java kernel.
      */
-    public File getDatabase() throws IOException {
-        return NodeFileManager.getDatabaseOf(getActualBuildLocation(), this.network);
+    public File getDatabaseJava() throws IOException {
+        return NodeFileManager.getDatabaseOfJava(getActualBuildLocation(), this.network);
+    }
+
+    /**
+     * Returns the database of the current network for Rust kernel directory structure.
+     *
+     * @return the database dir for Rust kernel if it exists; otherwise, null
+     */
+    public File getDatabaseRust(String dataDir) {
+        // wonky logic ahead: the lock files for leveldb used by Rust kernel reside in
+        // $RUST_DATA_DIR/chains/$NETWORK_NAME/db/$HEXSTRING/archive/db/$DB_KIND/LOCK
+        // where "$" parts of the path are variables.  Can't figure out how to
+        // know the $HEXSTRING part ahead of time.  However, I noticed there's always only
+        // one subdirectory in $RUST_DATA_DIR/chains/$NETWORK_NAME/db, so we'll use that
+        // reasoning to guess the path of the leveldb lock files
+
+        File base = new File(String.format("%s/%s/chains/%s/db",
+            getActualBuildLocation(), dataDir, getNetwork().string()));
+        if(!base.exists()) {
+            // db not yet created
+            return null;
+        }
+        List<String> baseSubdirs = Arrays.asList(base.list(DirectoryFileFilter.INSTANCE));
+        if(baseSubdirs.size() != 1) {
+            throw new RuntimeException(String.format(
+                "Can't figure out where the leveldb db lock files are because there wasn't "
+                    + "exactly one subdirectory under %s (instead I found the following: %s)",
+                base.getAbsolutePath(), baseSubdirs));
+        }
+        return new File(base
+            + File.separator + baseSubdirs.get(0)
+            + File.separator + "archive/db");
     }
 
     /**

@@ -197,7 +197,7 @@ public final class NodeInitializer {
     }
 
     private void destroyDatabaseOf(File builtKernelDirectory, Network network) throws IOException {
-        FileUtils.deleteDirectory(NodeFileManager.getDatabaseOf(builtKernelDirectory, network));
+        FileUtils.deleteDirectory(NodeFileManager.getDatabaseOfJava(builtKernelDirectory, network));
     }
 
     private void destroyTemporaryTarFile() {

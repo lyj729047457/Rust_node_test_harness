@@ -23,7 +23,7 @@ public class LeveldbLockAwaiter {
 
     public static final int AWAIT_INTERVAL_SEC = 3;
     public static final int AWAIT_LIMIT_MIN = 5;
-    public static final List<String> LOCK_FILES = Collections.unmodifiableList(
+    private static final List<String> LOCK_FILES = Collections.unmodifiableList(
         List.of(
         "pendingBlock/index/LOCK",
         "state/LOCK",
@@ -53,10 +53,10 @@ public class LeveldbLockAwaiter {
 
     /**
      * Block for up to {@link #AWAIT_LIMIT_MIN} minutes until all files of
-     * {@link #LOCK_FILES} are not locked.
+     * {@link #getLockFiles()} are not locked.
      */
     public void await() throws IOException, InterruptedException {
-        List<File> notChecked = LOCK_FILES.stream()
+        List<File> notChecked = getLockFiles().stream()
             .map(f -> new File(databaseDir + File.separator + f))
             .collect(Collectors.toList());
 
@@ -88,5 +88,9 @@ public class LeveldbLockAwaiter {
                 return lock == null;
             }
         }
+    }
+
+    protected List<String> getLockFiles() {
+        return LOCK_FILES;
     }
 }

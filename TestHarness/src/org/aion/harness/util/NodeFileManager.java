@@ -40,8 +40,12 @@ public class NodeFileManager {
 
     /**
      * Returns the path to the database for the given network and root directory of the built kernel.
+     *
+     * @implNote this gives the path of the db used by a {@link org.aion.harness.main.impl.JavaNode},
+     *           not the Rust one!  see {@link org.aion.harness.main.NodeConfigurations#getDatabaseRust(String)}
+     *           for that.
      */
-    public static File getDatabaseOf(File builtKernelDirectory, Network network) throws IOException {
+    public static File getDatabaseOfJava(File builtKernelDirectory, Network network) throws IOException {
         return new File(builtKernelDirectory.getCanonicalPath() + File.separator + network.string() + File.separator + "database");
     }
 

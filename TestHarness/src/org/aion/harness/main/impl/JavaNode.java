@@ -1,6 +1,5 @@
 package org.aion.harness.main.impl;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -8,14 +7,11 @@ import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.OrEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
 import org.aion.harness.main.impl.internal.NodeInitializer;
 import org.aion.harness.misc.Assumptions;
-import org.aion.harness.result.FutureResult;
-import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.sys.LeveldbLockAwaiter;
 import org.aion.harness.util.*;
@@ -141,7 +137,7 @@ public final class JavaNode implements LocalNode {
         builder.redirectOutput(outputLog);
         builder.redirectError(this.logManager.getCurrentErrorLogFile());
 
-        new LeveldbLockAwaiter(this.configurations.getDatabase().getAbsolutePath()).await();
+        new LeveldbLockAwaiter(this.configurations.getDatabaseJava().getAbsolutePath()).await();
         this.runningKernel = builder.start();
 
         return waitForRpcReadyOrError(outputLog);
@@ -211,7 +207,7 @@ public final class JavaNode implements LocalNode {
 
         log.log(Assumptions.LOGGER_BANNER + "Resetting the state of the Java kernel node...");
 
-        File database = this.configurations.getDatabase();
+        File database = this.configurations.getDatabaseJava();
         if (database.exists()) {
             FileUtils.deleteDirectory(database);
         }
