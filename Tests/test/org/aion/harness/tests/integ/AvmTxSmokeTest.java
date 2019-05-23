@@ -42,7 +42,7 @@ public class AvmTxSmokeTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
 
-    private static final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.AvmTxSmokeTest");
+    private final SimpleLog log = new SimpleLog("org.aion.harness.tests.integ.AvmTxSmokeTest");
 
     private static RPC rpc = new RPC("127.0.0.1", "8545");
 
