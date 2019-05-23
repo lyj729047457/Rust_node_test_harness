@@ -7,9 +7,9 @@ These are temporary instructions for setting up Rust kernel so that the `Rust_*`
 
 #### Execute tests
 
-There are two ways.  You can do it through gradle:
+There are two ways.  You can do it through Gradle by invoking the following from `node_test_harness` root:
 
-`./gradlew rustTest`
+`./gradlew :Tests:rustTest`
 
 Or you can do it through IDE:  
 
