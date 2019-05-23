@@ -14,11 +14,6 @@ You can find the build in the newly created `dist` directory.
 # How to use the framework
 
 ## Contents
-* [Setting up the Test Harness](#framework-setup)
-* [Debugging & Troubleshooting](#debug)
-    * [Verbose methods and log files](#verbose-methods-and-logs)
-    * [Common mistakes](#common-misuses)
-* [Developing](#develop)
 * [Configuring a local java kernel node](#configure-local-node)
     * [Building from source](#build-source)
     * [Using a pre-built kernel](#use-prebuilt)
@@ -46,13 +41,6 @@ You can find the build in the newly created `dist` directory.
     * [Fetching the log lines that triggered an event](#get-logs)
 * [How to benchmark events](#benchmarking)
 * [Getting basic statistics](#statistics)
-
-### <a name="framework-setup">Setting up the Test Harness</a>
-The test harness still has a few limitations. In particular, this framework is only guaranteed to operate correctly under the following conditions:
-* The node must be an Aion Java Kernel node.
-* The config.xml file must have the `TX` logger level set to `TRACE`.
-* The `NodeListener` class has the ability to wait for a transaction to be processed. This functionality only works on kernel builds that contain the commit `b6fb4a5`, which is on the `master-pre-merge` branch.
-* The `RPC` class has the ability to wait for a node to sync with the network. This functionality only works on kernel builds that contain the commit `ec32f1c` (currently a Pull Request to the `master-pre-merge` branch).
 
 ### <a name="configure-local-node">Configuring a local Java Kernel node</a>
 #### <a name="build-source">Building from source</a>
@@ -547,35 +535,3 @@ List<Block> blocks = // blocks obtained somehow
 BlockStatistics blockStats = BlockStatistics.from(numberOfTransactionsSent, blocks);
 blockStats.printStatistics();
 ```
-
-### <a name="debug">Debugging and Troubleshooting</a>
-Trouble with `ant test`? See the [Developing](#develop) section.
-
-#### <a name="verbose-methods-and-logs">i. Verbose methods and log files</a> 
-There are two primary ways of debugging your program before having to result to live debugging:
-1. Many of the methods provided by the testing harness have a `verbose` variant. The convention is that for a method named `method()` its verbose variant will be named `methodVerbose()`.
-2. The node's stdout and stderr streams get redirected into log files that can be found in the `logs` directory. This directory is created by the testing harness when your program is run and should be created in the same directory you are running your program in. You can either inspect these logs once your program quits or else inspect them live using `tail -f logs/filename`.
-
-If your troubles are related to waiting for a transaction to be processed note that `NodeListener::listenForTransactionToBeProcessed()` listens for the transaction to be sealed into a block __or__ for it to be rejected from the network. Maybe your transaction is being rejected. Try listening explicitly for the two events separately with moderate timeout values and see what you get. Or grab these events from the `PrepackagedLogEvents` class and put them together into a single event using `Event.or()` and `NodeListener::listenForEvent()`. See the section above on [constructing complex events](#make-complex-event).
-
-#### <a name="common-misuses">ii. Some common misuses of the testing harness:</a>
-* Ensure you are not running in standalone mode (no peers) _and_ are calling `RPC::waitForSyncToComplete()`. In standalone mode there is no network to sync up to, so `waitForSyncToComplete()` will run until it times out.
-* Ensure all method results are checked before proceeding, or, at the very least, print these results to screen (they all implement `toString()`) so you actually know what is happening at every step.
-* Ensure that no old `aion` process is hanging around, preventing you from starting your node: `ps -aux | grep aion`
-* Ensure that you call `node.stop()` _wherever_ your program can exit (regularly & unexpectedly), this helps the previous point.
-* Ensure that you are connecting to the correct network.
-* Ensure you have your peers removed if you are expecting to not sync and work immediately.
-* Ensure that the `config.xml` file corresponding to the correct _network_ has the following line in it: `<TX>TRACE</TX>`.
-* Ensure that the `config.xml` file has mining enabled.
-* Ensure that you are building off the `master-pre-merge` branch or one of its derivatives.
-* Ensure that you begin listening for events first, then fire the events off, then wait on the futures. Any other ordering may not produce the desired results.
-* Ensure that you create your `RPC` object with the correct IP and port to listen to the rpc server.
-
-### <a name="develop">Developing</a>
-Running `ant test` at every commit should see all of the tests passing. If you are not seeing this it is very likely because you are using the wrong kernel build. This testing harness has to talk about a kernel, and so we have to make some assumptions about where that kernel is going to live on your file system. Moreover, we also need to use premined accounts, which means we need our own genesis file.
-
-Simply `cd` into the aion repository and run: `git checkout node_test_harness && git submodule update --init --recursive && ./gradlew clean pack`
-
-You can unpack this build (located in the `pack` directory) and use this as your built kernel for the tests.
-
-
