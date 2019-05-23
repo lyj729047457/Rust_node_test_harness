@@ -123,8 +123,8 @@ public final class ConcurrentRunner extends Runner {
      * When this method returns all tests will be done being processed.
      */
     private void runAllTests(List<Class<?>> testClasses, RunNotifier runNotifier) {
-        replaceStdoutWithThreadSpecificOutputStream();
-        replaceStderrWithThreadSpecificErrorStream();
+        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
+        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
 
         List<TestContext> allTestContexts = getTestContextsForAllTests(testClasses);
         int numThreads = Math.min(MAX_NUM_THREADS, allTestContexts.size());
@@ -177,6 +177,10 @@ public final class ConcurrentRunner extends Runner {
                 Thread.currentThread().interrupt();
             }
         }
+
+        // Restore the original stdout and stderr back to System.
+        System.setOut(originalStdout);
+        System.setErr(originalStderr);
     }
 
     private List<TestExecutor> createTestExecutors(int num, TestAndResultQueueManager queueManager) {
@@ -452,22 +456,28 @@ public final class ConcurrentRunner extends Runner {
     /**
      * Replaces System.out with a custom print stream that allows each thread to print to a thread
      * local stdout stream.
+     *
+     * This method returns the original System.out print stream.
      */
-    private static void replaceStdoutWithThreadSpecificOutputStream() {
+    private static PrintStream replaceStdoutWithThreadSpecificOutputStream() {
         PrintStream originalOut = System.out;
         ThreadSpecificStdout threadSpecificStdout = new ThreadSpecificStdout();
         System.setOut(threadSpecificStdout);
         threadSpecificStdout.setStdout(originalOut);
+        return originalOut;
     }
 
     /**
      * Replaces System.err with a custom print stream that allows each thread to print to a thread
      * local stderr stream.
+     *
+     * This method returns the original System.err print stream.
      */
-    private static void replaceStderrWithThreadSpecificErrorStream() {
+    private static PrintStream replaceStderrWithThreadSpecificErrorStream() {
         PrintStream originalErr = System.err;
         ThreadSpecificStderr threadSpecificStderr = new ThreadSpecificStderr();
         System.setErr(threadSpecificStderr);
         threadSpecificStderr.setStderr(originalErr);
+        return originalErr;
     }
 }
