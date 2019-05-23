@@ -173,8 +173,4 @@ public class AvmFailuresTest {
         Assert.assertTrue(listenResult.eventWasObserved());
         log.log("Transaction was sealed into a block.");
     }
-
-    private static void destroyLogs() throws IOException {
-        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
-    }
 }
