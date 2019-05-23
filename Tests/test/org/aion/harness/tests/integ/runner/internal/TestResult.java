@@ -8,6 +8,10 @@ public final class TestResult {
     public final boolean success;
     public final Throwable error;
 
+    // The stdout and stderr streams, as strings, corresponding to the test whose result this is.
+    public byte[] stdout;
+    public byte[] stderr;
+
     private TestResult(Description description, boolean ignored, boolean success, Throwable error) {
         this.description = description;
         this.ignored = ignored;

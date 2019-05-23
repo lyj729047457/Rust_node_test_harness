@@ -2,6 +2,7 @@ package org.aion.harness.tests.integ.runner;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -20,6 +21,8 @@ import org.aion.harness.tests.integ.runner.internal.TestAndResultQueueManager;
 import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
 import org.aion.harness.tests.integ.runner.internal.TestResult;
+import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStderr;
+import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStdout;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -120,6 +123,9 @@ public final class ConcurrentRunner extends Runner {
      * When this method returns all tests will be done being processed.
      */
     private void runAllTests(List<Class<?>> testClasses, RunNotifier runNotifier) {
+        replaceStdoutWithThreadSpecificOutputStream();
+        replaceStderrWithThreadSpecificErrorStream();
+
         List<TestContext> allTestContexts = getTestContextsForAllTests(testClasses);
         int numThreads = Math.min(MAX_NUM_THREADS, allTestContexts.size());
 
@@ -136,7 +142,6 @@ public final class ConcurrentRunner extends Runner {
         // Dynamically dispatch all of the tests to the threads.
         for (TestContext testContext : allTestContexts) {
             queueManager.putTest(testContext);
-            runNotifier.fireTestStarted(testContext.testDescription);
         }
 
         // Close the queue to notify threads that all tests have been submitted.
@@ -148,9 +153,17 @@ public final class ConcurrentRunner extends Runner {
             if (result.ignored) {
                 runNotifier.fireTestIgnored(result.description);
             } else {
+                runNotifier.fireTestStarted(result.description);
                 if (!result.success) {
                     runNotifier.fireTestFailure(new Failure(result.description, result.error));
                 }
+
+                // Print the stdout and stderr of the current test to console.
+                System.out.write(result.stdout, 0, result.stdout.length);
+                System.err.write(result.stderr, 0, result.stderr.length);
+                System.out.flush();
+                System.err.flush();
+
                 runNotifier.fireTestFinished(result.description);
             }
             result = queueManager.takeResult();
@@ -434,5 +447,27 @@ public final class ConcurrentRunner extends Runner {
             }
         }
         return false;
+    }
+
+    /**
+     * Replaces System.out with a custom print stream that allows each thread to print to a thread
+     * local stdout stream.
+     */
+    private static void replaceStdoutWithThreadSpecificOutputStream() {
+        PrintStream originalOut = System.out;
+        ThreadSpecificStdout threadSpecificStdout = new ThreadSpecificStdout();
+        System.setOut(threadSpecificStdout);
+        threadSpecificStdout.setStdout(originalOut);
+    }
+
+    /**
+     * Replaces System.err with a custom print stream that allows each thread to print to a thread
+     * local stderr stream.
+     */
+    private static void replaceStderrWithThreadSpecificErrorStream() {
+        PrintStream originalErr = System.err;
+        ThreadSpecificStderr threadSpecificStderr = new ThreadSpecificStderr();
+        System.setErr(threadSpecificStderr);
+        threadSpecificStderr.setStderr(originalErr);
     }
 }

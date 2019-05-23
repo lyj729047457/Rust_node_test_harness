@@ -1,5 +1,8 @@
 package org.aion.harness.tests.integ.runner.internal;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -51,8 +54,31 @@ public final class TestExecutor implements Runnable {
                 // left to run, so this thread can exit.
                 this.alive = false;
             } else {
-                // Run the test and place the result in the outbound queue.
-                this.queueManager.putResult(runTest(testContext));
+                try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+                    try (ByteArrayOutputStream errStream = new ByteArrayOutputStream()) {
+
+                        // Replace the thread-local stdout/stderr with our own out/err streams for this test only.
+                        ((ThreadSpecificStdout) System.out).setStdout(new PrintStream(new BufferedOutputStream(outStream)));
+                        ((ThreadSpecificStderr) System.err).setStderr(new PrintStream(new BufferedOutputStream(errStream)));
+
+                        printTestStartBanner(testContext);
+
+                        // Run the test and place the result in the outbound queue.
+                        TestResult result = runTest(testContext);
+
+                        printTestEndBanner();
+
+                        // Flush the stdout and stderr streams, and save them to the test result.
+                        System.out.flush();
+                        System.err.flush();
+                        result.stdout = outStream.toByteArray();
+                        result.stderr = errStream.toByteArray();
+
+                        this.queueManager.putResult(result);
+                    }
+                } catch (Throwable e) {
+                    throw new UnexpectedTestRunnerException("Error running the test: " + testContext.testDescription.getMethodName(), e.getCause());
+                }
             }
         }
         this.queueManager.reportThreadIsFinished();
@@ -253,5 +279,24 @@ public final class TestExecutor implements Runnable {
                 throw new UnsupportedAnnotation("This custom runner does not allow a @After method to have any other annotations.");
             }
         }
+    }
+
+    private static final String LINE_BREAK = "-----------------------------------------------------------------------------------------------";
+
+    private void printTestStartBanner(TestContext testContext) {
+        String currentTest = "CURRENT TEST: " + testContext.testClass.getName() + "::" + testContext.testDescription.getMethodName();
+
+        System.out.println(LINE_BREAK);
+        System.out.println(currentTest);
+        System.out.println();
+
+        System.err.println(LINE_BREAK);
+        System.err.println(currentTest);
+        System.err.println();
+    }
+
+    private void printTestEndBanner() {
+        System.out.println(LINE_BREAK);
+        System.err.println(LINE_BREAK);
     }
 }
