@@ -2,6 +2,7 @@ package org.aion.harness.tests.integ.runner;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -16,6 +17,8 @@ import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestExecutor;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
 import org.aion.harness.tests.integ.runner.internal.TestResult;
+import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStderr;
+import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStdout;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -114,6 +117,9 @@ public final class SequentialRunner extends Runner {
     }
 
     private void runTests(RunNotifier runNotifier) {
+        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
+        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
+
         List<TestContext> testContexts = new ArrayList<>();
         for (Description testDescription : this.testClassDescription.getChildren()) {
             testContexts.add(new TestContext(this.testClass, testDescription));
@@ -155,6 +161,10 @@ public final class SequentialRunner extends Runner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        // Restore the original stdout and stderr back to System.
+        System.setOut(originalStdout);
+        System.setErr(originalStderr);
     }
 
     private boolean isTestClassIgnored() {
@@ -292,5 +302,33 @@ public final class SequentialRunner extends Runner {
                 }
             }
         }
+    }
+
+    /**
+     * Replaces System.out with a custom print stream that allows each thread to print to a thread
+     * local stdout stream.
+     *
+     * This method returns the original System.out print stream.
+     */
+    private static PrintStream replaceStdoutWithThreadSpecificOutputStream() {
+        PrintStream originalOut = System.out;
+        ThreadSpecificStdout threadSpecificStdout = new ThreadSpecificStdout();
+        System.setOut(threadSpecificStdout);
+        threadSpecificStdout.setStdout(originalOut);
+        return originalOut;
+    }
+
+    /**
+     * Replaces System.err with a custom print stream that allows each thread to print to a thread
+     * local stderr stream.
+     *
+     * This method returns the original System.err print stream.
+     */
+    private static PrintStream replaceStderrWithThreadSpecificErrorStream() {
+        PrintStream originalErr = System.err;
+        ThreadSpecificStderr threadSpecificStderr = new ThreadSpecificStderr();
+        System.setErr(threadSpecificStderr);
+        threadSpecificStderr.setStderr(originalErr);
+        return originalErr;
     }
 }
