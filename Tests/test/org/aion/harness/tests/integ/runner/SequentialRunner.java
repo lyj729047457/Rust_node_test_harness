@@ -135,7 +135,6 @@ public final class SequentialRunner extends Runner {
         // Dynamically dispatch all of the tests to the thread.
         for (TestContext testContext : testContexts) {
             queueManager.putTest(testContext);
-            runNotifier.fireTestStarted(testContext.testDescription);
         }
 
         // Close the queue to notify threads that all tests have been submitted.
@@ -147,9 +146,17 @@ public final class SequentialRunner extends Runner {
             if (result.ignored) {
                 runNotifier.fireTestIgnored(result.description);
             } else {
+                runNotifier.fireTestStarted(result.description);
                 if (!result.success) {
                     runNotifier.fireTestFailure(new Failure(result.description, result.error));
                 }
+
+                // Print the stdout and stderr of the current test to console.
+                System.out.write(result.stdout, 0, result.stdout.length);
+                System.err.write(result.stderr, 0, result.stderr.length);
+                System.out.flush();
+                System.err.flush();
+
                 runNotifier.fireTestFinished(result.description);
             }
             result = queueManager.takeResult();
