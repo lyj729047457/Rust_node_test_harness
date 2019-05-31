@@ -1,7 +1,10 @@
 package org.aion.harness.main.types;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.main.types.internal.TransactionReceiptBuilder;
@@ -29,6 +32,7 @@ public final class TransactionReceipt {
     private final Address deployedContractAddress;
     private final Address sender;
     private final Address destination;
+    private final List<TransactionLog> transactionLog;
     private final int status;
 
     /**
@@ -36,7 +40,7 @@ public final class TransactionReceipt {
      */
     public TransactionReceipt(long energyPrice, long energyLimit, long energyConsumed, long cumulativeEnergyConsumed,
         int transactionIndex, byte[] blockHash, byte[] bloomFilter, byte[] transactionHash, byte[] stateRootHash,
-        BigInteger blockNumber, Address newContractAddress, Address sender, Address destination, int status) {
+        BigInteger blockNumber, Address newContractAddress, Address sender, Address destination, List<TransactionLog> transactionLog, int status) {
 
         this.energyPrice = energyPrice;
         this.energyLimit = energyLimit;
@@ -51,6 +55,7 @@ public final class TransactionReceipt {
         this.deployedContractAddress = newContractAddress;
         this.sender = sender;
         this.destination = destination;
+        this.transactionLog = Collections.unmodifiableList(transactionLog);
         this.status = status;
     }
 
@@ -161,6 +166,16 @@ public final class TransactionReceipt {
     }
 
     /**
+     * Returns an unmodifiable list of transaction logs that were fired off by this transaction (or
+     * any of the internal transactions that this transaction spawned).
+     *
+     * @return the logs fired off by this transaction.
+     */
+    public List<TransactionLog> getLogs() {
+        return this.transactionLog;
+    }
+
+    /**
      * Returns the address of the account that sent this transaction.
      *
      * @return the sender address.
@@ -206,6 +221,7 @@ public final class TransactionReceipt {
             + ", deployed contract address = " + this.deployedContractAddress
             + ", transaction sender = " + this.sender
             + ", transaction destination = " + this.destination
+            + ", logs = " + this.transactionLog
             + ", status = " + this.status
             + " }";
     }

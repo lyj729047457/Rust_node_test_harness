@@ -1,8 +1,13 @@
 package org.aion.harness.main.types.internal;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.main.tools.JsonStringParser;
+import org.aion.harness.main.types.TransactionLog;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -42,6 +47,7 @@ public final class TransactionReceiptBuilder {
     private Address deployedContractAddress = null;
     private Address sender = null;
     private Address destination = null;
+    private List<TransactionLog> transactionLogs = null;
     private int status = -1;
 
     /**
@@ -220,6 +226,11 @@ public final class TransactionReceiptBuilder {
         return this;
     }
 
+    public TransactionReceiptBuilder transactionLogs(List<TransactionLog> transactionLog) {
+        this.transactionLogs = transactionLog;
+        return this;
+    }
+
     /**
      * Builds the receipt from the parameters that were set prior to calling this method.
      *
@@ -265,6 +276,9 @@ public final class TransactionReceiptBuilder {
         if ((this.deployedContractAddress != null) && (this.destination != null)) {
             throw new IllegalStateException("Cannot construct transaction receipt - both destination AND contract address set.");
         }
+        if (this.transactionLogs == null) {
+            throw new IllegalStateException("Cannot construct transaction receipt - no transaction logs set.");
+        }
 
         return new TransactionReceipt(
             this.energyPrice,
@@ -280,6 +294,7 @@ public final class TransactionReceiptBuilder {
             this.deployedContractAddress,
             this.sender,
             this.destination,
+            this.transactionLogs,
             this.status
         );
     }
@@ -314,6 +329,7 @@ public final class TransactionReceiptBuilder {
         String contract = jsonParser.attributeToString("contractAddress");
         String destination = jsonParser.attributeToString("to");
         String status = jsonParser.attributeToString("status");
+        String logs = jsonParser.attributeToString("logs");
 
         return new TransactionReceiptBuilder()
             .transactionEnergyPrice((energyPrice == null) ? -1 : Long.parseLong(energyPrice, 16))
@@ -329,8 +345,18 @@ public final class TransactionReceiptBuilder {
             .transactionSender((sender == null) ? null : new Address(Hex.decodeHex(sender)))
             .newlyDeployedContractAddress((contract == null) ? null : new Address(Hex.decodeHex(contract)))
             .transactionDestination((destination == null) ? null : new Address(Hex.decodeHex(destination)))
+            .transactionLogs(parseLogsFromJson(logs))
             .status(status == null? -1: Integer.parseInt(status, 16))
             .build();
+    }
+    private static List<TransactionLog> parseLogsFromJson(String logs) throws DecoderException {
+        JsonArray logsArray = (JsonArray) new JsonParser().parse(logs);
+
+        List<TransactionLog> transactionLogs = new ArrayList<>();
+        for (int i = 0; i < logsArray.size(); i++) {
+            transactionLogs.add(new TransactionLogBuilder().buildFromJsonString(logsArray.get(i).toString()));
+        }
+        return transactionLogs;
     }
 
     /**
@@ -350,6 +376,7 @@ public final class TransactionReceiptBuilder {
         this.deployedContractAddress = null;
         this.sender = null;
         this.destination = null;
+        this.transactionLogs = null;
         this.status = -1;
     }
 
