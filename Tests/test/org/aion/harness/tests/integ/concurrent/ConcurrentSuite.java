@@ -2,6 +2,7 @@ package org.aion.harness.tests.integ.concurrent;
 
 import org.aion.harness.tests.integ.AlternatingVmTest;
 import org.aion.harness.tests.integ.AvmFailuresTest;
+import org.aion.harness.tests.integ.AvmReceiptLogTest;
 import org.aion.harness.tests.integ.AvmTxSmokeTest;
 import org.aion.harness.tests.integ.BalanceTransferTest;
 import org.aion.harness.tests.integ.BulkBalanceTransferTest;
@@ -24,6 +25,7 @@ import org.junit.runners.Suite;
     , AvmFailuresTest.class
     , AlternatingVmTest.class
     , RemovedStorageTest.class
+    , AvmReceiptLogTest.class
 })
 public class ConcurrentSuite {
     /**
