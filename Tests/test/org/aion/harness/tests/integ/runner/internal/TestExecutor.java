@@ -105,8 +105,17 @@ public final class TestExecutor implements Runnable {
 
         // Grab the test method to be run.
         try {
-            String fakeMethodName = testContext.testDescription.getMethodName();
-            String realMethodName = fakeMethodName.split(":")[1];
+            // sequential runner modifies the method name, prepending the node type that
+            // it is executing with.  concurrent runner will soon do that too, but until then,
+            // need to check if the provided method name is the real one or the prepended one.
+            String maybeMethodName = testContext.testDescription.getMethodName();
+            final String realMethodName;
+            if(maybeMethodName.contains(":")) {
+                realMethodName = maybeMethodName.split(":")[1];
+            } else {
+                realMethodName = maybeMethodName;
+            }
+
             testMethod = testContext.testClass.getDeclaredMethod(realMethodName);
         } catch (NoSuchMethodException e) {
             return TestResult.failed(testContext.testDescription, e);
