@@ -8,24 +8,23 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.event.JavaPrepackagedLogEvents;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.event.RustPrepackagedLogEvents;
 import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationException;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
 import org.aion.harness.tests.integ.runner.internal.FailedClass;
-import org.aion.harness.tests.integ.runner.internal.TestExecutor;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccountFunder;
 import org.aion.harness.tests.integ.runner.internal.TestAndResultQueueManager;
 import org.aion.harness.tests.integ.runner.internal.TestContext;
+import org.aion.harness.tests.integ.runner.internal.TestExecutor;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
 import org.aion.harness.tests.integ.runner.internal.TestResult;
-import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStderr;
-import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStdout;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -33,27 +32,54 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Suite.SuiteClasses;
 
+/**
+ * Concurrently Runner.  Responsible for starting up a node and executing tests against it.
+ * Test case execution will be parallelized, but each node will be tested one at a time.
+ *
+ * By default, all test classes will be tested twice, once with Rust kernel and once with
+ * Java kernel.  Test classes can override this behaviour using {@link ExcludeNodeType}.
+ * This can also be overridden using the JVM system property <code>testNodes</code>.
+ * If that property is provided, its value will determine what nodes this runner will
+ * use for testing.  Valid value examples:
+ *
+ * <code>java,rust</code> - run with java and rust kernels
+ * <code>java</code> - run with java kernel only
+ * <code>rust</code> - run with rust kernel only
+ *
+ * If it is an empty string, the override will not take effect.  {@link ExcludeNodeType}
+ * will take effect in addition to these overrides.
+ */
 public final class ConcurrentRunner extends Runner {
     // Maximum number of threads to be used to run the tests. Our max is high because our tests are IO-bound.
     private static final int MAX_NUM_THREADS = 50;
 
+    private final RunnerHelper helper;
+
     private final Class<?> suiteClass;
     private final Description testSuiteDescription;
-    private final TestNodeManager nodeManagerForTests;
-    private final PreminedAccountFunder preminedAccountFunder;
-    private final Map<Class<?>, Description> testClassesToDescriptions = new HashMap<>();
+    private final Map<NodeType, Map<Class<?>, Description>> node2ClassDescriptions;
 
-    // The type of node that this runner will start up.
-    private NodeType nodeType = NodeType.JAVA_NODE;
+    /** Kernels will be tested in this order */
+    private static final List<NodeType> SUPPORTED_NODES = List.of(
+        NodeType.RUST_NODE,
+        NodeType.JAVA_NODE
+    );
 
     public ConcurrentRunner(Class<?> suiteClass) {
+        this.helper = new RunnerHelper();
         this.suiteClass = suiteClass;
-        this.testSuiteDescription = getFullSuiteDescriptionAndPopulateMap(suiteClass); // populates the map above
-        this.nodeManagerForTests = new TestNodeManager(nodeType);
-        this.preminedAccountFunder = new PreminedAccountFunder(
-            this.nodeManagerForTests,
-            new JavaPrepackagedLogEvents() /* TODO - should be injected as a IPrepackagedLogEvents */
-        );
+
+        this.testSuiteDescription = Description.createSuiteDescription(suiteClass);
+
+        this.node2ClassDescriptions = new LinkedHashMap<>();
+        List<NodeType> nodesToTest = new LinkedList<>(helper.determineNodeTypes(SUPPORTED_NODES));
+
+        for(NodeType nt: nodesToTest) {
+            Map<Class<?>, Description> class2Desc = new HashMap<>();
+            Description nodeDesc = createSuiteDescriptionForNode(nt, suiteClass, class2Desc);
+            node2ClassDescriptions.put(nt, class2Desc);
+            testSuiteDescription.addChild(nodeDesc);
+        }
     }
 
     @Override
@@ -76,28 +102,38 @@ public final class ConcurrentRunner extends Runner {
                     runNotifier.fireTestIgnored(testDescription);
                 }
             }
-        } else {
+
+            return;
+        }
+
+        PrintStream originalStdout = helper.replaceStdoutWithThreadSpecificOutputStream();
+        PrintStream originalStderr = helper.replaceStderrWithThreadSpecificErrorStream();
+
+        for(NodeType nt : node2ClassDescriptions.keySet()) {
+            TestNodeManager testNodeManager = new TestNodeManager(nt);
+
             // Start up the local node before any tests are run.
-            initializeAndStartNode();
+            initializeAndStartNode(testNodeManager);
 
             try {
                 // Run every @BeforeClass method in any of the test classes.
-                List<FailedClass> failedClasses = runAllBeforeClassMethodsAndReturnFailedClasses();
+                List<FailedClass> failedClasses = runAllBeforeClassMethodsAndReturnFailedClasses(nt);
 
                 // If any @BeforeClass methods failed, then every test in that class must be marked failed.
-                notifyRunnerAllTestsInAllFailedClassesAreFailed(failedClasses, runNotifier);
+                notifyRunnerAllTestsInAllFailedClassesAreFailed(failedClasses, runNotifier, nt);
 
                 // Grab all of the test classes whose @BeforeClass methods did not fail, we will run these now.
-                List<Class<?>> allNonFailedTests = getAllNonFailedTestClassesRemaining(failedClasses);
+                List<Class<?>> allNonFailedTests = getAllNonFailedTestClassesRemaining(
+                    failedClasses, nt);
 
                 // Run all of the test methods now. No exceptions will be thrown here.
-                runAllTests(allNonFailedTests, runNotifier);
+                runSuiteTests(allNonFailedTests, runNotifier, nt, testNodeManager);
 
                 // Run any @AfterClass method in any of the test classes.
                 failedClasses = runAllAfterClassMethodsAndReturnFailedClasses(allNonFailedTests);
 
                 // If any @AfterClass methods failed, then we mark the test class itself as failed in JUnit to display this information.
-                notifyRunnerAfterClassMethodsFailed(failedClasses, runNotifier);
+                notifyRunnerAfterClassMethodsFailed(failedClasses, runNotifier, nt);
 
             } catch (Throwable e) {
                 // We do not expect any exceptions to ever make it here. This is just to ensure our node
@@ -106,7 +142,7 @@ public final class ConcurrentRunner extends Runner {
                 throw new UnexpectedTestRunnerException("Unexpected throwable!", e);
             } finally {
                 // Ensure that the node gets shut down properly.
-                stopNode();
+                stopNode(testNodeManager);
 
                 // Delete the log files unless specified not to.
                 if (System.getProperty("skipCleanLogs") == null) {
@@ -118,6 +154,10 @@ public final class ConcurrentRunner extends Runner {
                 }
             }
         }
+
+        // Restore the original stdout and stderr back to System.
+        System.setOut(originalStdout);
+        System.setErr(originalStderr);
     }
 
     /**
@@ -128,16 +168,28 @@ public final class ConcurrentRunner extends Runner {
      *
      * When this method returns all tests will be done being processed.
      */
-    private void runAllTests(List<Class<?>> testClasses, RunNotifier runNotifier) {
-        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
-        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
+    private void runSuiteTests(List<Class<?>> testClasses, RunNotifier runNotifier, NodeType nt, TestNodeManager testNodeManager) {
+        if(testClasses.isEmpty()) {
+            // if there's nothing to test, no point in going through the exercise of
+            // enqueuing/dequeuing TestContexts and TestResults
+            return;
+        }
 
-        List<TestContext> allTestContexts = getTestContextsForAllTests(testClasses);
+        List<TestContext> allTestContexts = getTestContextsForAllTests(testClasses, nt);
         int numThreads = Math.min(MAX_NUM_THREADS, allTestContexts.size());
-
         TestAndResultQueueManager queueManager = new TestAndResultQueueManager(numThreads);
 
-        List<TestExecutor> testExecutors = createTestExecutors(numThreads, queueManager);
+        final PreminedAccountFunder paf;
+        if(nt == NodeType.RUST_NODE) {
+            paf = new PreminedAccountFunder(testNodeManager, new RustPrepackagedLogEvents());
+        } else if(nt == NodeType.JAVA_NODE) {
+            paf = new PreminedAccountFunder(testNodeManager, new JavaPrepackagedLogEvents());
+        } else {
+            throw new IllegalArgumentException(
+                "Don't know how to construct PreminedAccountFunder for node type" + nt.name());
+        }
+
+        List<TestExecutor> testExecutors = createTestExecutors(numThreads, paf, queueManager, testNodeManager, nt);
         List<Thread> executorThreads = createExecutorThreads(testExecutors);
 
         // Start the threads.
@@ -154,6 +206,7 @@ public final class ConcurrentRunner extends Runner {
         queueManager.reportAllTestsSubmitted();
 
         // Collect the results of the tests and notify JUnit.
+
         TestResult result = queueManager.takeResult();
         while (result != null) {
             if (result.ignored) {
@@ -183,19 +236,19 @@ public final class ConcurrentRunner extends Runner {
                 Thread.currentThread().interrupt();
             }
         }
-
-        // Restore the original stdout and stderr back to System.
-        System.setOut(originalStdout);
-        System.setErr(originalStderr);
     }
 
-    private List<TestExecutor> createTestExecutors(int num, TestAndResultQueueManager queueManager) {
+    private List<TestExecutor> createTestExecutors(int num,
+                                                   PreminedAccountFunder paf,
+                                                   TestAndResultQueueManager queueManager,
+                                                   TestNodeManager testNodeManager,
+                                                   NodeType nt) {
         List<TestExecutor> threads = new ArrayList<>();
         for (int i = 0; i < num; i++) {
-            threads.add(new TestExecutor(this.nodeManagerForTests,
-                preminedAccountFunder,
+            threads.add(new TestExecutor(testNodeManager,
+                paf,
                 queueManager,
-                NodeType.JAVA_NODE /*TODO will be fixed when Rust support added to this Runner */)
+                nt)
             );
         }
         return threads;
@@ -209,10 +262,10 @@ public final class ConcurrentRunner extends Runner {
         return threads;
     }
 
-    private List<TestContext> getTestContextsForAllTests(List<Class<?>> testClasses) {
+    private List<TestContext> getTestContextsForAllTests(List<Class<?>> testClasses, NodeType nt) {
         List<TestContext> contexts = new ArrayList<>();
         for (Class<?> testClass : testClasses) {
-            Description testClassDescription = this.testClassesToDescriptions.get(testClass);
+            Description testClassDescription = this.node2ClassDescriptions.get(nt).get(testClass);
 
             for (Description testDescription : testClassDescription.getChildren()) {
                 contexts.add(new TestContext(testClass, testDescription));
@@ -221,9 +274,9 @@ public final class ConcurrentRunner extends Runner {
         return contexts;
     }
 
-    private List<Class<?>> getAllNonFailedTestClassesRemaining(List<FailedClass> failedClasses) {
+    private List<Class<?>> getAllNonFailedTestClassesRemaining(List<FailedClass> failedClasses, NodeType nt) {
         List<Class<?>> nonFailedTestClass = new ArrayList<>();
-        nonFailedTestClass.addAll(this.testClassesToDescriptions.keySet());
+        nonFailedTestClass.addAll(this.node2ClassDescriptions.get(nt).keySet());
 
         for (FailedClass failedClass : failedClasses) {
             nonFailedTestClass.remove(failedClass);
@@ -237,32 +290,38 @@ public final class ConcurrentRunner extends Runner {
      * it would be misleading, so we create a 'task' for the test class and mark it failed. This is just
      * so that JUnit passes this information along and we actually see that something went wrong.
      */
-    private void notifyRunnerAfterClassMethodsFailed(List<FailedClass> failedClasses, RunNotifier runNotifier) {
+    private void notifyRunnerAfterClassMethodsFailed(List<FailedClass> failedClasses,
+                                                     RunNotifier runNotifier,
+                                                     NodeType nt) {
         for (FailedClass failedClass : failedClasses) {
-            Description testClassDescription = this.testClassesToDescriptions.get(failedClass.failedClass);
+            Description testClassDescription = this.node2ClassDescriptions.get(nt).get(failedClass.failedClass);
             runNotifier.fireTestStarted(testClassDescription);
             runNotifier.fireTestFailure(new Failure(testClassDescription, failedClass.failure));
         }
     }
 
-    private void notifyRunnerAllTestsInAllFailedClassesAreFailed(List<FailedClass> failedClasses, RunNotifier runNotifier) {
+    private void notifyRunnerAllTestsInAllFailedClassesAreFailed(List<FailedClass> failedClasses,
+                                                                 RunNotifier runNotifier,
+                                                                 NodeType nt) {
         for (FailedClass failedClass : failedClasses) {
-            notifyRunnerAllTestsInClassFailed(failedClass, runNotifier);
+            notifyRunnerAllTestsInClassFailed(failedClass, runNotifier, nt);
         }
     }
 
-    private void notifyRunnerAllTestsInClassFailed(FailedClass failedClass, RunNotifier runNotifier) {
-        Description testClassDescription = this.testClassesToDescriptions.get(failedClass.failedClass);
+    private void notifyRunnerAllTestsInClassFailed(FailedClass failedClass,
+                                                   RunNotifier runNotifier,
+                                                   NodeType nt) {
+        Description testClassDescription = this.node2ClassDescriptions.get(nt).get(failedClass.failedClass);
         for (Description testDescription : testClassDescription.getChildren()) {
             runNotifier.fireTestStarted(testDescription);
             runNotifier.fireTestFailure(new Failure(testDescription, failedClass.failure));
         }
     }
 
-    private List<FailedClass> runAllBeforeClassMethodsAndReturnFailedClasses() {
+    private List<FailedClass> runAllBeforeClassMethodsAndReturnFailedClasses(NodeType nt) {
         List<FailedClass> failedClasses = new ArrayList<>();
 
-        for (Class<?> testClass : this.testClassesToDescriptions.keySet()) {
+        for (Class<?> testClass : this.node2ClassDescriptions.get(nt).keySet()) {
             try {
                 runBeforeClassMethodsIfAnyExists(testClass);
             } catch (Throwable e) {
@@ -349,9 +408,9 @@ public final class ConcurrentRunner extends Runner {
         return afterClassMethods;
     }
 
-    private void initializeAndStartNode() {
+    private void initializeAndStartNode(TestNodeManager testNodeManager) {
         try {
-            this.nodeManagerForTests.startLocalNode();
+            testNodeManager.startLocalNode();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {
@@ -359,9 +418,9 @@ public final class ConcurrentRunner extends Runner {
         }
     }
 
-    private void stopNode() {
+    private void stopNode(TestNodeManager testNodeManager) {
         try {
-            this.nodeManagerForTests.shutdownLocalNode();
+            testNodeManager.shutdownLocalNode();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {
@@ -370,16 +429,41 @@ public final class ConcurrentRunner extends Runner {
     }
 
     /**
-     * This is the description of the full test suite used by your IDE etc.
+     * This is the description for the classes run under one NodeType.
+     *
+     * The returned description corresponds to the node.  Its children are the descriptions for each test class;
+     * which in turn have children for each test method.
+     *
+     * Visual example:
+     * <code>
+     *     Rust description
+     *     |--TestClassA description
+     *     ||----testMethod1() description
+     *     ||----testMethod2() description
+     *     ||----testMethodN() description
+     *     |--TestClassB description
+     *     ||----testMethod1() description
+     *     ||----testMethod2() description
+     *     ||----testMethodN() description
+     * </code>
+     *
+     * @param nt node type that this description is for
+     * @param suiteClass the suite class that is being run (contains the test classes)
+     * @param map will be populated with test classes and their description (the test
+     *            classes are determined by what classes are referenced in the suiteClass)
      */
-    private Description getFullSuiteDescriptionAndPopulateMap(Class<?> suiteClass) {
-        Description suiteDescription = Description.createSuiteDescription(suiteClass);
+    private Description createSuiteDescriptionForNode(NodeType nt,
+                                                      Class<?> suiteClass,
+                                                      Map<Class<?>, Description> map) {
+        Description suiteDescription = Description.createSuiteDescription(nt.name());
 
         List<Class<?>> testClasses = getSuiteTestClasses(suiteClass);
         for (Class<?> testClass : testClasses) {
-            Description description = deriveTestDescription(testClass);
-            suiteDescription.addChild(description);
-            this.testClassesToDescriptions.put(testClass, description);
+            if(! helper.determineExcludedNodeTypes(testClass.getAnnotations()).contains(nt)) {
+                Description description = deriveTestDescription(testClass, nt);
+                suiteDescription.addChild(description);
+                map.put(testClass, description);
+            }
         }
 
         return suiteDescription;
@@ -389,11 +473,12 @@ public final class ConcurrentRunner extends Runner {
      * This is the description of all the test methods in the test class. JUnit uses the description
      * to display info in your IDE etc. about which test is which.
      */
-    private Description deriveTestDescription(Class<?> testClass) {
+    private Description deriveTestDescription(Class<?> testClass, NodeType nt) {
         Description description = Description.createTestDescription(testClass, testClass.getName());
         for (Method testMethod : testClass.getMethods()) {
             if (testMethod.isAnnotationPresent(org.junit.Test.class)) {
-                description.addChild(Description.createTestDescription(testClass, testMethod.getName()));
+                description.addChild(Description.createTestDescription(testClass, nt.name()
+                    + ":" + testMethod.getName()));
             }
         }
         return description;
@@ -411,7 +496,7 @@ public final class ConcurrentRunner extends Runner {
     }
 
     private void verifyAnnotationsOfTestClasses() {
-        for (Class<?> testClass : this.testClassesToDescriptions.keySet()) {
+        for (Class<?> testClass : getSuiteTestClasses(suiteClass)) {
             verifyTestClassAnnotations(testClass);
         }
     }
@@ -428,7 +513,7 @@ public final class ConcurrentRunner extends Runner {
     }
 
     private void verifyAnnotationsOfAllMethodsAndFields() {
-        for (Class<?> testClass : this.testClassesToDescriptions.keySet()) {
+        for (Class<?> testClass : getSuiteTestClasses(suiteClass)) {
             verifyMethodAndFieldAnnotations(testClass);
         }
     }
@@ -465,31 +550,5 @@ public final class ConcurrentRunner extends Runner {
         return false;
     }
 
-    /**
-     * Replaces System.out with a custom print stream that allows each thread to print to a thread
-     * local stdout stream.
-     *
-     * This method returns the original System.out print stream.
-     */
-    private static PrintStream replaceStdoutWithThreadSpecificOutputStream() {
-        PrintStream originalOut = System.out;
-        ThreadSpecificStdout threadSpecificStdout = new ThreadSpecificStdout();
-        System.setOut(threadSpecificStdout);
-        threadSpecificStdout.setStdout(originalOut);
-        return originalOut;
-    }
 
-    /**
-     * Replaces System.err with a custom print stream that allows each thread to print to a thread
-     * local stderr stream.
-     *
-     * This method returns the original System.err print stream.
-     */
-    private static PrintStream replaceStderrWithThreadSpecificErrorStream() {
-        PrintStream originalErr = System.err;
-        ThreadSpecificStderr threadSpecificStderr = new ThreadSpecificStderr();
-        System.setErr(threadSpecificStderr);
-        threadSpecificStderr.setStderr(originalErr);
-        return originalErr;
-    }
 }

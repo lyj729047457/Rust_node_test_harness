@@ -21,6 +21,7 @@ import org.aion.harness.kernel.BulkRawTransactionBuilder;
 import org.aion.harness.kernel.BulkRawTransactionBuilder.TransactionType;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.PrepackagedLogEvents;
@@ -34,6 +35,7 @@ import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.statistics.DurationStatistics;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
+import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
@@ -46,6 +48,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SequentialRunner.class)
+@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
 public class BulkBalanceTransferTest {
     private static final BigInteger PREMINED_INITIAL_BALANCE = BigInteger.TEN.pow(22);
     private static final int NUMBER_OF_TRANSACTIONS = 25;

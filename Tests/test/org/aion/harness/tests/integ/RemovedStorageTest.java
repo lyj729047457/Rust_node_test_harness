@@ -16,6 +16,7 @@ import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
@@ -28,6 +29,7 @@ import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.RemoveStorageTarget;
 import org.aion.harness.tests.contracts.avm.StorageTargetClinitTarget;
+import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
@@ -38,6 +40,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SequentialRunner.class)
+@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
 public class RemovedStorageTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;

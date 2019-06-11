@@ -50,6 +50,7 @@ import org.junit.runner.notification.RunNotifier;
  * will take effect in addition to these overrides.
  */
 public final class SequentialRunner extends Runner {
+    private final RunnerHelper helper;
     private final Class<?> testClass;
     private final Description testClassDescription;
     private final Map<NodeType, Description> nodeType2Description;
@@ -61,11 +62,12 @@ public final class SequentialRunner extends Runner {
     );
 
     public SequentialRunner(Class<?> testClass) {
+        this.helper = new RunnerHelper();
         this.testClass = testClass;
         nodeType2Description = new LinkedHashMap<>(); // because run method depends on the order
 
-        List<NodeType> nodesToTest = new LinkedList<>(determineNodeTypes());
-        nodesToTest.removeAll(determineExcludedNodeTypes());
+        List<NodeType> nodesToTest = new LinkedList<>(helper.determineNodeTypes(SUPPORTED_NODES));
+        nodesToTest.removeAll(helper.determineExcludedNodeTypes(this.testClass.getAnnotations()));
 
         this.testClassDescription = deriveTestDescription(testClass, nodeType2Description, nodesToTest);
     }
@@ -93,8 +95,8 @@ public final class SequentialRunner extends Runner {
             return;
         }
 
-        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
-        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
+        PrintStream originalStdout = helper.replaceStdoutWithThreadSpecificOutputStream();
+        PrintStream originalStderr = helper.replaceStderrWithThreadSpecificErrorStream();
 
         for(NodeType nt : nodeType2Description.keySet()) {
             TestNodeManager testNodeManager = new TestNodeManager(nt);
@@ -230,16 +232,6 @@ public final class SequentialRunner extends Runner {
             }
         }
         return false;
-    }
-
-    private Set<NodeType> determineExcludedNodeTypes() {
-        for (Annotation annotation : this.testClass.getAnnotations()) {
-            Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (annotationType.equals(ExcludeNodeType.class)) {
-                return Set.of(((ExcludeNodeType) annotation).value());
-            }
-        }
-        return Collections.emptySet();
     }
 
     private void initializeAndStartNode(TestNodeManager testNodeManager) {
@@ -404,56 +396,5 @@ public final class SequentialRunner extends Runner {
                 }
             }
         }
-    }
-
-    /**
-     * Replaces System.out with a custom print stream that allows each thread to print to a thread
-     * local stdout stream.
-     *
-     * This method returns the original System.out print stream.
-     */
-    private static PrintStream replaceStdoutWithThreadSpecificOutputStream() {
-        PrintStream originalOut = System.out;
-        ThreadSpecificStdout threadSpecificStdout = new ThreadSpecificStdout();
-        System.setOut(threadSpecificStdout);
-        threadSpecificStdout.setStdout(originalOut);
-        return originalOut;
-    }
-
-    /**
-     * Replaces System.err with a custom print stream that allows each thread to print to a thread
-     * local stderr stream.
-     *
-     * This method returns the original System.err print stream.
-     */
-    private static PrintStream replaceStderrWithThreadSpecificErrorStream() {
-        PrintStream originalErr = System.err;
-        ThreadSpecificStderr threadSpecificStderr = new ThreadSpecificStderr();
-        System.setErr(threadSpecificStderr);
-        threadSpecificStderr.setStderr(originalErr);
-        return originalErr;
-    }
-
-    private static List<NodeType> determineNodeTypes() {
-        final Map<String, NodeType> nodeStringToEnum = Map.ofEntries(
-            Map.entry("java", NodeType.JAVA_NODE),
-            Map.entry("rust", NodeType.RUST_NODE)
-        );
-
-        String propString = System.getProperty("testNodes");
-        if(null == propString || propString.isEmpty()) {
-            return SUPPORTED_NODES;
-        }
-
-        List<NodeType> ret = new LinkedList<>();
-        for(String nodeString : propString.split(",")) {
-            NodeType maybeNodeType = nodeStringToEnum.get(nodeString.toLowerCase().trim());
-            if(maybeNodeType == null) {
-                throw new IllegalArgumentException("Unrecognized node type: " + nodeString);
-            }
-            ret.add(maybeNodeType);
-        }
-
-        return ret;
     }
 }
