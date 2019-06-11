@@ -15,6 +15,7 @@ import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.Result;
+import org.aion.harness.sys.LeveldbLockAwaiter;
 import org.aion.harness.sys.RustLeveldbLockAwaiter;
 import org.aion.harness.util.LogManager;
 import org.aion.harness.util.LogReader;
@@ -157,8 +158,8 @@ public class RustNode implements LocalNode {
         builder.environment().put("LD_LIBRARY_PATH", ldLib);
         builder.environment().put("AIONR_HOME", ".");
 
+        builder.redirectErrorStream(true);
         builder.redirectOutput(this.logManager.getCurrentOutputLogFile());
-        builder.redirectError(this.logManager.getCurrentErrorLogFile());
 
         File levelDbBaseDir = configurations.getDatabaseRust(DATA_DIR);
         // if null, don't need to wait because the db doesn't exist yet
@@ -167,7 +168,7 @@ public class RustNode implements LocalNode {
         }
 
         this.runningKernel = builder.start();
-        return waitForReadyOrError(this.logManager.getCurrentErrorLogFile());
+        return waitForReadyOrError(this.logManager.getCurrentOutputLogFile());
     }
 
     @Override
@@ -194,6 +195,27 @@ public class RustNode implements LocalNode {
             return Result.unsuccessfulDueTo(
                 "Process still running one minute after issuing termination.");
         }
+    }
+
+    @Override
+    public Result blockingStop(long timeout, TimeUnit timeoutUnit) throws IOException, InterruptedException {
+        Result res = stop();
+        if(! res.isSuccess()) {
+            return res;
+        }
+
+        File levelDbBaseDir = configurations.getDatabaseRust(DATA_DIR);
+        final boolean leveldbLockReleased;
+        // if null, don't need to wait because the db doesn't exist yet
+        if(levelDbBaseDir != null) {
+            leveldbLockReleased = new RustLeveldbLockAwaiter(
+                levelDbBaseDir.getAbsolutePath()).await(timeout, timeoutUnit);
+        } else {
+            leveldbLockReleased = true;
+        }
+
+        return leveldbLockReleased? Result.successful() : Result.unsuccessfulDueTo(
+            "Leveldb lock used by node was not released after node termination");
     }
 
     @Override

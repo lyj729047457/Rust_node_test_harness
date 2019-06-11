@@ -7,6 +7,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.LocalNode;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.types.Block;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
@@ -433,7 +434,10 @@ public class RpcTest {
         NodeListener listener = NodeListener.listenTo(this.node);
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction, 2, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> futureResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
+            2,
+            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
@@ -490,7 +494,10 @@ public class RpcTest {
         NodeListener listener = NodeListener.listenTo(this.node);
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(transaction, 2, TimeUnit.MINUTES);
+        FutureResult<LogEventResult> futureResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
+            2,
+            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
@@ -625,8 +632,8 @@ public class RpcTest {
 
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForTransactionToBeProcessed(
-            transaction,
+        FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             1,
             TimeUnit.MINUTES);
 

@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -15,19 +16,20 @@ import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
+import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
-import org.aion.harness.tests.integ.runner.SequentialRunner;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +48,9 @@ public class FvmTxSmokeTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     /**
      * <code>data</code> field for deploying the contract.  This is the binary output of
@@ -161,7 +166,7 @@ public class FvmTxSmokeTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.

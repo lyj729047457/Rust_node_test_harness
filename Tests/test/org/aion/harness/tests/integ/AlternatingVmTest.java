@@ -24,6 +24,7 @@ import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Rule;
@@ -42,6 +43,9 @@ public class AlternatingVmTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     /**
      * Tests making a bunch of Avm-Fvm alternating contract create transactions and sending them off.
@@ -84,7 +88,7 @@ public class AlternatingVmTest {
     private List<IEvent> makeTransactionProcessedEventPerTransaction(List<RawTransaction> transactions) {
         List<IEvent> events = new ArrayList<>();
         for (RawTransaction transaction : transactions) {
-            events.add(PrepackagedLogEvents.getTransactionSealedEvent(transaction));
+            events.add(prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction));
         }
         return events;
     }

@@ -18,6 +18,7 @@ import org.aion.api.type.ApiMsg;
 import org.aion.api.type.BlockDetails;
 import org.aion.api.type.TxDetails;
 import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.event.PrepackagedLogEvents;
@@ -27,9 +28,11 @@ import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.TransactionResult;
+import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -38,6 +41,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SequentialRunner.class)
+@ExcludeNodeType(NodeType.RUST_NODE)
 public class JavaApiSmokeTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
@@ -51,6 +55,9 @@ public class JavaApiSmokeTest {
     
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void testGetBlockDetailsByRange() throws Exception {
@@ -126,7 +133,7 @@ public class JavaApiSmokeTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.

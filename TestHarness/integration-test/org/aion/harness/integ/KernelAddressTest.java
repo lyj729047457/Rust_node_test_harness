@@ -10,6 +10,7 @@ import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
@@ -97,8 +98,8 @@ public class KernelAddressTest {
         assertTrue(transactionResult.isSuccess());
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
-            transaction,
+        FutureResult<LogEventResult> futureResult = nodeListener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             2,
             TimeUnit.MINUTES);
 
@@ -133,8 +134,8 @@ public class KernelAddressTest {
 
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = nodeListener.listenForTransactionToBeProcessed(
-            transaction,
+        FutureResult<LogEventResult> futureResult = nodeListener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             2,
             TimeUnit.MINUTES);
 

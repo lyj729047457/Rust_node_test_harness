@@ -31,6 +31,7 @@ import org.aion.harness.tests.contracts.avm.StorageTargetClinitTarget;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +51,9 @@ public class RemovedStorageTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void putResetVerifyStatic() throws Exception {
@@ -442,8 +446,8 @@ public class RemovedStorageTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent event = Event.or(transactionIsRejected, transactionIsSealed);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(event, 5, TimeUnit.MINUTES);
 
@@ -466,8 +470,8 @@ public class RemovedStorageTest {
 
     private TransactionReceipt sendGetStaticTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent transactionIsProcessed = Event.or(transactionIsSealed, transactionIsRejected);
         IEvent verifyIsCorrect = new Event("CORRECT: found null");
         IEvent verifyIsIncorrect = new Event("INCORRECT: found non-null");

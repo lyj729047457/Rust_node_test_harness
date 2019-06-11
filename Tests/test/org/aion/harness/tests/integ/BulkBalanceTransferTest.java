@@ -37,6 +37,7 @@ import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -60,6 +61,9 @@ public class BulkBalanceTransferTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void testMixOfBalanceTransferTransactionsFromSameSender() throws InterruptedException, InvalidKeySpecException, DecoderException {
@@ -201,7 +205,7 @@ public class BulkBalanceTransferTest {
     private List<IEvent> getTransactionSealedEvents(List<RawTransaction> transactions) {
         List<IEvent> events = new ArrayList<>();
         for (RawTransaction transaction : transactions) {
-            events.add(PrepackagedLogEvents.getTransactionSealedEvent(transaction));
+            events.add(prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction));
         }
         return events;
     }

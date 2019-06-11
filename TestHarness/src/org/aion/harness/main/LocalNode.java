@@ -1,6 +1,7 @@
 package org.aion.harness.main;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.result.Result;
 
 public interface LocalNode extends Node {
@@ -43,6 +44,21 @@ public interface LocalNode extends Node {
      * @throws IllegalStateException if the node has not been configured yet.
      */
     public Result stop() throws IOException, InterruptedException;
+
+
+    /**
+     * Stops the node if it is currently running and block until the Leveldb lock of the node
+     * is released (or until the given timeout duration is reached).
+     *
+     * This is intended for use with nodes in which terminating the process that starts the node
+     * necessarily guarantee that the process of the actual node has been terminated (i.e.
+     * when node start up calls a shell script that starts a different process) as a means
+     * of checking that the real node process is no longer running.
+     *
+     * @param timeout timeout value for blocking until Leveldb lock release
+     * @param timeoutUnit unit of the timeout value
+     */
+    Result blockingStop(long timeout, TimeUnit timeoutUnit) throws IOException, InterruptedException;
 
     /**
      * Returns {@code true} if node is running, {@code false} otherwise.

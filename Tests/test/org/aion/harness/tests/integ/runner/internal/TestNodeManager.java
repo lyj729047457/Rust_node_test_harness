@@ -2,6 +2,7 @@ package org.aion.harness.tests.integ.runner.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
@@ -20,19 +21,35 @@ import org.apache.commons.io.FileUtils;
  * The node is never exposed. The caller has the ability to start and stop it.
  */
 public final class TestNodeManager {
-    private static final String WORKING_DIR = System.getProperty("user.dir");
-    private static final String EXPECTED_KERNEL_LOCATION = WORKING_DIR + "/aion";
-    private static final String HANDWRITTEN_CONFIGS = WORKING_DIR + "/test_resources/custom/config";
+    private NodeType nodeType;
     private LocalNode localNode;
+    private final String expectedKernelLocation;
+    private final String handedwrittenConfigs;
+
+    private static final String WORKING_DIR = System.getProperty("user.dir");
+    private static final long EXIT_LOCK_TIMEOUT = 3;
+    private static final TimeUnit EXIT_LOCK_TIMEOUT_UNIT = TimeUnit.MINUTES;
+
+    public TestNodeManager(NodeType nodeType) {
+        this.nodeType = nodeType;
+        if(nodeType == NodeType.RUST_NODE) {
+            this.expectedKernelLocation = WORKING_DIR + "/aionr";
+            this.handedwrittenConfigs = WORKING_DIR + "/test_resources/rust_custom";
+        } else if(nodeType == NodeType.JAVA_NODE) {
+            this.expectedKernelLocation = WORKING_DIR + "/aion";
+            this.handedwrittenConfigs = WORKING_DIR + "/test_resources/custom";
+        } else {
+            throw new IllegalArgumentException("Unsupported kernel");
+        }
+    }
 
     /**
      * Starts up a local node of the specified type if no node has currently been started.
      *
      * If anything goes wrong this method will throw an exception to halt the runner.
      */
-    public void startLocalNode(NodeType nodeType) throws Exception {
+    public void startLocalNode() throws Exception {
         if (this.localNode == null) {
-
             // Verify the kernel is in the expected location and overwrite its config & genesis files.
             checkKernelExistsAndOverwriteConfigs();
 
@@ -40,7 +57,8 @@ public final class TestNodeManager {
             ProhibitConcurrentHarness.acquireTestLock();
 
             // Initialize the node.
-            NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(Network.CUSTOM, EXPECTED_KERNEL_LOCATION, DatabaseOption.PRESERVE_DATABASE);
+            NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(
+                Network.CUSTOM, expectedKernelLocation, DatabaseOption.PRESERVE_DATABASE);
             LocalNode node = NodeFactory.getNewLocalNodeInstance(nodeType);
             node.configure(configurations);
 
@@ -67,11 +85,12 @@ public final class TestNodeManager {
     public void shutdownLocalNode() throws Exception {
         if (this.localNode != null) {
             try {
-                this.localNode.stop();
+                this.localNode.blockingStop(EXIT_LOCK_TIMEOUT, EXIT_LOCK_TIMEOUT_UNIT);
             } catch (Throwable e) {
                 e.printStackTrace();
             } finally {
                 ProhibitConcurrentHarness.releaseTestLock();
+                this.localNode = null;
             }
         } else {
             throw new IllegalStateException("Attempted to stop running a local node but no node is currently running!");
@@ -89,21 +108,30 @@ public final class TestNodeManager {
         }
     }
 
-    private static void checkKernelExistsAndOverwriteConfigs() throws IOException {
+    private void checkKernelExistsAndOverwriteConfigs() throws IOException {
         if (!kernelExists()) {
-            throw new TestRunnerInitializationException("Expected to find a kernel at: " + EXPECTED_KERNEL_LOCATION);
+            throw new TestRunnerInitializationException("Expected to find a kernel at: " + expectedKernelLocation);
         }
         overwriteConfigAndGenesis();
     }
 
-    private static boolean kernelExists() {
-        File kernel = new File(EXPECTED_KERNEL_LOCATION);
+    private boolean kernelExists() {
+        File kernel = new File(expectedKernelLocation);
         return kernel.exists() && kernel.isDirectory();
     }
 
-    private static void overwriteConfigAndGenesis() throws IOException {
-        FileUtils.copyDirectory(new File(HANDWRITTEN_CONFIGS), new File(EXPECTED_KERNEL_LOCATION + "/config/custom"));
-        overwriteIfTargetDirExists(new File(HANDWRITTEN_CONFIGS), new File(EXPECTED_KERNEL_LOCATION + "/custom/config"));
+    private void overwriteConfigAndGenesis() throws IOException {
+        if(nodeType == NodeType.RUST_NODE) {
+            overwriteIfTargetDirExists(new File(handedwrittenConfigs),
+                new File(expectedKernelLocation + "/custom"));
+        } else if(nodeType == NodeType.JAVA_NODE) {
+            FileUtils.copyDirectory(new File(handedwrittenConfigs),
+                new File(expectedKernelLocation + "/config/custom"));
+            overwriteIfTargetDirExists(new File(handedwrittenConfigs),
+                new File(expectedKernelLocation + "/custom/config"));
+        } else {
+            throw new IllegalStateException("Unsupported kernel");
+        }
     }
 
     private static void overwriteIfTargetDirExists(File source, File target) throws IOException {

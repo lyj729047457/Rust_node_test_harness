@@ -13,6 +13,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
@@ -75,7 +76,7 @@ public class EventListenerTest {
 
         NodeListener listener = NodeListener.listenTo(this.node);
 
-        LogEventResult requestResult = listener.listenForMinersToStart(2, TimeUnit.MINUTES).get();
+        LogEventResult requestResult = listener.listenForEvent(new JavaPrepackagedLogEvents().getStartedMiningEvent(), 2, TimeUnit.MINUTES).get();
 
         System.out.println(requestResult);
         Assert.assertTrue(requestResult.eventWasObserved());
@@ -111,8 +112,9 @@ public class EventListenerTest {
 
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
-            transaction,
+
+        FutureResult<LogEventResult> futureResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             2,
             TimeUnit.MINUTES);
 
@@ -155,8 +157,8 @@ public class EventListenerTest {
 
         transaction = transactionResult.getTransaction();
 
-        futureResult = listener.listenForTransactionToBeProcessed(
-            transaction,
+        futureResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             2,
             TimeUnit.MINUTES);
 
@@ -205,8 +207,8 @@ public class EventListenerTest {
 
         RawTransaction transaction = transactionResult.getTransaction();
 
-        FutureResult<LogEventResult> futureResult = listener.listenForTransactionToBeProcessed(
-            transaction,
+        FutureResult<LogEventResult> futureResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
             2,
             TimeUnit.MINUTES);
 

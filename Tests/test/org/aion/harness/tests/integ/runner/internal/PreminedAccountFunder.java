@@ -10,6 +10,7 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.result.FutureResult;
@@ -31,12 +32,14 @@ public final class PreminedAccountFunder {
     private final Object nonceLock = new Object();
 
     private final TestNodeManager nodeManager;
+    private final PrepackagedLogEvents prepackagedLogEvents;
     private final PrivateKey preminedAccount;
     private final RPC rpc;
     private BigInteger currentNonce = null;
 
-    public PreminedAccountFunder(TestNodeManager nodeManager) {
+    public PreminedAccountFunder(TestNodeManager nodeManager, PrepackagedLogEvents prepackagedLogEvents) {
         this.nodeManager = nodeManager;
+        this.prepackagedLogEvents = prepackagedLogEvents;
         this.rpc = new RPC("127.0.0.1", "8545");
 
         try {
@@ -73,8 +76,8 @@ public final class PreminedAccountFunder {
         RawTransaction transaction = buildResult.getTransaction();
 
         // Construct the 'transaction is processed' event we want to listen for.
-        IEvent transactionSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionSealed = prepackagedLogEvents.getTransactionSealedEvent(transaction);
+        IEvent transactionRejected = prepackagedLogEvents.getTransactionRejectedEvent(transaction);
         IEvent transactionProcessed = Event.or(transactionRejected, transactionSealed);
 
         // Start listening for the transaction to get processed and send it off.
@@ -88,8 +91,10 @@ public final class PreminedAccountFunder {
 
         // Block until it's processed and verify it was sealed into a block and not rejected!
         LogEventResult listenResult = future.get();
-        if (!listenResult.eventWasObserved() && transactionSealed.hasBeenObserved() && !transactionRejected.hasBeenObserved()) {
-            throw new UnexpectedTestRunnerException("Failed transferring " + amount + " funds from the real pre-mined account: " + listenResult);
+
+        if(! transactionSealed.hasBeenObserved() || transactionRejected.hasBeenObserved() ) {
+            throw new UnexpectedTestRunnerException("Failed transferring " + amount +
+                " funds from the real pre-mined account: " + listenResult);
         }
     }
 

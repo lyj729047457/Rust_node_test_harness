@@ -35,6 +35,7 @@ import org.aion.harness.tests.contracts.avm.LogTarget;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +56,9 @@ public class AvmReceiptLogTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void testContractWritesNoLogs() throws Exception {
@@ -395,8 +399,8 @@ public class AvmReceiptLogTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent transactionProcessed = Event.or(transactionIsSealed, transactionIsRejected);
 
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionProcessed, 5, TimeUnit.MINUTES);

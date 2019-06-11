@@ -83,6 +83,9 @@ test {
 	} else {
 		include '**/integ/concurrent/ConcurrentSuite.class'
 	}
+	if ( project.hasProperty("testNodes") ) {
+		systemProperty "testNodes", project.getProperty("testNodes")
+	}
 }
 
 task ciTest

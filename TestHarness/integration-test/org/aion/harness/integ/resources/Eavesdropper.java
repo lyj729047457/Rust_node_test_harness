@@ -7,6 +7,7 @@ import org.aion.harness.main.Node;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.result.LogEventResult;
 
 public final class Eavesdropper implements Runnable {
@@ -53,7 +54,11 @@ public final class Eavesdropper implements Runnable {
                 startTimeInNanos = System.nanoTime();
 
                 try {
-                    result = this.listener.listenForHeartbeat(2, TimeUnit.MINUTES).get();
+                    // Eavesdropper is currently used by tests of TestHarness in a way that
+                    // doesn't care what these events actually say.  Hardcoding the Java messages
+                    // for now, which is good enough for the tests to work.
+                    IEvent heartbeat = new JavaPrepackagedLogEvents().getHeartbeatEvent();
+                    result = this.listener.listenForEvent(heartbeat, 2, TimeUnit.MINUTES).get();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

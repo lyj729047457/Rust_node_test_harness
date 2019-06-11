@@ -26,6 +26,7 @@ import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -47,6 +48,9 @@ public class BalanceTransferTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     /**
      * Tests making a CREATE transaction in which funds are transferred as well.
@@ -224,7 +228,7 @@ public class BalanceTransferTest {
 
     private TransactionReceipt sendCallToAvmContract(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent contractPrintln = new Event("I'm a pretty dull contract.");
         IEvent event = Event.and(transactionIsSealed, contractPrintln);
         FutureResult<LogEventResult> future = listener.listenForEvent(event, 5, TimeUnit.MINUTES);
@@ -249,7 +253,7 @@ public class BalanceTransferTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.

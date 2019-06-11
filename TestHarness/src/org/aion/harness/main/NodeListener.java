@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.event.IEvent;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.global.SingletonFactory;
 import org.aion.harness.result.FutureResult;
@@ -35,94 +36,6 @@ public final class NodeListener {
             throw new IllegalStateException("node cannot be null");
         }
         return new NodeListener(SingletonFactory.singleton().nodeWatcher().getReaderForNodeByID(node.getID()).getLogListener());
-    }
-
-    /**
-     * Listens for the miners to start up.
-     *
-     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
-     * implementation.
-     *
-     * @param timeout The duration after which the event expires.
-     * @param unit The time unit of the duration.
-     * @return the result of this event.
-     */
-    public FutureResult<LogEventResult> listenForMinersToStart(long timeout, TimeUnit unit) {
-        if (timeout < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
-        }
-        if (unit == null) {
-            throw new IllegalArgumentException("Cannot specify a null time unit.");
-        }
-
-        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getStartedMiningEvent(), timeout, unit);
-    }
-
-    /**
-     * Listens for the transactions to be processed.
-     *
-     * This method is non-blocking but returns blocking {@link java.util.concurrent.Future}
-     * implementations.
-     *
-     * All transactions being listened for will have the exact same timeout values, which are the
-     * values specified in the input parameters.
-     *
-     * @param transactions The transactions.
-     * @param timeout The duration after which the events expire.
-     * @param unit The time unit of the duration.
-     * @return the results of the these events.
-     */
-    public List<FutureResult<LogEventResult>> listenForTransactionsToBeProcessed(List<RawTransaction> transactions, long timeout, TimeUnit unit) {
-        List<FutureResult<LogEventResult>> futures = new ArrayList<>();
-
-        for (RawTransaction transaction : transactions) {
-            futures.add(listenForTransactionToBeProcessed(transaction, timeout, unit));
-        }
-
-        return futures;
-    }
-
-    /**
-     * Listens for the transaction to be processed.
-     *
-     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
-     * implementation.
-     *
-     * @param transaction The transaction.
-     * @param timeout The duration after which the event expires.
-     * @param unit The time unit of the duration.
-     * @return the result of this event.
-     */
-    public FutureResult<LogEventResult> listenForTransactionToBeProcessed(RawTransaction transaction, long timeout, TimeUnit unit) {
-        if (timeout < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
-        }
-        if (unit == null) {
-            throw new IllegalArgumentException("Cannot specify a null time unit.");
-        }
-
-        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getTransactionProcessedEvent(transaction), timeout, unit);
-    }
-
-    /**
-     * Listens for the heartbeat event to occur.
-     *
-     * This method is non-blocking but returns a blocking {@link java.util.concurrent.Future}
-     * implementation.
-     *
-     * @param timeout The duration after which the event expires.
-     * @param unit The time unit of the duration.
-     * @return the result of this event.
-     */
-    public FutureResult<LogEventResult> listenForHeartbeat(long timeout, TimeUnit unit) {
-        if (timeout < 0) {
-            throw new IllegalArgumentException("Timeout value was negative: " + timeout);
-        }
-        if (unit == null) {
-            throw new IllegalArgumentException("Cannot specify a null time unit.");
-        }
-
-        return this.logListener.submitEventToBeListenedFor(PrepackagedLogEvents.getHeartbeatEvent(), timeout, unit);
     }
 
     /**

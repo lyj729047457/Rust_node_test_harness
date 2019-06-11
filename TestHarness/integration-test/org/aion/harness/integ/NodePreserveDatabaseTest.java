@@ -9,6 +9,7 @@ import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.misc.Assumptions;
@@ -173,7 +174,10 @@ public class NodePreserveDatabaseTest {
 
         FutureResult<LogEventResult> futureResult =
                 NodeListener.listenTo(this.node)
-                        .listenForTransactionToBeProcessed(transaction, 1, TimeUnit.MINUTES);
+                        .listenForEvent(
+                            new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
+                            1,
+                            TimeUnit.MINUTES);
 
         RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + result);

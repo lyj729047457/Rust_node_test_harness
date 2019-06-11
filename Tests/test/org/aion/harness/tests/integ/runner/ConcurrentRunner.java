@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.harness.main.NodeFactory.NodeType;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
+import org.aion.harness.main.event.PrepackagedLogEvents;
+import org.aion.harness.main.event.RustPrepackagedLogEvents;
 import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationException;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
@@ -46,8 +49,11 @@ public final class ConcurrentRunner extends Runner {
     public ConcurrentRunner(Class<?> suiteClass) {
         this.suiteClass = suiteClass;
         this.testSuiteDescription = getFullSuiteDescriptionAndPopulateMap(suiteClass); // populates the map above
-        this.nodeManagerForTests = new TestNodeManager();
-        this.preminedAccountFunder = new PreminedAccountFunder(this.nodeManagerForTests);
+        this.nodeManagerForTests = new TestNodeManager(nodeType);
+        this.preminedAccountFunder = new PreminedAccountFunder(
+            this.nodeManagerForTests,
+            new JavaPrepackagedLogEvents() /* TODO - should be injected as a IPrepackagedLogEvents */
+        );
     }
 
     @Override
@@ -186,7 +192,11 @@ public final class ConcurrentRunner extends Runner {
     private List<TestExecutor> createTestExecutors(int num, TestAndResultQueueManager queueManager) {
         List<TestExecutor> threads = new ArrayList<>();
         for (int i = 0; i < num; i++) {
-            threads.add(new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, queueManager));
+            threads.add(new TestExecutor(this.nodeManagerForTests,
+                preminedAccountFunder,
+                queueManager,
+                NodeType.JAVA_NODE /*TODO will be fixed when Rust support added to this Runner */)
+            );
         }
         return threads;
     }
@@ -341,7 +351,7 @@ public final class ConcurrentRunner extends Runner {
 
     private void initializeAndStartNode() {
         try {
-            this.nodeManagerForTests.startLocalNode(this.nodeType);
+            this.nodeManagerForTests.startLocalNode();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {
@@ -409,7 +419,9 @@ public final class ConcurrentRunner extends Runner {
     private void verifyTestClassAnnotations(Class<?> testClass) {
         for (Annotation annotation : testClass.getAnnotations()) {
             Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (!annotationType.equals(org.junit.Ignore.class) && !annotationType.equals(org.junit.runner.RunWith.class)) {
+            if (!annotationType.equals(org.junit.Ignore.class)
+                && !annotationType.equals(org.junit.runner.RunWith.class)
+                && !annotationType.equals(ExcludeNodeType.class)) {
                 throw new UnsupportedAnnotation("This custom runner does not support the annotation: " + annotation);
             }
         }

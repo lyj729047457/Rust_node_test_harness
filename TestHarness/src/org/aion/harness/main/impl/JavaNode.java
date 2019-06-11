@@ -181,6 +181,26 @@ public final class JavaNode implements LocalNode {
     }
 
     /**
+     * Stops the node if it is currently running and block until the Leveldb lock of the node
+     * is released (or until the given timeout duration is reached)
+     *
+     * @param timeout
+     * @param timeoutUnit
+     */
+    @Override
+    public Result blockingStop(long timeout, TimeUnit timeoutUnit) throws IOException, InterruptedException {
+        Result res = stop();
+        if(! res.isSuccess()) {
+            return res;
+        }
+
+        boolean leveldbLockReleased = new LeveldbLockAwaiter(
+            this.configurations.getDatabaseJava().getAbsolutePath()).await();
+        return leveldbLockReleased? Result.successful() : Result.unsuccessfulDueTo(
+            "Leveldb lock used by node was not released after node termination");
+    }
+
+    /**
      * Returns true if the node is currently running.
      */
     @Override

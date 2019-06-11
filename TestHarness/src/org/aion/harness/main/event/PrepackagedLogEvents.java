@@ -1,10 +1,9 @@
 package org.aion.harness.main.event;
 
 import org.aion.harness.kernel.RawTransaction;
-import org.apache.commons.codec.binary.Hex;
 
 /**
- * A class that holds a number of prepackaged events that may be of convenience.
+ * An interface that provides a number of prepackaged events for kernel events.
  *
  * All events in this class are log events: events that are witnessed in the log file of a node.
  *
@@ -13,16 +12,13 @@ import org.apache.commons.codec.binary.Hex;
  *
  * This class always returns a {@code new} event when any of its methods are called.
  */
-public final class PrepackagedLogEvents {
-
+public interface PrepackagedLogEvents {
     /**
      * Returns an event that captures the miners being started up.
      *
      * @return the event.
      */
-    public static IEvent getStartedMiningEvent() {
-        return new Event("sealer starting");
-    }
+    IEvent getStartedMiningEvent();
 
     /**
      * Returns an event that captures a transaction being processed.
@@ -33,7 +29,7 @@ public final class PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    public static IEvent getTransactionProcessedEvent(RawTransaction transaction) {
+    default IEvent getTransactionProcessedEvent(RawTransaction transaction) {
         return Event.or(getTransactionSealedEvent(transaction), getTransactionRejectedEvent(transaction));
     }
 
@@ -43,12 +39,7 @@ public final class PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    public static IEvent getTransactionSealedEvent(RawTransaction transaction) {
-        if (transaction == null) {
-            throw new NullPointerException("Cannot get event for null transaction hash.");
-        }
-        return new Event("Transaction: " + Hex.encodeHexString(transaction.getTransactionHash()) + " was sealed into block");
-    }
+    IEvent getTransactionSealedEvent(RawTransaction transaction);
 
     /**
      * Returns an event that captures the node rejecting a transaction.
@@ -56,12 +47,7 @@ public final class PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    public static IEvent getTransactionRejectedEvent(RawTransaction transaction) {
-        if (transaction == null) {
-            throw new NullPointerException("Cannot get event for null transaction hash.");
-        }
-        return new Event("tx " + Hex.encodeHexString(transaction.getTransactionHash()) + " is rejected");
-    }
+    IEvent getTransactionRejectedEvent(RawTransaction transaction);
 
     /**
      * Returns an event that captures a log line that is expected to occur consistently over the
@@ -69,8 +55,5 @@ public final class PrepackagedLogEvents {
      *
      * @return the event.
      */
-    public static IEvent getHeartbeatEvent() {
-        return new Event("p2p-status");
-    }
-
+    IEvent getHeartbeatEvent();
 }

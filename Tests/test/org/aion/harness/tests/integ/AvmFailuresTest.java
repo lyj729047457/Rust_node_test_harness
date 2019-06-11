@@ -35,6 +35,7 @@ import org.aion.harness.tests.contracts.avm.ByteArrayHolder;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -63,6 +64,9 @@ public class AvmFailuresTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void testPass() throws Exception {
@@ -150,7 +154,7 @@ public class AvmFailuresTest {
 
     private TransactionReceipt sendRawTransactionSynchronously(RawTransaction rawTransaction) throws InterruptedException {
         // Capture the event for asynchronous waiting.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(rawTransaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(rawTransaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
         
         // Send the transaction.

@@ -11,6 +11,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.aion.harness.util.SimpleLog;
 
@@ -52,17 +53,21 @@ public class LeveldbLockAwaiter {
     }
 
     /**
-     * Block for up to {@link #AWAIT_LIMIT_MIN} minutes until all files of
+     * Block for up until given duration until all files of
      * {@link #getLockFiles()} are not locked.
+     *
+     * @param duration timeout duration value
+     * @param durationUnit timeout duration unit
+     * @return whether the lock was acquired
      */
-    public void await() throws IOException, InterruptedException {
+    public boolean await(long duration, TimeUnit durationUnit) throws IOException, InterruptedException {
         List<File> notChecked = getLockFiles().stream()
             .map(f -> new File(databaseDir + File.separator + f))
             .collect(Collectors.toList());
 
         long t0 = System.nanoTime();
         while(! notChecked.isEmpty()
-            && System.nanoTime() - t0 < MINUTES.toNanos(AWAIT_LIMIT_MIN)) {
+            && System.nanoTime() - t0 < durationUnit.toNanos(duration)) {
 
             File file = notChecked.get(0);
             if(file.exists() && checkIsFileLocked(file)) {
@@ -78,6 +83,16 @@ public class LeveldbLockAwaiter {
                 notChecked.remove(0);
             }
         }
+
+        return notChecked.isEmpty();
+    }
+
+    /*
+     * Block for up to {@link #AWAIT_LIMIT_MIN} minutes until all files of
+     * {@link #getLockFiles()} are not locked.
+     */
+    public boolean await() throws IOException, InterruptedException {
+        return await(AWAIT_LIMIT_MIN, MINUTES);
     }
 
     /** @return whether file is locked */

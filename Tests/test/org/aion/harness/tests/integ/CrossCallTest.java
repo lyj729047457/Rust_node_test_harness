@@ -29,6 +29,7 @@ import org.aion.harness.tests.contracts.avm.AvmCrossCallDispatcher;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
+import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Rule;
@@ -47,6 +48,9 @@ public class CrossCallTest {
 
     @Rule
     private LocalNodeListener listener = new LocalNodeListener();
+
+    @Rule
+    private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
     public void testCallingFvmContractFromAvm() throws Exception {
@@ -148,8 +152,8 @@ public class CrossCallTest {
 
     private void sendCrossCallToFvm(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent transactionProcessed = Event.or(transactionIsSealed, transactionIsRejected);
 
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionProcessed, 5, TimeUnit.MINUTES);
@@ -180,8 +184,8 @@ public class CrossCallTest {
 
     private void sendCrossCallToAvm(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent transactionProcessed = Event.or(transactionIsSealed, transactionIsRejected);
 
         // we expect to see the foreign virtual machine exception get caught.
@@ -216,8 +220,8 @@ public class CrossCallTest {
 
     private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
-        IEvent transactionIsSealed = PrepackagedLogEvents.getTransactionSealedEvent(transaction);
-        IEvent transactionIsRejected = PrepackagedLogEvents.getTransactionRejectedEvent(transaction);
+        IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
+        IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
         IEvent transactionProcessed = Event.or(transactionIsSealed, transactionIsRejected);
 
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionProcessed, 5, TimeUnit.MINUTES);

@@ -7,8 +7,16 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.NodeFactory.NodeType;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
+import org.aion.harness.main.event.RustPrepackagedLogEvents;
 import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccountFunder;
@@ -25,20 +33,41 @@ import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 
+/**
+ * Sequential Runner.  Responsible for starting up a node and executing tests against it.
+ *
+ * By default, all test classes will be tested twice, once with Rust kernel and once with
+ * Java kernel.  Test classes can override this behaviour using {@link ExcludeNodeType}.
+ * This can also be overridden using the JVM system property <code>testNodes</code>.
+ * If that property is provided, its value will determine what nodes this runner will
+ * use for testing.  Valid value examples:
+ *
+ * <code>java,rust</code> - run with java and rust kernels
+ * <code>java</code> - run with java kernel only
+ * <code>rust</code> - run with rust kernel only
+ *
+ * If it is an empty string, the override will not take effect.  {@link ExcludeNodeType}
+ * will take effect in addition to these overrides.
+ */
 public final class SequentialRunner extends Runner {
     private final Class<?> testClass;
     private final Description testClassDescription;
-    private final TestNodeManager nodeManagerForTests;
-    private final PreminedAccountFunder preminedAccountFunder;
+    private final Map<NodeType, Description> nodeType2Description;
 
-    // The type of node that this runner will start up.
-    private NodeType nodeType = NodeType.JAVA_NODE;
+    /** Kernels will be tested in this order */
+    private static final List<NodeType> SUPPORTED_NODES = List.of(
+        NodeType.RUST_NODE,
+        NodeType.JAVA_NODE
+    );
 
     public SequentialRunner(Class<?> testClass) {
         this.testClass = testClass;
-        this.testClassDescription = deriveTestDescription(testClass);
-        this.nodeManagerForTests = new TestNodeManager();
-        this.preminedAccountFunder = new PreminedAccountFunder(this.nodeManagerForTests);
+        nodeType2Description = new LinkedHashMap<>(); // because run method depends on the order
+
+        List<NodeType> nodesToTest = new LinkedList<>(determineNodeTypes());
+        nodesToTest.removeAll(determineExcludedNodeTypes());
+
+        this.testClassDescription = deriveTestDescription(testClass, nodeType2Description, nodesToTest);
     }
 
     @Override
@@ -46,7 +75,6 @@ public final class SequentialRunner extends Runner {
         return this.testClassDescription;
     }
 
-    @Override
     public void run(RunNotifier runNotifier) {
         // This is the method JUnit invokes to run all of the tests in our test class.
 
@@ -56,14 +84,24 @@ public final class SequentialRunner extends Runner {
 
         if (isTestClassIgnored()) {
             // This class is marked Ignore so we mark all tests ignored and finish up right here.
-            for (Description testDescription : this.testClassDescription.getChildren()) {
-                runNotifier.fireTestIgnored(testDescription);
+            for (Description nodeDescription : this.testClassDescription.getChildren()) {
+                for (Description testDescription : nodeDescription.getChildren()) {
+                    runNotifier.fireTestIgnored(testDescription);
+                }
             }
-        } else {
-            // Start up the local node before any tests are run.
-            initializeAndStartNode();
+
+            return;
+        }
+
+        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
+        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
+
+        for(NodeType nt : nodeType2Description.keySet()) {
+            TestNodeManager testNodeManager = new TestNodeManager(nt);
+            Description nodeDescription = nodeType2Description.get(nt);
 
             try {
+
                 boolean beforeClassFailed = false;
 
                 // If the class has a @BeforeClass method then run it now.
@@ -72,7 +110,7 @@ public final class SequentialRunner extends Runner {
                 } catch (Throwable e) {
                     // The @BeforeClass failed so mark every test as failed.
                     beforeClassFailed = true;
-                    for (Description description : this.testClassDescription.getChildren()) {
+                    for (Description description : nodeDescription.getChildren()) {
                         runNotifier.fireTestStarted(description);
                         runNotifier.fireTestFailure(new Failure(description, e));
                         runNotifier.fireTestFinished(description);
@@ -81,7 +119,8 @@ public final class SequentialRunner extends Runner {
 
                 // Run all of the test methods now. No exceptions will be thrown here.
                 if (!beforeClassFailed) {
-                    runTests(runNotifier);
+                    initializeAndStartNode(testNodeManager);
+                    runTests(runNotifier, nodeDescription.getChildren(), nt, testNodeManager);
                 }
 
                 // If the class has a @AfterClass method then run it now.
@@ -91,9 +130,9 @@ public final class SequentialRunner extends Runner {
                     }
                 } catch (Throwable e) {
                     // Document the afterClass error as if the test class itself failed, so we can show the error.
-                    runNotifier.fireTestStarted(this.testClassDescription);
-                    runNotifier.fireTestFailure(new Failure(this.testClassDescription, e));
-                    runNotifier.fireTestFinished(this.testClassDescription);
+                    runNotifier.fireTestStarted(nodeDescription);
+                    runNotifier.fireTestFailure(new Failure(nodeDescription, e));
+                    runNotifier.fireTestFinished(nodeDescription);
                 }
 
             } catch (Throwable e) {
@@ -102,33 +141,46 @@ public final class SequentialRunner extends Runner {
                 throw e;
             } finally {
                 // Ensure that the node gets shut down properly.
-                stopNode();
+                stopNode(testNodeManager);
 
                 // Delete the log files unless specified not to.
                 if (System.getProperty("skipCleanLogs") == null) {
                     try {
-                        FileUtils.deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
+                        FileUtils
+                            .deleteDirectory(new File(System.getProperty("user.dir") + "/logs"));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         }
+
+        // Restore the original stdout and stderr back to System.
+        System.setOut(originalStdout);
+        System.setErr(originalStderr);
     }
 
-    private void runTests(RunNotifier runNotifier) {
-        PrintStream originalStdout = replaceStdoutWithThreadSpecificOutputStream();
-        PrintStream originalStderr = replaceStderrWithThreadSpecificErrorStream();
-
+    private void runTests(RunNotifier runNotifier, List<Description> tests, NodeType nt, TestNodeManager testNodeManager) {
         List<TestContext> testContexts = new ArrayList<>();
-        for (Description testDescription : this.testClassDescription.getChildren()) {
-            testContexts.add(new TestContext(this.testClass, testDescription));
+        for (Description testDescription : tests) {
+                testContexts.add(new TestContext(this.testClass, testDescription));
         }
 
         TestAndResultQueueManager queueManager = new TestAndResultQueueManager(1);
 
         // Run all of the tests on a single thread.
-        TestExecutor testExecutor = new TestExecutor(this.nodeManagerForTests, this.preminedAccountFunder, queueManager);
+        final PreminedAccountFunder paf;
+        if(nt == NodeType.RUST_NODE) {
+            paf = new PreminedAccountFunder(testNodeManager, new RustPrepackagedLogEvents());
+        } else if (nt == NodeType.JAVA_NODE) {
+            paf = new PreminedAccountFunder(testNodeManager, new JavaPrepackagedLogEvents());
+        } else {
+            throw new IllegalArgumentException(String.format(
+                "Don't know how to construct PremindedAccountFunder for NodeType '%s'.",
+                nt));
+        }
+
+        TestExecutor testExecutor = new TestExecutor(testNodeManager, paf, queueManager, nt);
         Thread executorThread = new Thread(testExecutor);
         executorThread.start();
 
@@ -168,10 +220,6 @@ public final class SequentialRunner extends Runner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-
-        // Restore the original stdout and stderr back to System.
-        System.setOut(originalStdout);
-        System.setErr(originalStderr);
     }
 
     private boolean isTestClassIgnored() {
@@ -184,9 +232,19 @@ public final class SequentialRunner extends Runner {
         return false;
     }
 
-    private void initializeAndStartNode() {
+    private Set<NodeType> determineExcludedNodeTypes() {
+        for (Annotation annotation : this.testClass.getAnnotations()) {
+            Class<? extends Annotation> annotationType = annotation.annotationType();
+            if (annotationType.equals(ExcludeNodeType.class)) {
+                return Set.of(((ExcludeNodeType) annotation).value());
+            }
+        }
+        return Collections.emptySet();
+    }
+
+    private void initializeAndStartNode(TestNodeManager testNodeManager) {
         try {
-            this.nodeManagerForTests.startLocalNode(this.nodeType);
+            testNodeManager.startLocalNode();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {
@@ -220,9 +278,9 @@ public final class SequentialRunner extends Runner {
         }
     }
 
-    private void stopNode() {
+    private void stopNode(TestNodeManager testNodeManager) {
         try {
-            this.nodeManagerForTests.shutdownLocalNode();
+            testNodeManager.shutdownLocalNode();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {
@@ -233,14 +291,48 @@ public final class SequentialRunner extends Runner {
     /**
      * This is the description of all the test methods in the test class. JUnit uses the description
      * to display info in your IDE etc. about which test is which.
+     *
+     * The returned Description will correspond to the test class.  Each node type to test will
+     * be represented by a child description.  Each of these child descriptions, will have children
+     * descripions; one for each test method.
+     *
+     * Visual example:
+     * <code>
+     *     Class description
+     *     |--Rust description
+     *     ||----testMethod1() description
+     *     ||----testMethod2() description
+     *     ||----testMethodN() description
+     *     |--Java description
+     *     ||----testMethod1() description
+     *     ||----testMethod2() description
+     *     ||----testMethodN() description
+     * </code>
+     * @param testClass the class of the JUnit test
+     * @param nodeType2Description method will add pairs (NodeType, Description) for each NodeType in
+     *                             the nodesToTest parameter, where the Description is a child
+     *                             of the Description of the test class.
+     * @param nodesToTest the node types that should be used to execute this test class
+     * @return Description for test class
      */
-    private Description deriveTestDescription(Class<?> testClass) {
+    private Description deriveTestDescription(Class<?> testClass,
+                                              Map<NodeType, Description> nodeType2Description,
+                                              List<NodeType> nodesToTest) {
         Description description = Description.createTestDescription(testClass, testClass.getName());
-        for (Method testMethod : testClass.getMethods()) {
-            if (testMethod.isAnnotationPresent(org.junit.Test.class)) {
-                description.addChild(Description.createTestDescription(testClass, testMethod.getName()));
+
+        for(NodeType nt : nodesToTest) {
+            Description nd = Description.createSuiteDescription(nt.name());
+
+            for (Method testMethod : testClass.getMethods()) {
+                if (testMethod.isAnnotationPresent(org.junit.Test.class)) {
+                    nd.addChild(Description.createTestDescription(testClass, nt.name() + ":" + testMethod.getName()));
+                }
             }
+
+            description.addChild(nd);
+            nodeType2Description.put(nt, nd);
         }
+
         return description;
     }
 
@@ -283,7 +375,10 @@ public final class SequentialRunner extends Runner {
     private void verifyTestClassAnnotations() {
         for (Annotation annotation : this.testClass.getAnnotations()) {
             Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (!annotationType.equals(org.junit.Ignore.class) && !annotationType.equals(org.junit.runner.RunWith.class)) {
+            if (!annotationType.equals(org.junit.Ignore.class)
+                && !annotationType.equals(org.junit.runner.RunWith.class)
+                && !annotationType.equals(ExcludeNodeType.class)
+            ) {
                 throw new UnsupportedAnnotation("This custom runner does not support the annotation: " + annotation);
             }
         }
@@ -337,5 +432,28 @@ public final class SequentialRunner extends Runner {
         System.setErr(threadSpecificStderr);
         threadSpecificStderr.setStderr(originalErr);
         return originalErr;
+    }
+
+    private static List<NodeType> determineNodeTypes() {
+        final Map<String, NodeType> nodeStringToEnum = Map.ofEntries(
+            Map.entry("java", NodeType.JAVA_NODE),
+            Map.entry("rust", NodeType.RUST_NODE)
+        );
+
+        String propString = System.getProperty("testNodes");
+        if(null == propString || propString.isEmpty()) {
+            return SUPPORTED_NODES;
+        }
+
+        List<NodeType> ret = new LinkedList<>();
+        for(String nodeString : propString.split(",")) {
+            NodeType maybeNodeType = nodeStringToEnum.get(nodeString.toLowerCase().trim());
+            if(maybeNodeType == null) {
+                throw new IllegalArgumentException("Unrecognized node type: " + nodeString);
+            }
+            ret.add(maybeNodeType);
+        }
+
+        return ret;
     }
 }

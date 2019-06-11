@@ -16,6 +16,7 @@ import org.aion.harness.integ.resources.Eavesdropper.Gossip;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
@@ -50,7 +51,10 @@ public class NodeListenerLifecycleTest {
         NodeListener listener = NodeListener.listenTo(this.node);
 
         // Time out should be irrelevant in this situation.
-        LogEventResult result = listener.listenForHeartbeat(10, TimeUnit.SECONDS).get();
+        LogEventResult result = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getHeartbeatEvent(),
+            10,
+            TimeUnit.SECONDS).get();
         System.out.println("Result = " + result);
         assertTrue(result.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", result.causeOfRejection());
@@ -74,7 +78,10 @@ public class NodeListenerLifecycleTest {
         assertTrue(result.isSuccess());
         assertFalse(this.node.isAlive());
 
-        LogEventResult eventResult = listener.listenForHeartbeat(10, TimeUnit.SECONDS).get();
+        LogEventResult eventResult = listener.listenForEvent(
+            new JavaPrepackagedLogEvents().getHeartbeatEvent(),
+            10,
+            TimeUnit.SECONDS).get();
         System.out.println("Result = " + eventResult);
         assertTrue(eventResult.eventWasRejected());
         assertEquals("Listener is not currently listening to a log file.", eventResult.causeOfRejection());

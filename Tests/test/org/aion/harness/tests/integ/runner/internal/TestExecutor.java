@@ -9,7 +9,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.NodeListener;
+import org.aion.harness.main.event.JavaPrepackagedLogEvents;
+import org.aion.harness.main.event.RustPrepackagedLogEvents;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
 
@@ -33,14 +36,19 @@ import org.aion.harness.tests.integ.runner.exception.UnsupportedAnnotation;
  */
 public final class TestExecutor implements Runnable {
     private final TestNodeManager nodeManagerForTests;
-    private final PreminedAccountFunder preminedDispatcher;
     private final TestAndResultQueueManager queueManager;
+    private final NodeType nodeType;
+    private final PreminedAccountFunder preminedDispatcher;
     private boolean alive;
 
-    public TestExecutor(TestNodeManager nodeManager, PreminedAccountFunder preminedDispatcher, TestAndResultQueueManager queueManager) {
+    public TestExecutor(TestNodeManager nodeManager,
+                        PreminedAccountFunder preminedDispatcher,
+                        TestAndResultQueueManager queueManager,
+                        NodeType nodeType) {
         this.nodeManagerForTests = nodeManager;
-        this.preminedDispatcher = preminedDispatcher;
         this.queueManager = queueManager;
+        this.nodeType = nodeType;
+        this.preminedDispatcher = preminedDispatcher;
         this.alive = true;
     }
 
@@ -97,7 +105,9 @@ public final class TestExecutor implements Runnable {
 
         // Grab the test method to be run.
         try {
-            testMethod = testContext.testClass.getDeclaredMethod(testContext.testDescription.getMethodName());
+            String fakeMethodName = testContext.testDescription.getMethodName();
+            String realMethodName = fakeMethodName.split(":")[1];
+            testMethod = testContext.testClass.getDeclaredMethod(realMethodName);
         } catch (NoSuchMethodException e) {
             return TestResult.failed(testContext.testDescription, e);
         }
@@ -193,6 +203,8 @@ public final class TestExecutor implements Runnable {
                 initializePreminedAccountRule(ruleField, testClassInstance);
             } else if (ruleType.equals(LocalNodeListener.class)) {
                 initializeNodeListenerRule(ruleField, testClassInstance);
+            } else if (ruleType.equals(PrepackagedLogEventsFactory.class)) {
+                initializePrepackagdLogEventsFactory(ruleField, testClassInstance);
             } else {
                 throw new UnsupportedAnnotation("This custom runner only supports the following @Rule's: PreminedAccount, LocalNodeListener. Found: " + ruleType);
             }
@@ -210,6 +222,19 @@ public final class TestExecutor implements Runnable {
             }
         }
         return ruleFields;
+    }
+
+    private void initializePrepackagdLogEventsFactory(Field ruleField, Object testClassInstance) {
+        try {
+            // Grab the field instance and invoke the 'setKernel' method.
+            ruleField.setAccessible(true);
+            Object fieldInstance = ruleField.get(testClassInstance);
+            Method setKernelMethod = fieldInstance.getClass().getDeclaredMethod("setKernel", NodeType.class);
+            setKernelMethod.setAccessible(true);
+            setKernelMethod.invoke(fieldInstance, nodeType);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new UnexpectedTestRunnerException("Failed initializing the PrepackedLogEventsFactory @Rule", e);
+        }
     }
 
     private void initializePreminedAccountRule(Field ruleField, Object testClassInstance) {
@@ -284,7 +309,7 @@ public final class TestExecutor implements Runnable {
     private static final String LINE_BREAK = "-----------------------------------------------------------------------------------------------";
 
     private void printTestStartBanner(TestContext testContext) {
-        String currentTest = "CURRENT TEST: " + testContext.testClass.getName() + "::" + testContext.testDescription.getMethodName();
+        String currentTest = "CURRENT TEST [" + nodeType.name() + "]: " + testContext.testClass.getName() + "::" + testContext.testDescription.getMethodName();
 
         System.out.println(LINE_BREAK);
         System.out.println(currentTest);
