@@ -12,6 +12,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
@@ -131,7 +132,8 @@ public class JavaApiSmokeTest {
         assertTrue(foundTransaction);
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
@@ -143,7 +145,7 @@ public class JavaApiSmokeTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
         log.log("Transaction was sealed into a block.");
 

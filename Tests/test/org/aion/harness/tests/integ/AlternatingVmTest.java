@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.RawTransaction;
@@ -62,7 +63,8 @@ public class AlternatingVmTest {
         sendTransactions(transactions);
     }
 
-    private void sendTransactions(List<RawTransaction> transactions) throws InterruptedException {
+    private void sendTransactions(List<RawTransaction> transactions)
+        throws InterruptedException, TimeoutException {
         List<IEvent> transactionProcessedEvents = makeTransactionProcessedEventPerTransaction(transactions);
 
         List<FutureResult<LogEventResult>> futures = this.listener.listenForEvents(transactionProcessedEvents, 10, TimeUnit.MINUTES);
@@ -76,7 +78,7 @@ public class AlternatingVmTest {
         // Wait on the futures to complete and ensure we saw the transactions get sealed.
         System.out.println("Waiting for the " + transactions.size() + " transactions to process...");
         for (FutureResult<LogEventResult> future : futures) {
-            LogEventResult listenResult = future.get();
+            LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
             assertTrue(listenResult.eventWasObserved());
         }
         System.out.println("Transactions were all sealed into blocks!");

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
@@ -59,7 +60,8 @@ public class BalanceTransferTest {
      * Tests making a CREATE transaction in which funds are transferred as well.
      */
     @Test
-    public void testTransferBalanceToFvmContractUponCreation() throws InterruptedException, DecoderException {
+    public void testTransferBalanceToFvmContractUponCreation()
+        throws InterruptedException, DecoderException, TimeoutException {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(13).add(BigInteger.valueOf(2_938_652));
 
@@ -85,7 +87,8 @@ public class BalanceTransferTest {
      * to a payable function (which does work).
      */
     @Test
-    public void testTransferBalanceToFvmContractAfterCreation() throws InterruptedException, DecoderException {
+    public void testTransferBalanceToFvmContractAfterCreation()
+        throws InterruptedException, DecoderException, TimeoutException {
         BigInteger amount = BigInteger.TEN.pow(11).add(BigInteger.valueOf(237_645));
 
         // Build and send the transaction off, grab its receipt.
@@ -132,7 +135,8 @@ public class BalanceTransferTest {
      * Tests making a CREATE transaction in which funds are transferred as well.
      */
     @Test
-    public void testTransferBalanceToAvmContractUponCreation() throws InterruptedException {
+    public void testTransferBalanceToAvmContractUponCreation()
+        throws InterruptedException, TimeoutException {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(298_365_712));
 
@@ -157,7 +161,8 @@ public class BalanceTransferTest {
      * avm contract.
      */
     @Test
-    public void testTransferBalanceToAvmContractAfterCreation() throws InterruptedException {
+    public void testTransferBalanceToAvmContractAfterCreation()
+        throws InterruptedException, TimeoutException {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(2_384_956));
 
         // Create the contract.
@@ -190,7 +195,8 @@ public class BalanceTransferTest {
      * has no code (ie. it is not a contract address).
      */
     @Test
-    public void testTransferBalanceToRegularAccount() throws InterruptedException, InvalidKeySpecException {
+    public void testTransferBalanceToRegularAccount()
+        throws InterruptedException, InvalidKeySpecException, TimeoutException {
         BigInteger amount = BigInteger.TEN.pow(16).add(BigInteger.valueOf(12_476));
         BigInteger originalBalance = getPreminedBalance();
 
@@ -229,7 +235,8 @@ public class BalanceTransferTest {
         return balanceResult.getResult();
     }
 
-    private TransactionReceipt sendCallToAvmContract(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendCallToAvmContract(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent contractPrintln = new Event("I'm a pretty dull contract.");
@@ -243,7 +250,7 @@ public class BalanceTransferTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the avm call transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
         log.log("Transaction was sealed into a block & we observed the println statement.");
 
@@ -254,7 +261,8 @@ public class BalanceTransferTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
@@ -266,7 +274,7 @@ public class BalanceTransferTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         log.log("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
         log.log("Transaction was sealed into a block.");
 

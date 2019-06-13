@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIDecoder;
@@ -82,7 +83,7 @@ public class InternalTxTest {
         assertFalse(receipt.transactionWasSuccessful());
     }
 
-    private TransactionReceipt deployAvmContract() throws InterruptedException {
+    private TransactionReceipt deployAvmContract() throws InterruptedException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
@@ -95,7 +96,9 @@ public class InternalTxTest {
         return sendDeployment(result.getTransaction());
     }
 
-    private TransactionReceipt callAvmContract(Address contract, String methodName, int parameter, boolean shouldSucceed) throws InterruptedException {
+    private TransactionReceipt
+    callAvmContract(Address contract, String methodName, int parameter, boolean shouldSucceed)
+    throws InterruptedException, TimeoutException {
         ABIStreamingEncoder encoder = new ABIStreamingEncoder();
         byte[] data = encoder.encodeOneString(methodName).encodeOneInteger(parameter).toBytes();
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
@@ -112,7 +115,8 @@ public class InternalTxTest {
             shouldSucceed ? sendCallToSucceed(result.getTransaction()) : sendCallToFail(result.getTransaction());
     }
 
-    private TransactionReceipt sendDeployment(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendDeployment(RawTransaction transaction)
+    throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -127,7 +131,7 @@ public class InternalTxTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.
@@ -159,7 +163,12 @@ public class InternalTxTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = futureProcessed.get();
+        LogEventResult listenResult = null;
+        try {
+            listenResult = futureProcessed.get(5, TimeUnit.MINUTES);
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
         assertTrue(listenResult.eventWasObserved());
         listenResult = future9.get();
         assertTrue(listenResult.eventWasObserved());
@@ -177,7 +186,8 @@ public class InternalTxTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendCallToFail(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendCallToFail(RawTransaction transaction)
+    throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -195,11 +205,11 @@ public class InternalTxTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = futureProcessed.get();
+        LogEventResult listenResult = futureProcessed.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
-        listenResult = future9.get();
+        listenResult = future9.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
-        listenResult = future10.get();
+        listenResult = future10.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.

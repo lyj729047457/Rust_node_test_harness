@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
@@ -123,7 +124,8 @@ public final class TestHarnessHelper {
      *
      * @param futures The futures to wait on.
      */
-    public static void waitOnFutures(List<FutureResult<LogEventResult>> futures) throws InterruptedException {
+    public static void waitOnFutures(List<FutureResult<LogEventResult>> futures)
+        throws InterruptedException, TimeoutException {
         if (futures == null) {
             throw new NullPointerException("Cannot wait on null list of futures.");
         }
@@ -133,7 +135,7 @@ public final class TestHarnessHelper {
                 throw new NullPointerException("Cannot wait on a null future.");
             }
 
-            future.get();
+            future.get(5, TimeUnit.MINUTES);
         }
     }
 
@@ -275,7 +277,8 @@ public final class TestHarnessHelper {
      * @param futures The futures whose result objects are to be extracted.
      * @return a bulk result holding these extracted objects.
      */
-    public static BulkResult<LogEventResult> extractFutureResults(List<FutureResult<LogEventResult>> futures) throws InterruptedException {
+    public static BulkResult<LogEventResult> extractFutureResults(List<FutureResult<LogEventResult>> futures)
+        throws InterruptedException, TimeoutException {
         if (futures == null) {
             throw new NullPointerException("Cannot extract future results from a null list of futures.");
         }
@@ -287,7 +290,7 @@ public final class TestHarnessHelper {
                 return BulkResult.unsuccessful("Result at index " + results.size() + " was null!");
             }
 
-            LogEventResult logResult = future.get();
+            LogEventResult logResult = future.get(5, TimeUnit.MINUTES);
             if (!logResult.eventWasObserved()) {
                 return BulkResult.unsuccessful("Result at index " + results.size() + " was not observed.");
             }

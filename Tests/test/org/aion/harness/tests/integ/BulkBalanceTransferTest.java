@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
@@ -69,7 +70,8 @@ public class BulkBalanceTransferTest {
     private PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
 
     @Test
-    public void testMixOfBalanceTransferTransactionsFromSameSender() throws InterruptedException, InvalidKeySpecException, DecoderException {
+    public void testMixOfBalanceTransferTransactionsFromSameSender()
+        throws InterruptedException, InvalidKeySpecException, DecoderException, TimeoutException {
         List<Address> recipients = randomAddresses(NUMBER_OF_TRANSACTIONS);
         List<BigInteger> amounts = randomAmounts(NUMBER_OF_TRANSACTIONS);
         BigInteger initialNonce = this.preminedAccount.getNonce();
@@ -94,7 +96,8 @@ public class BulkBalanceTransferTest {
     }
 
     @Test
-    public void testMixOfBalanceTransferTransactionsFromDifferentSenders() throws InterruptedException, InvalidKeySpecException, DecoderException {
+    public void testMixOfBalanceTransferTransactionsFromDifferentSenders()
+        throws InterruptedException, InvalidKeySpecException, DecoderException, TimeoutException {
         List<PrivateKey> senders = randomKeys(NUMBER_OF_TRANSACTIONS);
         List<Address> senderAddresses = TestHarnessHelper.extractAddresses(senders);
         List<Address> recipients = randomAddresses(NUMBER_OF_TRANSACTIONS);
@@ -174,7 +177,8 @@ public class BulkBalanceTransferTest {
         }
     }
 
-    private List<TransactionReceipt> sendTransactions(List<RawTransaction> transactions) throws InterruptedException {
+    private List<TransactionReceipt> sendTransactions(List<RawTransaction> transactions)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transactions get sealed into blocks.
         List<IEvent> transactionIsSealedEvents = getTransactionSealedEvents(transactions);
         List<FutureResult<LogEventResult>> futures = this.listener.listenForEvents(transactionIsSealedEvents, 30, TimeUnit.MINUTES);

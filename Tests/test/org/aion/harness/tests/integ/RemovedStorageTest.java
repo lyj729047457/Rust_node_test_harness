@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
@@ -363,91 +364,99 @@ public class RemovedStorageTest {
 
     }
 
-    private void putStorageLengthZero(Address contract) throws InterruptedException {
+    private void putStorageLengthZero(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthZero");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void resetStorage(Address contract) throws InterruptedException {
+    private void resetStorage(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "resetStorage");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void verifyAllStorageRemoved(Address contract) throws InterruptedException {
+    private void verifyAllStorageRemoved(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "verifyAllStorageRemoved");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putStorageLengthOne(Address contract) throws InterruptedException {
+    private void putStorageLengthOne(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthOne");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putResetPut(Address contract) throws InterruptedException {
+    private void putResetPut(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putResetPut");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putStorageAddress(Address contract) throws InterruptedException {
+    private void putStorageAddress(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageAddress");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void validateStoragePreviousTxLength(Address contract, int i) throws InterruptedException {
+    private void validateStoragePreviousTxLength(Address contract, int i)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "validateStoragePreviousTxLength", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void getStorageOneKey(Address contract, int i) throws InterruptedException {
+    private void getStorageOneKey(Address contract, int i)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "getStorageOneKey", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void setStorageSameKey(Address contract, byte[] b) throws InterruptedException {
+    private void setStorageSameKey(Address contract, byte[] b)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "setStorageSameKey", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void reentrantCallAfterPut(Address contract, byte[] b) throws InterruptedException {
+    private void reentrantCallAfterPut(Address contract, byte[] b)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "reentrantCallAfterPut", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putZeroResetVerify(Address contract) throws InterruptedException {
+    private void putZeroResetVerify(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putZeroResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putOneResetVerify(Address contract) throws InterruptedException {
+    private void putOneResetVerify(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putOneResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putAddressResetVerify(Address contract) throws InterruptedException {
+    private void putAddressResetVerify(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "putAddressResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void ResetResetVerify(Address contract) throws InterruptedException {
+    private void ResetResetVerify(Address contract) throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "ResetResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -459,7 +468,7 @@ public class RemovedStorageTest {
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
         assertTrue(transactionIsSealed.hasBeenObserved());
         assertFalse(transactionIsRejected.hasBeenObserved());
@@ -471,7 +480,8 @@ public class RemovedStorageTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendGetStaticTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendGetStaticTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -488,7 +498,7 @@ public class RemovedStorageTest {
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         assertTrue(transactionIsSealed.hasBeenObserved());

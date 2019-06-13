@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
@@ -96,7 +97,8 @@ public class CrossCallTest {
         callFvmDispatcher(fvmContract, avmContract);
     }
 
-    private void callFvmDispatcher(Address dispatcher, Address target) throws InterruptedException, DecoderException {
+    private void callFvmDispatcher(Address dispatcher, Address target)
+        throws InterruptedException, DecoderException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
@@ -110,7 +112,8 @@ public class CrossCallTest {
         sendCrossCallToFvm(result.getTransaction());
     }
 
-    private void callAvmDispatcher(Address dispatcher, Address target) throws InterruptedException {
+    private void callAvmDispatcher(Address dispatcher, Address target)
+        throws InterruptedException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
@@ -124,7 +127,7 @@ public class CrossCallTest {
         sendCrossCallToAvm(result.getTransaction());
     }
 
-    private Address deployAvmDispatcherContract() throws InterruptedException {
+    private Address deployAvmDispatcherContract() throws InterruptedException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
@@ -138,7 +141,8 @@ public class CrossCallTest {
         return receipt.getAddressOfDeployedContract().get();
     }
 
-    private Address deployFvmContract() throws InterruptedException, DecoderException {
+    private Address deployFvmContract()
+        throws InterruptedException, DecoderException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
@@ -153,7 +157,8 @@ public class CrossCallTest {
         return receipt.getAddressOfDeployedContract().get();
     }
 
-    private void sendCrossCallToFvm(RawTransaction transaction) throws InterruptedException {
+    private void sendCrossCallToFvm(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -168,7 +173,7 @@ public class CrossCallTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.
@@ -185,7 +190,8 @@ public class CrossCallTest {
         assertFalse(receiptResult.getResult().transactionWasSuccessful());
     }
 
-    private void sendCrossCallToAvm(RawTransaction transaction) throws InterruptedException {
+    private void sendCrossCallToAvm(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -206,7 +212,7 @@ public class CrossCallTest {
         System.out.println("Waiting for the transaction to process...");
 
         // If it was observed then we know we witnessed the exception.
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.
@@ -221,7 +227,8 @@ public class CrossCallTest {
         assertRpcSuccess(receiptResult);
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -236,7 +243,7 @@ public class CrossCallTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.

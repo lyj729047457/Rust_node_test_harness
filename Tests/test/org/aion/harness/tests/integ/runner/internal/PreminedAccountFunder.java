@@ -3,6 +3,7 @@ package org.aion.harness.tests.integ.runner.internal;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
@@ -57,7 +58,8 @@ public final class PreminedAccountFunder {
      * off faked-up pre-mined accounts to our PreminedAccount @Rule. What we really do is give those
      * accounts some funds from the real premined account.
      */
-    public void fundAccount(Address address, BigInteger amount) throws InterruptedException {
+    public void fundAccount(Address address, BigInteger amount)
+        throws InterruptedException, TimeoutException {
         // Build the transaction to transfer balance to the specified account.
         // We are assuming this transaction succeeds, so we increment nonce here too. This allows for much higher concurrent throughput.
         TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
@@ -90,7 +92,7 @@ public final class PreminedAccountFunder {
         }
 
         // Block until it's processed and verify it was sealed into a block and not rejected!
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
 
         if(! transactionSealed.hasBeenObserved() || transactionRejected.hasBeenObserved() ) {
             throw new UnexpectedTestRunnerException("Failed transferring " + amount +

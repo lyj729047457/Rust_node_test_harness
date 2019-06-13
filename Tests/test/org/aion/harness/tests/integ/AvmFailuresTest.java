@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
@@ -119,7 +120,7 @@ public class AvmFailuresTest {
     }
 
 
-    private Address deployContract() throws InterruptedException {
+    private Address deployContract() throws InterruptedException, TimeoutException {
         // build contract deployment Tx
         TransactionResult deploy = RawTransaction.buildAndSignAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
@@ -138,7 +139,8 @@ public class AvmFailuresTest {
         return deployReceipt.getAddressOfDeployedContract().get();
     }
 
-    private TransactionReceipt sendTransactionToContract(Address contract, byte argument) throws InterruptedException {
+    private TransactionReceipt sendTransactionToContract(Address contract, byte argument)
+        throws InterruptedException, TimeoutException {
         // Create the transaction.
         TransactionResult transaction = RawTransaction.buildAndSignGeneralTransaction(
                 this.preminedAccount.getPrivateKey(),
@@ -154,7 +156,8 @@ public class AvmFailuresTest {
         return sendRawTransactionSynchronously(transaction.getTransaction());
     }
 
-    private TransactionReceipt sendRawTransactionSynchronously(RawTransaction rawTransaction) throws InterruptedException {
+    private TransactionReceipt sendRawTransactionSynchronously(RawTransaction rawTransaction)
+        throws InterruptedException, TimeoutException {
         // Capture the event for asynchronous waiting.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(rawTransaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
@@ -173,9 +176,10 @@ public class AvmFailuresTest {
         return receiptResult.getResult();
     }
 
-    private void waitForEvent(FutureResult<LogEventResult> future) throws InterruptedException {
+    private void waitForEvent(FutureResult<LogEventResult> future)
+        throws InterruptedException, TimeoutException {
         log.log("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         Assert.assertTrue(listenResult.eventWasObserved());
         log.log("Transaction was sealed into a block.");
     }

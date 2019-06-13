@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIDecoder;
@@ -265,42 +266,50 @@ public class AvmReceiptLogTest {
         }
     }
 
-    private TransactionReceipt callMethodWriteLogsFromInternalCallAlso(Address caller, Address callee, byte[] data) throws InterruptedException {
+    private TransactionReceipt callMethodWriteLogsFromInternalCallAlso(Address caller, Address callee, byte[] data)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(caller, "writeLogsFromInternalCallAlso", callee.getAddressBytes(), data);
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteAllLogs(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteAllLogs(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeAllLogs");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteDataLogWithFourTopics(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteDataLogWithFourTopics(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithFourTopics");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteDataLogWithThreeTopics(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteDataLogWithThreeTopics(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithThreeTopics");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteDataLogWithTwoTopics(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteDataLogWithTwoTopics(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithTwoTopics");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteDataLogWithOneTopic(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteDataLogWithOneTopic(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithOneTopic");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteNoLogs(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteNoLogs(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeNoLogs");
         return sendTransaction(transaction);
     }
 
-    private TransactionReceipt callMethodWriteDataOnlyLog(Address contract) throws InterruptedException {
+    private TransactionReceipt callMethodWriteDataOnlyLog(Address contract)
+        throws InterruptedException, TimeoutException {
         RawTransaction transaction = makeCallTransaction(contract, "writeDataOnlyLog");
         return sendTransaction(transaction);
     }
@@ -385,7 +394,7 @@ public class AvmReceiptLogTest {
         return buildResult.getTransaction();
     }
 
-    private Address deployLogTargetContract() throws InterruptedException {
+    private Address deployLogTargetContract() throws InterruptedException, TimeoutException {
         TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
@@ -400,7 +409,8 @@ public class AvmReceiptLogTest {
         return receipt.getAddressOfDeployedContract().get();
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendTransaction(RawTransaction transaction)
+        throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -415,7 +425,7 @@ public class AvmReceiptLogTest {
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
         System.out.println("Waiting for the transaction to process...");
-        LogEventResult listenResult = future.get();
+        LogEventResult listenResult = future.get(5, TimeUnit.MINUTES);
         assertTrue(listenResult.eventWasObserved());
 
         // Verify it was sealed and not rejected.
