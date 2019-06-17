@@ -1,12 +1,21 @@
 # Tests
 This module is where we store all of the tests that _use_ the testing harness. This is not the place to test out the harness itself - that's what the `TestHarness` module is for!
 
+## Aion kernel setup
+
+The tests will automatically start the kernel(s) that it needs to test against.  They expect the Java and Rust kernels to be at a particular location, so this must be set up before the tests can be run successfully.  Kernel configuration will be automatically copied as part of test execution.
+
+Assuming that you have a directory named `node_test_harness` where you've cloned the Git repository:
+- For Java kernel, extract the release to `node_test_harness/Tests/aion` (so that `aion.sh` is present in that directory)
+- For Rust kernel, extract the release to `node_test_harness/Tests/aionr` (so that `aion` is present in that directory)
+
 ## Concurrent testing framework
 The tests in this module have the ability to be incorporated into a test suite that is run concurrently against a single node instance. This allows us to not only gain a huge speed-up in terms of how long it takes for all of the tests to run, but it also allows for our individual functional tests to come together and serve as a stress test of the kernel, by flooding it with transactions simultaneously.
 
 __All tests should be written for concurrent testing unless there is a very good reason why they do not fit into the concurrent model!__
 
-In general, `./gradlew :Tests:test` is how you should be running tests (this will use the concurrent runner).
+In general, `./gradlew :Tests:test` is how you should be running tests (this will use the concurrent runner and execute the tests against both Java and Rust kernels).  To test against only one kernel, use `./gradlew :Tests:test -PtestNodes=java` or `./gradlew :Tests:test -PtestNodes=rust`
+
 
 * [Concurrent Testing](#concurrent)
   * [Writing tests to be run concurrently](#concurrent-writing)

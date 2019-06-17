@@ -1,7 +1,9 @@
 # Node Testing Harness
 A test harness for functional integration testing of the Aion kernel(s).
 
-## How to get the jar?
+This README documents details about the Test Harness library itself.  For a guide to getting started with executing and authoring test cases, start with the [Tests README.md](Tests/README.md).
+
+## How to build the jar?
 We strive to make the `master` branch a ready-to-ship product at every commit, so it is always safe to build the latest version of the project. Otherwise, you can also find jars built at various commits in the `releases` tab.
 
 1) `git clone` the project to your machine.
@@ -43,17 +45,6 @@ You can find the build in the newly created `dist` directory.
 * [Getting basic statistics](#statistics)
 
 ### <a name="configure-local-node">Configuring a local Java Kernel node</a>
-#### <a name="build-source">Building from source</a>
-You have the `aion` repository somewhere on your machine and you want to build your node from the source files.
-```java
-NodeConfigurations configurations = NodeConfigurations.alwaysBuildFromSource(network, "/path/to/source/directory");
-
-LocalNode node = NodeFactory.getNewLocalNodeInstance(NodeFactory.NodeType.JAVA_NODE);
-node.configure(configurations);
-Result result = node.initialize();
-```
-Now every time you start the node, the node will be built anew from source.
-Note that the test harness will create a 'sandbox' directory in which the new build will be placed each time. If you are building from source, you may want to remove this directory once you are done with it.
 
 #### <a name="use-prebuilt">Using a pre-built kernel</a>
 You have a pre-built kernel. Not a tar file, but its extracted contents. This should be a directory named `aion` (most likely) that contains the `aion.sh` script. Now instead of building from source, you want the node to launch directly from this build.
@@ -87,22 +78,6 @@ You should __always__ check the result of `node.start()`. Don't assume the node 
 
 #### When is it safe to use a newly started node?
 If you are connecting to a real network then it is always recommended that you wait until you have synced up with that network. However, if you are running a standalone node (you have no peers) then you definitely do not want to sync (this will be explained below), but the rpc server and the miner threads are not necessarily ready to be prodded yet - this is a known "bug" and is being tracked by issue #35. Until the bug is fixed, it is recommended that you sleep for 5-10 seconds just to be safe before proceeding.
-
-### <a name="syncing">Syncing to a network</a>
-If you connect to a network and you have peers then your node will automatically start syncing up with them. But you shouldn't be interacting with the node during this point. You always want to wait until you are finished syncing. Here's how you do it:
-```java
-RPC rpc = new RPC("127.0.0.1", "8545");
-
-Result result = rpc.waitForSyncToComplete(1, TimeUnit.HOURS);
-if (!result.isSuccess()) {
-    System.out.println("Failed to finish syncing: " + result.getError());
-}
-```
-
-You'll have to specify the correct IP and port for what you're doing, and a more appropriate timeout value depending on your situation. Again, you should always check the return result, just to make sure that the node has indeed finished syncing.
-The `waitForSyncToComplete` method will regularly report its status (you should see a status update get printed to the console at least every minute - we do not want to commit to an interval more precise than this).
-
-__Do not sync__ if you are running in standalone mode (no peers): the system interprets no peers as if you are still trying to connect to your peers, which is the first step in a real sync, and therefore will keep syncing indefinitely until you time out. Instead, if you are running in standalone, it is advised to sleep for 5-10 seconds just to ensure that the miner threads & rpc server have activated.
 
 ### <a name="remote-node">Interacting with a remote node</a>
 #### <a name="remote-create">i. Creating a remote node</a>
@@ -413,16 +388,18 @@ This event will be observed only if the `fruits` event is observed _or_ the `siz
 You can use these and-or operators to create arbitrarily complex events to be listened for.
 
 #### <a name="prepackaged-events">iii. Prepackaged events</a>
-The events that the `NodeListener` allows you to listen for by default can be found in the `PrepackagedLogEvents` class if you want to handle them directly. This may be desirable if you want to do something like: listen for a transaction to be processed _and_ listen for specific output it will generate.
+The events that the `NodeListener` allows you to listen for by default can be found in the subclasses of the `PrepackagedLogEvents` interface if you want to handle them directly. This may be desirable if you want to do something like: listen for a transaction to be processed _and_ listen for specific output it will generate.
 
 A quick example of this:
 ```java
+PrepackagedLogEventsFactory prepackagedLogEventsFactory = new PrepackagedLogEventsFactory();
+prepackagedLogEventsFactory.setKernel(JAVA_NODE); // or RUST_NODE
 LocalNode node = // A local node obtained from one of the steps above.
 NodeListener listener = NodeListener.listenTo(node);
 Transaction transaction = // A transaction that was built from one of the above steps.
 
 IEvent output = new Event("contract output");
-IEvent transactionProcessed = PrepackagedLogEvents.getTransactionProcessedEvent(transaction);
+IEvent transactionProcessed = prepackagedLogEventsFactory.build().getTransactionProcessedEvent(transaction);
 IEvent event = Event.and(output, transactionProcessed);
 
 FutureResult<LogEventResult> future = listener.listenForEvent(event, 1, TimeUnit.MINUTES);
