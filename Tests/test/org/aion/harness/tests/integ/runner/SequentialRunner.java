@@ -7,13 +7,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.event.RustPrepackagedLogEvents;
@@ -25,8 +22,6 @@ import org.aion.harness.tests.integ.runner.internal.TestContext;
 import org.aion.harness.tests.integ.runner.internal.TestExecutor;
 import org.aion.harness.tests.integ.runner.internal.TestNodeManager;
 import org.aion.harness.tests.integ.runner.internal.TestResult;
-import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStderr;
-import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStdout;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -58,7 +53,8 @@ public final class SequentialRunner extends Runner {
     /** Kernels will be tested in this order */
     private static final List<NodeType> SUPPORTED_NODES = List.of(
         NodeType.RUST_NODE,
-        NodeType.JAVA_NODE
+        NodeType.JAVA_NODE,
+        NodeType.PROXY_JAVA_NODE
     );
 
     public SequentialRunner(Class<?> testClass) {
@@ -174,7 +170,7 @@ public final class SequentialRunner extends Runner {
         final PreminedAccountFunder paf;
         if(nt == NodeType.RUST_NODE) {
             paf = new PreminedAccountFunder(testNodeManager, new RustPrepackagedLogEvents());
-        } else if (nt == NodeType.JAVA_NODE) {
+        } else if (nt == NodeType.JAVA_NODE || nt == NodeType.PROXY_JAVA_NODE) {
             paf = new PreminedAccountFunder(testNodeManager, new JavaPrepackagedLogEvents());
         } else {
             throw new IllegalArgumentException(String.format(

@@ -62,7 +62,8 @@ public final class ConcurrentRunner extends Runner {
     /** Kernels will be tested in this order */
     private static final List<NodeType> SUPPORTED_NODES = List.of(
         NodeType.RUST_NODE,
-        NodeType.JAVA_NODE
+        NodeType.JAVA_NODE,
+        NodeType.PROXY_JAVA_NODE
     );
 
     public ConcurrentRunner(Class<?> suiteClass) {
@@ -182,7 +183,7 @@ public final class ConcurrentRunner extends Runner {
         final PreminedAccountFunder paf;
         if(nt == NodeType.RUST_NODE) {
             paf = new PreminedAccountFunder(testNodeManager, new RustPrepackagedLogEvents());
-        } else if(nt == NodeType.JAVA_NODE) {
+        } else if(nt == NodeType.JAVA_NODE || nt == NodeType.PROXY_JAVA_NODE) {
             paf = new PreminedAccountFunder(testNodeManager, new JavaPrepackagedLogEvents());
         } else {
             throw new IllegalArgumentException(

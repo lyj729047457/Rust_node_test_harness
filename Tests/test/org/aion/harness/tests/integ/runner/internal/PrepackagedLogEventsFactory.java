@@ -26,7 +26,8 @@ public class PrepackagedLogEventsFactory implements TestRule {
             case RUST_NODE:
                 prepackagedLogEvents = new RustPrepackagedLogEvents();
                 break;
-            case JAVA_NODE:
+            case JAVA_NODE: 
+            case PROXY_JAVA_NODE:
                 prepackagedLogEvents = new JavaPrepackagedLogEvents();
                 break;
             default:

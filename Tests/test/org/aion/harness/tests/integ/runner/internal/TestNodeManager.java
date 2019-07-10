@@ -38,6 +38,9 @@ public final class TestNodeManager {
         } else if(nodeType == NodeType.JAVA_NODE) {
             this.expectedKernelLocation = WORKING_DIR + "/aion";
             this.handedwrittenConfigs = WORKING_DIR + "/test_resources/custom";
+        } else if(nodeType == NodeType.PROXY_JAVA_NODE) {
+            this.expectedKernelLocation = WORKING_DIR + "/aionproxy";
+            this.handedwrittenConfigs = WORKING_DIR + "/test_resources/proxy_java_custom";
         } else {
             throw new IllegalArgumentException("Unsupported kernel");
         }
@@ -124,11 +127,10 @@ public final class TestNodeManager {
         if(nodeType == NodeType.RUST_NODE) {
             overwriteIfTargetDirExists(new File(handedwrittenConfigs),
                 new File(expectedKernelLocation + "/custom"));
-        } else if(nodeType == NodeType.JAVA_NODE) {
+        } else if(nodeType == NodeType.JAVA_NODE
+            || nodeType == NodeType.PROXY_JAVA_NODE ) {
             FileUtils.copyDirectory(new File(handedwrittenConfigs),
-                new File(expectedKernelLocation + "/config/custom"));
-            overwriteIfTargetDirExists(new File(handedwrittenConfigs),
-                new File(expectedKernelLocation + "/custom/config"));
+                new File(expectedKernelLocation + "/custom"));
         } else {
             throw new IllegalStateException("Unsupported kernel");
         }

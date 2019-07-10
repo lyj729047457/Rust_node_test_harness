@@ -17,7 +17,8 @@ class RunnerHelper {
 
     private final static Map<String, NodeType> NODE_STRING_TO_ENUM = Map.ofEntries(
         Map.entry("java", NodeType.JAVA_NODE),
-        Map.entry("rust", NodeType.RUST_NODE)
+        Map.entry("rust", NodeType.RUST_NODE),
+        Map.entry("proxy", NodeType.PROXY_JAVA_NODE)
     );
 
     List<NodeType> determineNodeTypes(List<NodeType> supportedNodes) {

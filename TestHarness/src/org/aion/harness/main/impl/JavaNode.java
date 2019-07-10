@@ -25,11 +25,11 @@ import java.util.concurrent.TimeUnit;
  *
  * A JavaNode is not thread-safe.
  */
-public final class JavaNode implements LocalNode {
+public class JavaNode implements LocalNode {
     private final SimpleLog log;
     private NodeConfigurations configurations = null;
-    private LogReader logReader;
-    private LogManager logManager;
+    protected LogReader logReader;
+    protected LogManager logManager;
     private final int ID;
 
     private NodeInitializer initializer;
@@ -140,7 +140,7 @@ public final class JavaNode implements LocalNode {
         new LeveldbLockAwaiter(this.configurations.getDatabaseJava().getAbsolutePath()).await();
         this.runningKernel = builder.start();
 
-        return waitForRpcReadyOrError(outputLog);
+        return waitForKernelReadyOrError(outputLog);
     }
 
     /**
@@ -250,7 +250,7 @@ public final class JavaNode implements LocalNode {
     /**
      * Block until logs indicate that either RPC server started or an error happened
      */
-    private Result waitForRpcReadyOrError(File outputLog) throws InterruptedException {
+    protected Result waitForKernelReadyOrError(File outputLog) throws InterruptedException {
         // We wait for the rpc event to know we are ok to return. There is a chance that we will miss
         // this event and start listening too late. That is why we timeout after 20 seconds, which
         // should be more than sufficient for the server to activate, and then we check if the node
@@ -266,6 +266,7 @@ public final class JavaNode implements LocalNode {
                 return result;
             }
 
+            log.log("Waiting for kernel to start RPC server");
             try {
                 NodeListener.listenTo(this)
                     .listenForEvent(rpcEvent, 20, TimeUnit.SECONDS)
@@ -280,6 +281,7 @@ public final class JavaNode implements LocalNode {
                         "Did not see RPC started message in logs, but also could not find any error message.");
                 }
             }
+            log.log("Kernel RPC server started");
 
             return Result.successful();
         } else {
