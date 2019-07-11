@@ -3,18 +3,18 @@ This module is where we store all of the tests that _use_ the testing harness. T
 
 ## Aion kernel setup
 
-The tests will automatically start the kernel(s) that it needs to test against.  They expect the Java and Rust kernels to be at a particular location, so this must be set up before the tests can be run successfully.  Kernel configuration will be automatically copied as part of test execution.
+node_test_harness supports several _node types_, which represent the Aion implementation being tested.  The node type must be specified when running the tests by passing in Java system property `nodeTypes`.  For instance, if running with Gradle, to test against a Java kernel, the invocation is `./gradlew Tests:test -PnodeTypes=java`
 
-Assuming that you have a directory named `node_test_harness` where you've cloned the Git repository:
-- For Java kernel, extract the release to `node_test_harness/Tests/aion` (so that `aion.sh` is present in that directory)
-- For Rust kernel, extract the release to `node_test_harness/Tests/aionr` (so that `aion` is present in that directory)
+The tests expect that a kernel be at a particular location (dependent on node type being tested), so this must be set up before running the tests.  For instance, for testing against Java, the expected kernel location is Tests/aion within the node_test_harness cloned repo.
+
+For details on node types and configuring non-Java node types, see [Node type configuration](#node-type-configuration)
 
 ## Concurrent testing framework
 The tests in this module have the ability to be incorporated into a test suite that is run concurrently against a single node instance. This allows us to not only gain a huge speed-up in terms of how long it takes for all of the tests to run, but it also allows for our individual functional tests to come together and serve as a stress test of the kernel, by flooding it with transactions simultaneously.
 
 __All tests should be written for concurrent testing unless there is a very good reason why they do not fit into the concurrent model!__
 
-In general, `./gradlew :Tests:test` is how you should be running tests (this will use the concurrent runner and execute the tests against both Java and Rust kernels).  To test against only one kernel, use `./gradlew :Tests:test -PtestNodes=java` or `./gradlew :Tests:test -PtestNodes=rust`
+In general, `./gradlew :Tests:test -PnodeTypes=<nodetype>` is how you should be running tests.  For Java kernel, use `java` as <nodetype>.  This will use the concurrent runner and execute the tests against the Java kernel; for changing the kernel-under-test, see [Node type configuration](#node-type-configuration).
 
 
 * [Concurrent Testing](#concurrent)
@@ -67,4 +67,24 @@ These log files are your best means of debugging if you run into problems. You c
 ### <a name="sequential-run">Multi-kernel behaviour</a>
 
 By default, running tests sequentially will cause the test to be run twice -- once with Java kernel, then a second time with Rust kernel.  This behaviour can be overridden (for invocation from IDE or Gradle) by adding the JVM system property `testNodes`.  Value values are: `rust`, `java`, or `rust,java`.  Example Gradle invocation: `./gradlew :Tests:test -Psequential -PskipCleanLogs=true -PtestNodes=java`. 
+
+## Node type configuration
+
+Node type determines the Aion implementation that the tests will be executed against.  By default, node type is Java, but can be overridden using the system property `testNodes`.  If running tests from IDE, set the system property in your JUnit configuration.  If running tests via Gradle, set the property using the `-P` argument; i.e. `./gradlew Tests:test -PnodeType=java`.  Multiple node types can be provided, i.e. `./gradlew Tests:test -PnodeType=java,rust`.
+
+Supported node types:
+
+| Node type name | Description                                  |
+|----------------|----------------------------------------------|
+| java           | Tests implementation of Java kernel          |
+| rust           | Tests implementation of Rust kernel          |
+| proxy          | A special node type used for testing a network of kernels.  The test harness communicates with a Java kernel that performs no mining; instead, that kernel acts as a proxy by peering with kernel(s) in a network, which processes the transactions. |
+
+Each node type expects the kernel-under-test to be placed in a directory within the test harness.  Note that the test harness will overwrite config files in these directories.
+
+- for java, extract the release to `node_test_harness/Tests/aion` (so that `aion.sh` is present in that directory)
+- for rust, extract the release to `node_test_harness/Tests/aionr` (so that `aion` is present in that directory)
+- for proxy, extract a release of Java kernel to `node_test_harness/Tests/aionproxy` (so that `aion.sh` is present in that directory)
+
+For proxy, there is an additional set-up step to configure peering.  Modify the file `node_test_harness/Tests/test_resources/proxy_java_custom/config.xml` and add at least one peer from the network-under-test to the p2p nodes list.
 
