@@ -36,18 +36,19 @@ import org.junit.runners.Suite.SuiteClasses;
  * Concurrently Runner.  Responsible for starting up a node and executing tests against it.
  * Test case execution will be parallelized, but each node will be tested one at a time.
  *
- * By default, all test classes will be tested twice, once with Rust kernel and once with
- * Java kernel.  Test classes can override this behaviour using {@link ExcludeNodeType}.
- * This can also be overridden using the JVM system property <code>testNodes</code>.
- * If that property is provided, its value will determine what nodes this runner will
- * use for testing.  Valid value examples:
+ * To run tests, node type must be specified using JVM system property <code>testNodes</code>.
+ * Valid values:
  *
- * <code>java,rust</code> - run with java and rust kernels
- * <code>java</code> - run with java kernel only
- * <code>rust</code> - run with rust kernel only
+ *  <code>java,rust</code> - run with java and rust kernels
+ *  <code>java</code> - run with java kernel only
+ *  <code>rust</code> - run with rust kernel only
  *
- * If it is an empty string, the override will not take effect.  {@link ExcludeNodeType}
- * will take effect in addition to these overrides.
+ *  Multiple values may be specified, delimited with comma
+ *
+ * Gradle example: <code>./gradlew Tests:test -PtestNodes=java,rust</code>
+ * If running in IDE, add <code>-PtestNodes=java</code> to JUnit VM arguments.
+ *
+ * Classes can override this behaviour using {@link ExcludeNodeType}.
  */
 public final class ConcurrentRunner extends Runner {
     // Maximum number of threads to be used to run the tests. Our max is high because our tests are IO-bound.
@@ -59,13 +60,6 @@ public final class ConcurrentRunner extends Runner {
     private final Description testSuiteDescription;
     private final Map<NodeType, Map<Class<?>, Description>> node2ClassDescriptions;
 
-    /** Kernels will be tested in this order */
-    private static final List<NodeType> SUPPORTED_NODES = List.of(
-        NodeType.RUST_NODE,
-        NodeType.JAVA_NODE,
-        NodeType.PROXY_JAVA_NODE
-    );
-
     public ConcurrentRunner(Class<?> suiteClass) {
         this.helper = new RunnerHelper();
         this.suiteClass = suiteClass;
@@ -73,7 +67,7 @@ public final class ConcurrentRunner extends Runner {
         this.testSuiteDescription = Description.createSuiteDescription(suiteClass);
 
         this.node2ClassDescriptions = new LinkedHashMap<>();
-        List<NodeType> nodesToTest = new LinkedList<>(helper.determineNodeTypes(SUPPORTED_NODES));
+        List<NodeType> nodesToTest = new LinkedList<>(helper.determineNodeTypes());
 
         for(NodeType nt: nodesToTest) {
             Map<Class<?>, Description> class2Desc = new HashMap<>();

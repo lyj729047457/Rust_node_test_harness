@@ -10,21 +10,46 @@ import java.util.Set;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStderr;
 import org.aion.harness.tests.integ.runner.internal.ThreadSpecificStdout;
+import org.aion.harness.util.SimpleLog;
 
+/**
+ * Utility methods for node_test_harness custom JUnit runners.
+ */
 class RunnerHelper {
+    private final SimpleLog log;
+
+    public RunnerHelper() {
+        log = new SimpleLog(getClass().getName());
+    }
 
     // -- Methods for determining which kernel node types need to be run --------------------------
 
+    /** Human-friendly shorthand for node types for configuring which nodes to run tests with */
     private final static Map<String, NodeType> NODE_STRING_TO_ENUM = Map.ofEntries(
         Map.entry("java", NodeType.JAVA_NODE),
         Map.entry("rust", NodeType.RUST_NODE),
         Map.entry("proxy", NodeType.PROXY_JAVA_NODE)
     );
 
-    List<NodeType> determineNodeTypes(List<NodeType> supportedNodes) {
+    /** Default nodes to run with if {@code testNodes} property not supplied */
+    public final static List<NodeType> DEFAULT_NODE_TYPES = Collections.singletonList(
+        NodeType.JAVA_NODE);
+
+    /**
+     * Determine the requested node type(s) for test execution from the system property
+     * {@code testNodes}
+     */
+    List<NodeType> determineNodeTypes() {
         String propString = System.getProperty("testNodes");
         if(null == propString || propString.isEmpty()) {
-            return supportedNodes;
+            String msg =
+                "Cannot start tests because the test node types have not been specified.  Set the\n" +
+                "Java system property testNodes (valid values: java, rust, proxy).\n" +
+                "\n" +
+                "If running from Gradle, run the following to test Java node: ./gradlew Tests:test -PtestNodes=java\n" +
+                "If running from IDE, add the following VM argument to JUnit run execution: -DtestNodes=java\n";
+            log.log(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         List<NodeType> ret = new LinkedList<>();

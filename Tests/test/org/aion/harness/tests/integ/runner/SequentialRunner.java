@@ -31,18 +31,19 @@ import org.junit.runner.notification.RunNotifier;
 /**
  * Sequential Runner.  Responsible for starting up a node and executing tests against it.
  *
- * By default, all test classes will be tested twice, once with Rust kernel and once with
- * Java kernel.  Test classes can override this behaviour using {@link ExcludeNodeType}.
- * This can also be overridden using the JVM system property <code>testNodes</code>.
- * If that property is provided, its value will determine what nodes this runner will
- * use for testing.  Valid value examples:
+ * To run tests, node type must be specified using JVM system property <code>testNodes</code>.
+ * Valid values:
  *
- * <code>java,rust</code> - run with java and rust kernels
- * <code>java</code> - run with java kernel only
- * <code>rust</code> - run with rust kernel only
+ *  <code>java,rust</code> - run with java and rust kernels
+ *  <code>java</code> - run with java kernel only
+ *  <code>rust</code> - run with rust kernel only
  *
- * If it is an empty string, the override will not take effect.  {@link ExcludeNodeType}
- * will take effect in addition to these overrides.
+ *  Multiple values may be specified, delimited with comma
+ *
+ * Gradle example: <code>./gradlew Tests:test -PtestNodes=java,rust</code>
+ * If running in IDE, add <code>-PtestNodes=java</code> to JUnit VM arguments.
+ *
+ * Classes can override this behaviour using {@link ExcludeNodeType}.
  */
 public final class SequentialRunner extends Runner {
     private final RunnerHelper helper;
@@ -50,19 +51,12 @@ public final class SequentialRunner extends Runner {
     private final Description testClassDescription;
     private final Map<NodeType, Description> nodeType2Description;
 
-    /** Kernels will be tested in this order */
-    private static final List<NodeType> SUPPORTED_NODES = List.of(
-        NodeType.RUST_NODE,
-        NodeType.JAVA_NODE,
-        NodeType.PROXY_JAVA_NODE
-    );
-
     public SequentialRunner(Class<?> testClass) {
         this.helper = new RunnerHelper();
         this.testClass = testClass;
         nodeType2Description = new LinkedHashMap<>(); // because run method depends on the order
 
-        List<NodeType> nodesToTest = new LinkedList<>(helper.determineNodeTypes(SUPPORTED_NODES));
+        List<NodeType> nodesToTest = new LinkedList<>();
         nodesToTest.removeAll(helper.determineExcludedNodeTypes(this.testClass.getAnnotations()));
 
         this.testClassDescription = deriveTestDescription(testClass, nodeType2Description, nodesToTest);
