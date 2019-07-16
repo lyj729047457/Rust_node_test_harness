@@ -3,7 +3,7 @@ This module is where we store all of the tests that _use_ the testing harness. T
 
 ## Aion kernel setup
 
-node_test_harness supports several _node types_, which represent the Aion implementation being tested.  The node type must be specified when running the tests by passing in Java system property `PtestNodes`.  For instance, if running with Gradle, to test against a Java kernel, the invocation is `./gradlew Tests:test -PtestNodes=java`
+node_test_harness supports several _node types_, which represent the Aion implementation being tested.  The node type must be specified when running the tests by passing in Java system property `testNodes`.  For instance, if running with Gradle, to test against a Java kernel, the invocation is `./gradlew Tests:test -PtestNodes=java`
 
 The tests expect that a kernel be at a particular location (dependent on node type being tested), so this must be set up before running the tests.  For instance, for testing against Java, the expected kernel location is Tests/aion within the node_test_harness cloned repo.
 
