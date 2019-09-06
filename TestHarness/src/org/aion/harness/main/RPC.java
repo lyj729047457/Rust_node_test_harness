@@ -37,12 +37,20 @@ import org.apache.commons.codec.binary.Hex;
  * This class is not thread-safe.
  */
 public final class RPC {
-    private final SimpleLog log;
+    private final SimpleLog logger;
     private final RpcCaller rpc;
 
-    public RPC(String ip, String port) {
-        this.log = new SimpleLog(getClass().getName());
+    private RPC(String ip, String port, SimpleLog logger) {
+        this.logger = logger;
         this.rpc = new RpcCaller(ip, port);
+    }
+
+    public static RPC newRpc(String ip, String port) {
+        return new RPC(ip, port, null);
+    }
+
+    public static RPC newVerboseRpc(String ip, String port) {
+        return new RPC(ip, port, new SimpleLog(RPC.class.getName()));
     }
 
     /**
@@ -57,9 +65,9 @@ public final class RPC {
             tx.jsonString()
         ));
 
-        log.log("-->" + payload.payload);
+        logMessage("-->" + payload.payload);
         InternalRpcResult response = rpc.call(payload, false);
-        log.log("<--" + response.output);
+        logMessage("<--" + response.output);
 
 
         String rpcResult = new JsonParser().
@@ -75,9 +83,9 @@ public final class RPC {
     public RpcResult<Long> blockNumber() throws InterruptedException {
         RpcPayload payload = new RpcPayloadBuilder().method(RpcMethod.BLOCK_NUMBER).build();
 
-        log.log("-->" + payload.payload);
+        logMessage("-->" + payload.payload);
         InternalRpcResult internalResult = rpc.call(payload, false);
-        log.log("<--" + internalResult.output);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -578,9 +586,9 @@ public final class RPC {
 
     private void broadcastSyncUpdate(boolean waitingToConnect, BigInteger currentBlock, BigInteger highestBlock) {
         if (waitingToConnect) {
-            log.log(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
+            logMessage(Assumptions.LOGGER_BANNER + "Sync Progress = { waiting to connect to peers }");
         } else {
-            log.log(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
+            logMessage(Assumptions.LOGGER_BANNER + "Sync Progress = { At block: "
                 + NumberFormat.getIntegerInstance().format(currentBlock)
                 + " of " + NumberFormat.getIntegerInstance().format(highestBlock) + " }");
         }
@@ -632,9 +640,9 @@ public final class RPC {
             .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
             .build();
 
-        log.log("-->" + payload.payload);
+        logMessage("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
-        log.log("<--" + internalResult.output);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -701,9 +709,9 @@ public final class RPC {
             .useLatestBlock()
             .build();
 
-        log.log("-->" + payload.payload);
+        logMessage("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
-        log.log("<--" + internalResult.output);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -734,9 +742,9 @@ public final class RPC {
             .params(Hex.encodeHexString(receiptHash.getHash()))
             .build();
 
-        log.log("-->" + payload.payload);
+        logMessage("-->" + payload.payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
-        log.log("<--" + internalResult.output);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -819,4 +827,9 @@ public final class RPC {
         }
     }
 
+    private void logMessage(String message) {
+        if (this.logger != null) {
+            this.logger.log(message);
+        }
+    }
 }

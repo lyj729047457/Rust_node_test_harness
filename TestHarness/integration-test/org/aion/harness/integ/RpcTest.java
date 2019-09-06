@@ -49,7 +49,7 @@ public class RpcTest {
 
         this.node = TestHelper.configureDefaultLocalNodeForNetwork(Network.CUSTOM);
 
-        this.rpc = new RPC("127.0.0.1", "8545");
+        this.rpc = RPC.newRpc("127.0.0.1", "8545");
 
         assertTrue(this.node.initialize().isSuccess());
     }

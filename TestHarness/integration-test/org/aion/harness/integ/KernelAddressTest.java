@@ -47,7 +47,7 @@ public class KernelAddressTest {
         destination = new Address(Hex.decodeHex("a0e9f9832d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
         this.node = TestHelper.configureDefaultLocalNodeForNetwork(Network.CUSTOM);
-        this.rpc = new RPC("127.0.0.1", "8545");
+        this.rpc = RPC.newRpc("127.0.0.1", "8545");
 
         assertTrue(this.node.initialize().isSuccess());
     }

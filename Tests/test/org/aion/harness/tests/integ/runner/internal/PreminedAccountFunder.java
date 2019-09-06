@@ -41,7 +41,7 @@ public final class PreminedAccountFunder {
     public PreminedAccountFunder(TestNodeManager nodeManager, PrepackagedLogEvents prepackagedLogEvents) {
         this.nodeManager = nodeManager;
         this.prepackagedLogEvents = prepackagedLogEvents;
-        this.rpc = new RPC("127.0.0.1", "8545");
+        this.rpc = RPC.newRpc("127.0.0.1", "8545");
 
         try {
             this.preminedAccount = PrivateKey.fromBytes(Hex.decodeHex(PREMINED_KEY));
