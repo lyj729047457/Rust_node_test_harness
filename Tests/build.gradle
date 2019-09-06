@@ -33,11 +33,17 @@ test {
 	if ( project.hasProperty("skipCleanLogs") ) {
 		systemProperty "skipCleanLogs", project.getProperty("skipCleanLogs")
 	}
+
+    // If 'sequential' is specified or if 'saturation' is specified we run the tests these ways.
+    // However, the default way to run the tests is using the concurrent executor.
 	if ( project.hasProperty("sequential") ) {
 		exclude '**/integ/concurrent/ConcurrentSuite.class'
-	} else {
-		include '**/integ/concurrent/ConcurrentSuite.class'
-	}
+	} else if (project.hasProperty("saturation")) {
+		include '**/integ/saturation/*'
+    	} else {
+        	include '**/integ/concurrent/ConcurrentSuite.class'
+    	}
+
 	if ( project.hasProperty("testNodes") ) {
 		systemProperty "testNodes", project.getProperty("testNodes")
 	}

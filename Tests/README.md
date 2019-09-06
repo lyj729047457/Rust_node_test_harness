@@ -16,6 +16,7 @@ __All tests should be written for concurrent testing unless there is a very good
 
 In general, `./gradlew :Tests:test -PtestNodes=<nodetype>` is how you should be running tests.  For Java kernel, use `java` as <nodetype>.  This will use the concurrent runner and execute the tests against the Java kernel; for changing the kernel-under-test, see [Node type configuration](#node-type-configuration).
 
+To run the saturation tests: `./gradlew :Tests:test -Psaturation`
 
 * [Concurrent Testing](#concurrent)
   * [Writing tests to be run concurrently](#concurrent-writing)
