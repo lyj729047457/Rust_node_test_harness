@@ -39,7 +39,9 @@ test {
 	if ( project.hasProperty("sequential") ) {
 		exclude '**/integ/concurrent/ConcurrentSuite.class'
 	} else if (project.hasProperty("saturation")) {
-		include '**/integ/saturation/*'
+        	include '**/integ/saturation/*'
+    	} else if (project.hasProperty("unsignedSaturation")) {
+        	include '**/integ/unsignedSaturation/*'
     	} else {
         	include '**/integ/concurrent/ConcurrentSuite.class'
     	}
