@@ -3,6 +3,7 @@ package org.aion.harness.main.impl;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import org.aion.harness.kernel.Kernel;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.event.Event;
@@ -33,6 +34,7 @@ public class JavaNode implements LocalNode {
     private final int ID;
 
     private NodeInitializer initializer;
+    private Kernel kernel;
     private boolean isInitialized = false;
 
     // The running instance of the kernel.
@@ -97,6 +99,8 @@ public class JavaNode implements LocalNode {
         if (result.isSuccess()) {
             result = this.logManager.setupLogFiles();
         }
+
+        this.kernel = new Kernel(this.configurations.getActualBuildLocation(), this.configurations.getNetwork());
 
         this.isInitialized = true;
         return result;
@@ -245,6 +249,20 @@ public class JavaNode implements LocalNode {
     @Override
     public Network getNetwork() {
         return (this.configurations == null) ? null : this.configurations.getNetwork();
+    }
+
+    /**
+     * Returns the kernel corresponding to this node.
+     *
+     * This method must only be invoked after initializing this node!
+     *
+     * @return the kernel.
+     */
+    public Kernel getKernel() {
+        if (!this.isInitialized) {
+            throw new IllegalStateException("No kernel currently exists, node has not been initialized yet!");
+        }
+        return this.kernel;
     }
 
     /**
