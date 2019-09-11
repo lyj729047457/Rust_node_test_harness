@@ -42,9 +42,9 @@ public final class RpcCaller {
      * A successful result will contain the raw response of the server. It will still need to be
      * parsed.
      */
-    public InternalRpcResult call(RpcPayload payload, boolean verbose) throws InterruptedException {
+    public InternalRpcResult call(String payload, boolean verbose) throws InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder()
-            .command("curl", "-X", "POST", "-H", "Content-type: application/json", "--data", payload.payload, this.ip + ":" + this.port);
+            .command("curl", "-X", "POST", "-H", "Content-type: application/json", "--data", payload, this.ip + ":" + this.port);
 
         if (verbose) {
             processBuilder.inheritIO();

@@ -14,7 +14,6 @@ import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
 import org.aion.harness.main.tools.JsonStringParser;
 import org.aion.harness.main.tools.RpcPayload;
-import org.aion.harness.main.tools.RpcPayloadBuilder;
 import org.aion.harness.main.types.Block;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.SyncStatus;
@@ -60,12 +59,11 @@ public final class RPC {
      * @return the bytes returned by the <code>eth_call</code>
      */
     public byte[] call(Transaction tx) throws InterruptedException {
-        RpcPayload payload = new RpcPayload(String.format(
-            "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[%s,\"latest\"],\"id\":1}",
-            tx.jsonString()
-        ));
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = tx.jsonString() + ",\"latest\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.CALL, params);
 
-        logMessage("-->" + payload.payload);
+        logMessage("-->" + payload);
         InternalRpcResult response = rpc.call(payload, false);
         logMessage("<--" + response.output);
 
@@ -81,9 +79,11 @@ public final class RPC {
     }
 
     public RpcResult<Long> blockNumber() throws InterruptedException {
-        RpcPayload payload = new RpcPayloadBuilder().method(RpcMethod.BLOCK_NUMBER).build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "";
+        String payload = RpcPayload.generatePayload(RpcMethod.BLOCK_NUMBER, params);
 
-        logMessage("-->" + payload.payload);
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = rpc.call(payload, false);
         logMessage("<--" + internalResult.output);
 
@@ -599,13 +599,13 @@ public final class RPC {
             throw new NullPointerException("Cannot call getBlockByNumber using null number.");
         }
 
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.GET_BLOCK_BY_NUMBER)
-            .params(number.toString(16))
-            .useLatestBlock()
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + number.toString(16) + "\", false";
+        String payload = RpcPayload.generatePayload(RpcMethod.GET_BLOCK_BY_NUMBER, params);
 
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -635,12 +635,11 @@ public final class RPC {
             throw new IllegalArgumentException("Cannot send a null transaction.");
         }
 
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.SEND_RAW_TRANSACTION)
-            .params(Hex.encodeHexString(transaction.getSignedTransactionBytes()))
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(transaction.getSignedTransactionBytes()) + "\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.SEND_RAW_TRANSACTION, params);
 
-        logMessage("-->" + payload.payload);
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
         logMessage("<--" + internalResult.output);
 
@@ -671,13 +670,13 @@ public final class RPC {
             throw new IllegalArgumentException("Cannot get balance of a null address.");
         }
 
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.GET_BALANCE)
-            .params(Hex.encodeHexString(address.getAddressBytes()))
-            .useLatestBlock()
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(address.getAddressBytes()) + "\", \"latest\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.GET_BALANCE, params);
 
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);
@@ -703,13 +702,11 @@ public final class RPC {
             throw new IllegalArgumentException("Cannot get nonce of a null address.");
         }
 
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.GET_NONCE)
-            .params(Hex.encodeHexString(address.getAddressBytes()))
-            .useLatestBlock()
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(address.getAddressBytes()) + "\", \"latest\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.GET_NONCE, params);
 
-        logMessage("-->" + payload.payload);
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
         logMessage("<--" + internalResult.output);
 
@@ -737,12 +734,11 @@ public final class RPC {
             throw new NullPointerException("Cannot get a receipt from a null receipt hash.");
         }
 
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.GET_TRANSACTION_RECEIPT)
-            .params(Hex.encodeHexString(receiptHash.getHash()))
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(receiptHash.getHash()) + "\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.GET_TRANSACTION_RECEIPT, params);
 
-        logMessage("-->" + payload.payload);
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
         logMessage("<--" + internalResult.output);
 
@@ -771,11 +767,13 @@ public final class RPC {
     }
 
     private RpcResult<SyncStatus> callSyncing(boolean verbose) throws InterruptedException {
-        RpcPayload payload = new RpcPayloadBuilder()
-            .method(RpcMethod.IS_SYNCED)
-            .build();
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "";
+        String payload = RpcPayload.generatePayload(RpcMethod.IS_SYNCED, params);
 
+        logMessage("-->" + payload);
         InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        logMessage("<--" + internalResult.output);
 
         if (internalResult.success) {
             JsonStringParser outputParser = new JsonStringParser(internalResult.output);

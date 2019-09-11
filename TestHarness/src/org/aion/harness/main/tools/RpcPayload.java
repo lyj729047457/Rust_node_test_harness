@@ -1,41 +1,21 @@
 package org.aion.harness.main.tools;
 
 /**
- * A class that holds the payload for an RPC call. The payload for an RPC call is simply the data
+ * A class that generates the payload to an RPC call. The payload for an RPC call is simply the data
  * to that call (following the --data option).
- *
- * The preferred way of constructing an instance of this class is to the use the
- * {@link RpcPayloadBuilder}.
- *
- * An rpc payload is immutable.
  */
 public final class RpcPayload {
-    public final String payload;
+    private static final String PAYLOAD_START = "{\"jsonrpc\":\"2.0\",\"method\":\"";
+    private static final String PARAMS = "\",\"params\":[";
+    private static final String PAYLOAD_END = "],\"id\":1}";
 
-    public RpcPayload(String payload) {
-        this.payload = payload;
-    }
-
-    public RpcPayload(RpcMethod method, String params, String defaultBlock) {
+    public static String generatePayload(RpcMethod method, String params) {
         if (method == null) {
-            throw new NullPointerException("Cannot construct rpc payload with null method.");
+            throw new NullPointerException("Cannot generate rpc payload with null method.");
         }
         if (params == null) {
-            throw new NullPointerException("Cannot construct rpc payload with null params.");
+            throw new NullPointerException("Cannot generate rpc payload with null params.");
         }
-        if (defaultBlock == null) {
-            throw new NullPointerException("Cannot construct rpc payload with null default block.");
-        }
-
-        String parameters;
-        if ((!params.isEmpty()) && (!defaultBlock.isEmpty())) {
-            parameters = "\"" + params + "\",\"" + defaultBlock + "\"";
-        } else if ((!params.isEmpty()) && (defaultBlock.isEmpty())) {
-            parameters = "\"" + params + "\"";
-        } else {
-            parameters = "";
-        }
-
-        this.payload = "{\"jsonrpc\":\"2.0\",\"method\":\"" + method.getMethod() + "\",\"params\":[" + parameters + "],\"id\":1}";
+        return PAYLOAD_START + method.getMethod() + PARAMS + params + PAYLOAD_END;
     }
 }
