@@ -1,6 +1,6 @@
 package org.aion.harness.main.event;
 
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.apache.commons.codec.binary.Hex;
 
 public final class JavaPrepackagedLogEvents implements PrepackagedLogEvents {
@@ -10,7 +10,7 @@ public final class JavaPrepackagedLogEvents implements PrepackagedLogEvents {
     }
 
     @Override
-    public IEvent getTransactionSealedEvent(RawTransaction transaction) {
+    public IEvent getTransactionSealedEvent(SignedTransaction transaction) {
         if (transaction == null) {
             throw new NullPointerException("Cannot get event for null transaction hash.");
         }
@@ -18,7 +18,7 @@ public final class JavaPrepackagedLogEvents implements PrepackagedLogEvents {
     }
 
     @Override
-    public IEvent getTransactionRejectedEvent(RawTransaction transaction) {
+    public IEvent getTransactionRejectedEvent(SignedTransaction transaction) {
         if (transaction == null) {
             throw new NullPointerException("Cannot get event for null transaction hash.");
         }

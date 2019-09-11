@@ -7,7 +7,7 @@ import java.security.SignatureException;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
@@ -140,9 +140,9 @@ public class NodePreserveDatabaseTest {
         assertFalse(database.exists());
     }
 
-    private RawTransaction constructTransaction(
+    private SignedTransaction constructTransaction(
             PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
                 senderPrivateKey,
                 nonce,
                 destination,
@@ -168,7 +168,7 @@ public class NodePreserveDatabaseTest {
         System.out.println("Rpc getNonce = " + nonce);
         assertTrue(nonce.isSuccess());
 
-        RawTransaction transaction =
+        SignedTransaction transaction =
                 constructTransaction(
                         preminedPrivateKey, destination, transferValue, nonce.getResult());
 
@@ -179,7 +179,7 @@ public class NodePreserveDatabaseTest {
                             1,
                             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> result = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + result);
         assertTrue(result.isSuccess());
 

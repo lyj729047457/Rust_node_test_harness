@@ -5,7 +5,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -59,7 +59,7 @@ public final class PreminedAccountFunder {
         throws Exception {
         // Build the transaction to transfer balance to the specified account.
         // We are assuming this transaction succeeds, so we increment nonce here too. This allows for much higher concurrent throughput.
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             preminedAccount,
             getCurrentNonceThenIncrement(),
             address,
@@ -76,7 +76,7 @@ public final class PreminedAccountFunder {
         // Start listening for the transaction to get processed and send it off.
         NodeListener listener = this.nodeManager.newNodeListener();
         FutureResult<LogEventResult> future = listener.listenForEvent(transactionProcessed, 10, TimeUnit.MINUTES);
-        RpcResult<ReceiptHash> sendResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = this.rpc.sendSignedTransaction(transaction);
 
         if (!sendResult.isSuccess()) {
             throw new UnexpectedTestRunnerException("Failed transferring " + amount + " funds from the real pre-mined account: " + sendResult.getError());

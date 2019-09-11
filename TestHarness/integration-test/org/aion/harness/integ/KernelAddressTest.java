@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.kernel.utils.CryptoUtils;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
@@ -92,7 +92,7 @@ public class KernelAddressTest {
         transferFunds(nodeListener, senderPrivateKey);
 
         // send transaction with new address private key
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             senderPrivateKey,
             destination,
             BigInteger.ZERO,
@@ -103,7 +103,7 @@ public class KernelAddressTest {
             2,
             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -125,7 +125,7 @@ public class KernelAddressTest {
     }
 
     private void transferFunds(NodeListener nodeListener, PrivateKey senderPrivateKey) throws Exception {
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             senderPrivateKey.getAddress(),
             BigInteger.TEN.pow(20),
@@ -136,7 +136,7 @@ public class KernelAddressTest {
             2,
             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -144,8 +144,8 @@ public class KernelAddressTest {
         assertTrue(logEventResult.eventWasObserved());
     }
 
-    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction
+    private SignedTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction
             .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 

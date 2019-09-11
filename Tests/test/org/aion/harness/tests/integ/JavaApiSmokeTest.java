@@ -22,7 +22,7 @@ import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.api.type.BlockDetails;
 import org.aion.api.type.TxDetails;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
@@ -79,7 +79,7 @@ public class JavaApiSmokeTest {
         // send a transaction that deploys a simple contract and loads it with some funds
         log.log("Sending a transaction");
         BigInteger amount = BigInteger.TEN.pow(13).add(BigInteger.valueOf(2_938_652));
-        RawTransaction transaction = buildTransactionToCreateAndTransferToFvmContract(amount);
+        SignedTransaction transaction = buildTransactionToCreateAndTransferToFvmContract(amount);
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
@@ -134,7 +134,7 @@ public class JavaApiSmokeTest {
         assertTrue(foundTransaction);
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -142,7 +142,7 @@ public class JavaApiSmokeTest {
 
         // Send the transaction off.
         log.log("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -158,8 +158,8 @@ public class JavaApiSmokeTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,

@@ -19,7 +19,7 @@ import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -87,7 +87,7 @@ public class InternalTxTest {
     }
 
     private TransactionReceipt deployAvmContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
+        SignedTransaction transaction = SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),
@@ -103,7 +103,7 @@ public class InternalTxTest {
     throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         ABIStreamingEncoder encoder = new ABIStreamingEncoder();
         byte[] data = encoder.encodeOneString(methodName).encodeOneInteger(parameter).toBytes();
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -116,7 +116,7 @@ public class InternalTxTest {
             shouldSucceed ? sendCallToSucceed(transaction) : sendCallToFail(transaction);
     }
 
-    private TransactionReceipt sendDeployment(RawTransaction transaction)
+    private TransactionReceipt sendDeployment(SignedTransaction transaction)
     throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -127,7 +127,7 @@ public class InternalTxTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -148,7 +148,7 @@ public class InternalTxTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendCallToSucceed(RawTransaction transaction) throws InterruptedException {
+    private TransactionReceipt sendCallToSucceed(SignedTransaction transaction) throws InterruptedException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
         IEvent transactionIsRejected = prepackagedLogEventsFactory.build().getTransactionRejectedEvent(transaction);
@@ -159,7 +159,7 @@ public class InternalTxTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -187,7 +187,7 @@ public class InternalTxTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendCallToFail(RawTransaction transaction)
+    private TransactionReceipt sendCallToFail(SignedTransaction transaction)
     throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -201,7 +201,7 @@ public class InternalTxTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.

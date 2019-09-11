@@ -370,7 +370,7 @@ public final class BulkRawTransactionBuilder {
      * @return a result indicating whether or not the transactions were created, and if so, holds the
      * transactions themselves.
      */
-    public BulkResult<RawTransaction> build() {
+    public BulkResult<SignedTransaction> build() {
         // Ensure that if any list option was specified, that it has the expected size.
         if ((this.senderKeys != null) && (this.senderKeys.size() != this.numTransactions)) {
             throw new IllegalStateException("Specified incorrect number of sender keys: " + this.senderKeys.size()
@@ -406,9 +406,9 @@ public final class BulkRawTransactionBuilder {
         }
 
         // Create the transactions.
-        List<RawTransaction> transactions = new ArrayList<>();
+        List<SignedTransaction> transactions = new ArrayList<>();
 
-        RawTransaction transaction;
+        SignedTransaction transaction;
         BigInteger nonce = this.initialNonce;
         for (int i = 0; i < this.numTransactions; i++) {
 
@@ -424,9 +424,11 @@ public final class BulkRawTransactionBuilder {
             // Construct the appropriate transaction based on the type.
             try {
                 if ((type == TransactionType.AVM) && (destination == null)) {
-                    transaction = RawTransaction.newAvmCreateTransaction(key, senderNonce, data, energyLimit, energyPrice, value);
+                    transaction = SignedTransaction
+                        .newAvmCreateTransaction(key, senderNonce, data, energyLimit, energyPrice, value);
                 } else {
-                    transaction = RawTransaction.newGeneralTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
+                    transaction = SignedTransaction
+                        .newGeneralTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
                 }
             } catch (Exception e) {
                 return BulkResult.unsuccessful("Failed to create transaction #" + i + " due to: " + e.getMessage());

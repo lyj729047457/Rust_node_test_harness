@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeListener;
@@ -92,7 +92,7 @@ public class EventListenerTest {
 
     @Test
     public void testTransactionProcessed() throws Exception {
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
@@ -112,7 +112,7 @@ public class EventListenerTest {
             2,
             TimeUnit.MINUTES);
 
-        this.rpc.sendTransaction(transaction);
+        this.rpc.sendSignedTransaction(transaction);
 
         LogEventResult requestResult = futureResult.get();
 
@@ -149,7 +149,7 @@ public class EventListenerTest {
             2,
             TimeUnit.MINUTES);
 
-        this.rpc.sendTransaction(transaction);
+        this.rpc.sendSignedTransaction(transaction);
 
         requestResult = futureResult.get();
 
@@ -172,7 +172,7 @@ public class EventListenerTest {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
         PrivateKey privateKeyWithNoBalance = PrivateKey.fromBytes(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             privateKeyWithNoBalance,
             destination,
             BigInteger.ONE,
@@ -192,7 +192,7 @@ public class EventListenerTest {
             2,
             TimeUnit.MINUTES);
 
-        this.rpc.sendTransaction(transaction);
+        this.rpc.sendSignedTransaction(transaction);
 
         LogEventResult requestResult = futureResult.get();
 
@@ -270,8 +270,8 @@ public class EventListenerTest {
         assertFalse(this.node.isAlive());
     }
 
-    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction
+    private SignedTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction
             .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 

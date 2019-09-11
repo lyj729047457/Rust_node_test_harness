@@ -14,7 +14,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.BulkRawTransactionBuilder;
 import org.aion.harness.kernel.BulkRawTransactionBuilder.TransactionType;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.Network;
 import org.aion.harness.main.NodeConfigurations;
@@ -179,7 +179,7 @@ public class SaturationTest {
      * Transfers INITIAL_SENDER_BALANCE amount of aion to each of the listed senders.
      */
     private static void fundAllSenderAccounts(List<Address> senders) throws InterruptedException, TimeoutException {
-        BulkResult<RawTransaction> builderResult = new BulkRawTransactionBuilder(NUM_SENDERS)
+        BulkResult<SignedTransaction> builderResult = new BulkRawTransactionBuilder(NUM_SENDERS)
             .useSameSender(preminedAccount, preminedNonce)
             .useMultipleDestinations(senders)
             .useSameTransferValue(INITIAL_SENDER_BALANCE)
@@ -189,7 +189,7 @@ public class SaturationTest {
             .useSameTransactionType(TransactionType.FVM)
             .build();
         Assert.assertTrue(builderResult.isSuccess());
-        List<RawTransaction> transactions = builderResult.getResults();
+        List<SignedTransaction> transactions = builderResult.getResults();
 
         // Start listening for the transactions to be processed.
         NodeListener listener = NodeListener.listenTo(node);
@@ -198,7 +198,7 @@ public class SaturationTest {
         List<FutureResult<LogEventResult>> futures = listener.listenForEvents(processedEvents, 5, TimeUnit.MINUTES);
 
         // Send the transactions.
-        List<RpcResult<ReceiptHash>> bulkSendResults = rpc.sendTransactions(transactions);
+        List<RpcResult<ReceiptHash>> bulkSendResults = rpc.sendSignedTransactions(transactions);
         BulkResult<ReceiptHash> bulkResults = TestHarnessHelper.extractRpcResults(bulkSendResults);
         Assert.assertTrue(bulkResults.isSuccess());
 
@@ -238,9 +238,9 @@ public class SaturationTest {
         }
     }
 
-    private static List<ProcessedTransactionEventHolder> constructTransactionProcessedEvents(List<RawTransaction> transactions) {
+    private static List<ProcessedTransactionEventHolder> constructTransactionProcessedEvents(List<SignedTransaction> transactions) {
         List<ProcessedTransactionEventHolder> events = new ArrayList<>();
-        for (RawTransaction transaction : transactions) {
+        for (SignedTransaction transaction : transactions) {
             IEvent transactionIsSealed = prepackagedLogEvents.getTransactionSealedEvent(transaction);
             IEvent transactionIsRejected = prepackagedLogEvents.getTransactionRejectedEvent(transaction);
             IEvent transactionProcessed = Event.or(transactionIsSealed, transactionIsRejected);

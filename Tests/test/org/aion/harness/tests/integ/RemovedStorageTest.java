@@ -20,7 +20,7 @@ import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -63,13 +63,13 @@ public class RemovedStorageTest {
 
     @Test
     public void putResetVerifyStatic() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
         Address contract = receipt.getAddressOfDeployedContract().get();
 
-        RawTransaction transaction = makeCallTransaction(contract, "putStatic");
+        SignedTransaction transaction = makeCallTransaction(contract, "putStatic");
         receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
 
@@ -84,7 +84,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putResetPut() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -95,7 +95,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putZeroResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -108,7 +108,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putZeroResetResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -122,7 +122,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putOneResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -135,7 +135,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putOneResetResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -149,7 +149,7 @@ public class RemovedStorageTest {
 
     @Test
     public void resetResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -162,7 +162,7 @@ public class RemovedStorageTest {
 
     @Test
     public void resetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -174,7 +174,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putZeroVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -186,7 +186,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putOneVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -198,7 +198,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -211,7 +211,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putAddressVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -223,7 +223,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putAddressResetResetVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -237,7 +237,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putArbitrarySameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -250,7 +250,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putZeroSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -263,7 +263,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putOneSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -276,7 +276,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putNullSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -288,7 +288,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putArbitrarySameKeyVerifyNullSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -303,7 +303,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putZeroSameKeyVerifyNullSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -318,7 +318,7 @@ public class RemovedStorageTest {
 
     @Test
     public void putOneSameKeyVerifyNullSameKeyVerify() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -333,7 +333,7 @@ public class RemovedStorageTest {
 
     @Test
     public void removeStorageClinit() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateClinitTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateClinitTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -341,7 +341,7 @@ public class RemovedStorageTest {
 
     @Test
     public void removeStorageReentrant() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -353,7 +353,7 @@ public class RemovedStorageTest {
 
     @Test
     public void multipleGetSetVerifiesInSameCall() throws Exception {
-        RawTransaction deployTransaction = makeAvmCreateTransaction();
+        SignedTransaction deployTransaction = makeAvmCreateTransaction();
         TransactionReceipt receipt = sendTransaction(deployTransaction);
         assertTrue(receipt.transactionWasSuccessful());
         assertTrue(receipt.getAddressOfDeployedContract().isPresent());
@@ -368,96 +368,96 @@ public class RemovedStorageTest {
 
     private void putStorageLengthZero(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthZero");
+        SignedTransaction transaction = makeCallTransaction(contract, "putStorageLengthZero");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void resetStorage(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "resetStorage");
+        SignedTransaction transaction = makeCallTransaction(contract, "resetStorage");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void verifyAllStorageRemoved(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "verifyAllStorageRemoved");
+        SignedTransaction transaction = makeCallTransaction(contract, "verifyAllStorageRemoved");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putStorageLengthOne(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthOne");
+        SignedTransaction transaction = makeCallTransaction(contract, "putStorageLengthOne");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putResetPut(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putResetPut");
+        SignedTransaction transaction = makeCallTransaction(contract, "putResetPut");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putStorageAddress(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putStorageAddress");
+        SignedTransaction transaction = makeCallTransaction(contract, "putStorageAddress");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void validateStoragePreviousTxLength(Address contract, int i)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "validateStoragePreviousTxLength", i);
+        SignedTransaction transaction = makeCallTransaction(contract, "validateStoragePreviousTxLength", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void getStorageOneKey(Address contract, int i)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "getStorageOneKey", i);
+        SignedTransaction transaction = makeCallTransaction(contract, "getStorageOneKey", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void setStorageSameKey(Address contract, byte[] b)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "setStorageSameKey", b);
+        SignedTransaction transaction = makeCallTransaction(contract, "setStorageSameKey", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void reentrantCallAfterPut(Address contract, byte[] b)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "reentrantCallAfterPut", b);
+        SignedTransaction transaction = makeCallTransaction(contract, "reentrantCallAfterPut", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putZeroResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putZeroResetVerify");
+        SignedTransaction transaction = makeCallTransaction(contract, "putZeroResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putOneResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putOneResetVerify");
+        SignedTransaction transaction = makeCallTransaction(contract, "putOneResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putAddressResetVerify(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "putAddressResetVerify");
+        SignedTransaction transaction = makeCallTransaction(contract, "putAddressResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void ResetResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "ResetResetVerify");
+        SignedTransaction transaction = makeCallTransaction(contract, "ResetResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -466,7 +466,7 @@ public class RemovedStorageTest {
         FutureResult<LogEventResult> future = this.listener.listenForEvent(event, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -482,7 +482,7 @@ public class RemovedStorageTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendGetStaticTransaction(RawTransaction transaction)
+    private TransactionReceipt sendGetStaticTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -496,7 +496,7 @@ public class RemovedStorageTest {
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionProcessedAndVerified, 5, TimeUnit.MINUTES);
 
         // Send the transaction off.
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -515,10 +515,10 @@ public class RemovedStorageTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method, byte[] b) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private SignedTransaction makeCallTransaction(Address contract, String method, byte[] b) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = new ABIStreamingEncoder().encodeOneString(method).encodeOneByteArray(b).toBytes();
 
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -528,10 +528,10 @@ public class RemovedStorageTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method, int i) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private SignedTransaction makeCallTransaction(Address contract, String method, int i) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = ABIUtil.encodeMethodArguments(method, i);
 
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -541,10 +541,10 @@ public class RemovedStorageTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private SignedTransaction makeCallTransaction(Address contract, String method) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = ABIEncoder.encodeOneString(method);
 
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -554,8 +554,8 @@ public class RemovedStorageTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeAvmCreateTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newAvmCreateTransaction(
+    private SignedTransaction makeAvmCreateTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(RemoveStorageTarget.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes(),
@@ -564,8 +564,8 @@ public class RemovedStorageTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeAvmCreateClinitTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newAvmCreateTransaction(
+    private SignedTransaction makeAvmCreateClinitTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(StorageTargetClinitTarget.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes(),

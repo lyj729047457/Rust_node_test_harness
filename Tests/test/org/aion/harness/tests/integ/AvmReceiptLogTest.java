@@ -24,7 +24,7 @@ import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -270,49 +270,49 @@ public class AvmReceiptLogTest {
 
     private TransactionReceipt callMethodWriteLogsFromInternalCallAlso(Address caller, Address callee, byte[] data)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(caller, "writeLogsFromInternalCallAlso", callee.getAddressBytes(), data);
+        SignedTransaction transaction = makeCallTransaction(caller, "writeLogsFromInternalCallAlso", callee.getAddressBytes(), data);
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteAllLogs(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeAllLogs");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeAllLogs");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteDataLogWithFourTopics(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithFourTopics");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeDataLogWithFourTopics");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteDataLogWithThreeTopics(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithThreeTopics");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeDataLogWithThreeTopics");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteDataLogWithTwoTopics(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithTwoTopics");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeDataLogWithTwoTopics");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteDataLogWithOneTopic(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeDataLogWithOneTopic");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeDataLogWithOneTopic");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteNoLogs(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeNoLogs");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeNoLogs");
         return sendTransaction(transaction);
     }
 
     private TransactionReceipt callMethodWriteDataOnlyLog(Address contract)
         throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = makeCallTransaction(contract, "writeDataOnlyLog");
+        SignedTransaction transaction = makeCallTransaction(contract, "writeDataOnlyLog");
         return sendTransaction(transaction);
     }
 
@@ -364,10 +364,10 @@ public class AvmReceiptLogTest {
         assertArrayEquals(padOrTruncateTo32bytes(LogTarget.topic4), topics.get(3));
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private SignedTransaction makeCallTransaction(Address contract, String method) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = ABIEncoder.encodeOneString(method);
 
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -377,10 +377,10 @@ public class AvmReceiptLogTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method, byte[] internalContract, byte[] internalData) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private SignedTransaction makeCallTransaction(Address contract, String method, byte[] internalContract, byte[] internalData) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = new ABIStreamingEncoder().encodeOneString(method).encodeOneAddress(new avm.Address(internalContract)).encodeOneByteArray(internalData).toBytes();
 
-        return RawTransaction.newGeneralTransaction(
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -391,7 +391,7 @@ public class AvmReceiptLogTest {
     }
 
     private Address deployLogTargetContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
+        SignedTransaction transaction = SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             getAvmContractBytes(),
@@ -404,7 +404,7 @@ public class AvmReceiptLogTest {
         return receipt.getAddressOfDeployedContract().get();
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -415,7 +415,7 @@ public class AvmReceiptLogTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.

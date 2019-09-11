@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.RPC;
 import org.aion.harness.result.RpcResult;
 
@@ -37,8 +37,8 @@ public final class Saturator implements Callable<SaturationReport> {
             for (int i = 0; i < SaturationTest.NUM_TRANSACTIONS; i++) {
                 BigInteger nonce = BigInteger.valueOf(i);
 
-                RawTransaction transaction = RawTransaction.newGeneralTransaction(this.senderKey, nonce, destination, new byte[0], SaturationTest.ENERGY_LIMIT, SaturationTest.ENERGY_PRICE, SaturationTest.TRANSFER_AMOUNT);
-                this.rpc.sendTransaction(transaction);
+                SignedTransaction transaction = SignedTransaction.newGeneralTransaction(this.senderKey, nonce, destination, new byte[0], SaturationTest.ENERGY_LIMIT, SaturationTest.ENERGY_PRICE, SaturationTest.TRANSFER_AMOUNT);
+                this.rpc.sendSignedTransaction(transaction);
             }
         } catch (Exception e) {
             report = SaturationReport.unsuccessful(this.name, "Failed creating transactions due to: " + e.getMessage());

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
@@ -92,7 +92,7 @@ public class FvmTxSmokeTest {
     @Test
     public void test() throws Exception {
         // build contract deployment Tx
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,
@@ -120,8 +120,8 @@ public class FvmTxSmokeTest {
         this.preminedAccount.incrementNonce();
 
         // set "data" field of the contract
-        RawTransaction tx1 =
-            RawTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
+        SignedTransaction tx1 =
+            SignedTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
                 SET_DATA_1, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         TransactionReceipt tx1Receipt = sendTransaction(tx1);
         assertThat(tx1Receipt, is(not(nullValue()))); // can get more rigourous with this
@@ -139,8 +139,8 @@ public class FvmTxSmokeTest {
         this.preminedAccount.incrementNonce();
 
         // set "data" field of the contract
-        RawTransaction tx2 =
-            RawTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
+        SignedTransaction tx2 =
+            SignedTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
                 SET_DATA_2, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
         TransactionReceipt tx2Receipt = sendTransaction(tx2);
         assertThat(tx2Receipt, is(not(nullValue()))); // can get more rigourous with this
@@ -156,7 +156,7 @@ public class FvmTxSmokeTest {
             is(true));
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -164,7 +164,7 @@ public class FvmTxSmokeTest {
 
         // Send the transaction off.
         log.log("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.

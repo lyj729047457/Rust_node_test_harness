@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
@@ -110,7 +110,7 @@ public final class RPC {
     }
 
     /**
-     * Sends the specified transactions to the node.
+     * Sends the specified signed transactions to the node.
      *
      * These calls are asynchronous, and, as such, the returned list of receipt hashes will not
      * correspond to receipts until the corresponding transactions have been fully processed.
@@ -125,22 +125,22 @@ public final class RPC {
      * @param transactions The transactions to send.
      * @return the results.
      */
-    public List<RpcResult<ReceiptHash>> sendTransactionsVerbose(List<RawTransaction> transactions) throws InterruptedException {
+    public List<RpcResult<ReceiptHash>> sendSignedTransactionsVerbose(List<SignedTransaction> transactions) throws InterruptedException {
         if (transactions == null) {
             throw new NullPointerException("Cannot send null transactions.");
         }
 
         List<RpcResult<ReceiptHash>> results = new ArrayList<>();
 
-        for (RawTransaction transaction : transactions) {
-            results.add(sendTransactionVerbose(transaction));
+        for (SignedTransaction transaction : transactions) {
+            results.add(sendSignedTransactionVerbose(transaction));
         }
 
         return results;
     }
 
     /**
-     * Sends the specified transactions to the node.
+     * Sends the specified signed transactions to the node.
      *
      * These calls are asynchronous, and, as such, the returned list of receipt hashes will not
      * correspond to receipts until the corresponding transactions have been fully processed.
@@ -153,15 +153,15 @@ public final class RPC {
      * @param transactions The transactions to send.
      * @return the results.
      */
-    public List<RpcResult<ReceiptHash>> sendTransactions(List<RawTransaction> transactions) throws InterruptedException {
+    public List<RpcResult<ReceiptHash>> sendSignedTransactions(List<SignedTransaction> transactions) throws InterruptedException {
         if (transactions == null) {
             throw new NullPointerException("Cannot send null transactions.");
         }
 
         List<RpcResult<ReceiptHash>> results = new ArrayList<>();
 
-        for (RawTransaction transaction : transactions) {
-            results.add(sendTransaction(transaction));
+        for (SignedTransaction transaction : transactions) {
+            results.add(sendSignedTransaction(transaction));
         }
 
         return results;
@@ -373,7 +373,7 @@ public final class RPC {
     }
 
     /**
-     * Sends the specified transaction to the node.
+     * Sends the specified signed transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
      * receipt until the transaction has been fully processed.
@@ -381,12 +381,12 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransaction(RawTransaction transaction) throws InterruptedException {
-        return callSendTransaction(transaction, false);
+    public RpcResult<ReceiptHash> sendSignedTransaction(SignedTransaction transaction) throws InterruptedException {
+        return callSendSignedTransaction(transaction, false);
     }
 
     /**
-     * Sends the specified transaction to the node.
+     * Sends the specified signed transaction to the node.
      *
      * Displays the I/O of the attempt to hit the RPC endpoint.
      *
@@ -396,8 +396,8 @@ public final class RPC {
      * @param transaction The transaction to send.
      * @return the result of this attempt to send the transaction.
      */
-    public RpcResult<ReceiptHash> sendTransactionVerbose(RawTransaction transaction) throws InterruptedException {
-        return callSendTransaction(transaction, true);
+    public RpcResult<ReceiptHash> sendSignedTransactionVerbose(SignedTransaction transaction) throws InterruptedException {
+        return callSendSignedTransaction(transaction, true);
     }
 
     /**
@@ -630,7 +630,7 @@ public final class RPC {
         }
     }
 
-    private RpcResult<ReceiptHash> callSendTransaction(RawTransaction transaction, boolean verbose) throws InterruptedException {
+    private RpcResult<ReceiptHash> callSendSignedTransaction(SignedTransaction transaction, boolean verbose) throws InterruptedException {
         if (transaction == null) {
             throw new IllegalArgumentException("Cannot send a null transaction.");
         }

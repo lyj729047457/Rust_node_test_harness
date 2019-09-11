@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.types.Block;
@@ -76,13 +76,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -120,13 +120,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.valueOf(100));
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -145,13 +145,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -170,13 +170,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -195,13 +195,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         assertTrue(rpcResult.isSuccess());
 
         transaction = constructTransaction(
@@ -210,7 +210,7 @@ public class RpcTest {
             BigInteger.ONE,
             BigInteger.ONE);
 
-        rpcResult = this.rpc.sendTransaction(transaction);
+        rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -224,13 +224,13 @@ public class RpcTest {
     @Test
     public void testSendTransactionWhenNoNodeIsAlive() throws Exception {
         assertFalse(this.node.isAlive());
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.isSuccess());
     }
@@ -243,13 +243,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -271,13 +271,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             badPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.isSuccess());
         assertTrue(rpcResult.getError().contains("Transaction dropped"));
@@ -408,7 +408,7 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
@@ -421,7 +421,7 @@ public class RpcTest {
             2,
             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -465,7 +465,7 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             null,
             BigInteger.ONE,
@@ -478,7 +478,7 @@ public class RpcTest {
             2,
             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -595,7 +595,7 @@ public class RpcTest {
     }
 
     private void doBalanceTransfer(BigInteger transferValue) throws Exception {
-        RawTransaction transaction = constructTransaction(
+        SignedTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             transferValue,
@@ -606,7 +606,7 @@ public class RpcTest {
             1,
             TimeUnit.MINUTES);
 
-        RpcResult<ReceiptHash> result = this.rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> result = this.rpc.sendSignedTransaction(transaction);
         System.out.println("Rpc result = " + result);
         assertTrue(result.isSuccess());
 
@@ -614,8 +614,8 @@ public class RpcTest {
         assertTrue(eventResult.eventWasObserved());
     }
 
-    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction
+    private SignedTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction
             .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 

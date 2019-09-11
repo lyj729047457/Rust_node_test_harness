@@ -19,7 +19,7 @@ import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -101,7 +101,7 @@ public class CrossCallTest {
 
     private void callFvmDispatcher(Address dispatcher, Address target)
         throws InterruptedException, DecoderException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             dispatcher,
@@ -115,7 +115,7 @@ public class CrossCallTest {
 
     private void callAvmDispatcher(Address dispatcher, Address target)
         throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             dispatcher,
@@ -128,7 +128,7 @@ public class CrossCallTest {
     }
 
     private Address deployAvmDispatcherContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
+        SignedTransaction transaction = SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),
@@ -142,7 +142,7 @@ public class CrossCallTest {
 
     private Address deployFvmContract()
         throws InterruptedException, DecoderException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,
@@ -155,7 +155,7 @@ public class CrossCallTest {
         return receipt.getAddressOfDeployedContract().get();
     }
 
-    private void sendCrossCallToFvm(RawTransaction transaction)
+    private void sendCrossCallToFvm(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -166,7 +166,7 @@ public class CrossCallTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -188,7 +188,7 @@ public class CrossCallTest {
         assertFalse(receiptResult.getResult().transactionWasSuccessful());
     }
 
-    private void sendCrossCallToAvm(RawTransaction transaction)
+    private void sendCrossCallToAvm(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -203,7 +203,7 @@ public class CrossCallTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -225,7 +225,7 @@ public class CrossCallTest {
         assertRpcSuccess(receiptResult);
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -236,7 +236,7 @@ public class CrossCallTest {
 
         // Send the transaction off.
         System.out.println("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.

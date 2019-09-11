@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
@@ -61,11 +61,11 @@ public class AlternatingVmTest {
      */
     @Test
     public void testAlternatingCreationTransactions() throws Exception {
-        List<RawTransaction> transactions = makeAlternatingAvmFvmContractCreateTransactions(50);
+        List<SignedTransaction> transactions = makeAlternatingAvmFvmContractCreateTransactions(50);
         sendTransactions(transactions);
     }
 
-    private void sendTransactions(List<RawTransaction> transactions)
+    private void sendTransactions(List<SignedTransaction> transactions)
         throws InterruptedException, TimeoutException {
         List<IEvent> transactionProcessedEvents = makeTransactionProcessedEventPerTransaction(transactions);
 
@@ -73,7 +73,7 @@ public class AlternatingVmTest {
 
         // Send the transactions off.
         System.out.println("Sending the " + transactions.size() + " transactions...");
-        List<RpcResult<ReceiptHash>> sendResults = rpc.sendTransactions(transactions);
+        List<RpcResult<ReceiptHash>> sendResults = rpc.sendSignedTransactions(transactions);
         BulkResult<ReceiptHash> bulkHashes = TestHarnessHelper.extractRpcResults(sendResults);
         assertTrue(bulkHashes.isSuccess());
 
@@ -92,16 +92,16 @@ public class AlternatingVmTest {
         }
     }
 
-    private List<IEvent> makeTransactionProcessedEventPerTransaction(List<RawTransaction> transactions) {
+    private List<IEvent> makeTransactionProcessedEventPerTransaction(List<SignedTransaction> transactions) {
         List<IEvent> events = new ArrayList<>();
-        for (RawTransaction transaction : transactions) {
+        for (SignedTransaction transaction : transactions) {
             events.add(prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction));
         }
         return events;
     }
 
-    private List<RawTransaction> makeAlternatingAvmFvmContractCreateTransactions(int totalNum) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        List<RawTransaction> transactions = new ArrayList<>();
+    private List<SignedTransaction> makeAlternatingAvmFvmContractCreateTransactions(int totalNum) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        List<SignedTransaction> transactions = new ArrayList<>();
         for (int i = 0; i < totalNum; i++) {
             if (i % 2 == 0) {
                 transactions.add(makeAvmTransaction());
@@ -112,8 +112,8 @@ public class AlternatingVmTest {
         return transactions;
     }
 
-    private RawTransaction makeFvmTransaction() throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction makeFvmTransaction() throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             null,
@@ -123,8 +123,8 @@ public class AlternatingVmTest {
             BigInteger.ZERO);
     }
 
-    private RawTransaction makeAvmTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newAvmCreateTransaction(
+    private SignedTransaction makeAvmTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(SimpleContract.class), new byte[0]).encodeToBytes(),

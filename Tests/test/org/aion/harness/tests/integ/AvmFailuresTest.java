@@ -10,7 +10,7 @@ import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
@@ -106,7 +106,7 @@ public class AvmFailuresTest {
 
     private Address deployContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // build contract deployment Tx
-        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
+        SignedTransaction transaction = SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(
@@ -125,7 +125,7 @@ public class AvmFailuresTest {
     private TransactionReceipt sendTransactionToContract(Address contract, byte argument)
         throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // Create the transaction.
-        RawTransaction transaction = RawTransaction.newGeneralTransaction(
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(
                 this.preminedAccount.getPrivateKey(),
                 this.preminedAccount.getAndIncrementNonce(),
                 contract,
@@ -138,14 +138,14 @@ public class AvmFailuresTest {
         return sendRawTransactionSynchronously(transaction);
     }
 
-    private TransactionReceipt sendRawTransactionSynchronously(RawTransaction rawTransaction)
+    private TransactionReceipt sendRawTransactionSynchronously(SignedTransaction rawTransaction)
         throws InterruptedException, TimeoutException {
         // Capture the event for asynchronous waiting.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(rawTransaction);
         FutureResult<LogEventResult> future = this.listener.listenForEvent(transactionIsSealed, 5, TimeUnit.MINUTES);
         
         // Send the transaction.
-        RpcResult<ReceiptHash> sendResult = AvmFailuresTest.rpc.sendTransaction(rawTransaction);
+        RpcResult<ReceiptHash> sendResult = AvmFailuresTest.rpc.sendSignedTransaction(rawTransaction);
         Assertions.assertRpcSuccess(sendResult);
         
         // Wait for this to be mined.

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.BulkResult;
@@ -29,13 +29,13 @@ public final class TestHarnessHelper {
      * @param transactions The transactions whose hashes are to be extracted.
      * @return the transaction hashes.
      */
-    public static List<byte[]> extractTransactionHashes(List<RawTransaction> transactions) {
+    public static List<byte[]> extractTransactionHashes(List<SignedTransaction> transactions) {
         if (transactions == null) {
             throw new NullPointerException("Cannot extract hashes from null list of transactions.");
         }
 
         List<byte[]> hashes = new ArrayList<>();
-        for (RawTransaction transaction : transactions) {
+        for (SignedTransaction transaction : transactions) {
             if (transaction == null) {
                 throw new NullPointerException("Cannot extract hash from null transaction.");
             }

@@ -13,18 +13,13 @@ import org.apache.commons.codec.binary.Hex;
 /**
  * A signed Aion transaction.
  *
- * This transaction is "raw", indicating that it is a byte array representative of a transaction
- * (its encoding), rather than a typical object with fields associated with it.
- *
- * A raw transaction is used to send transactions over the RPC layer to the node.
- *
- * A transaction is immutable.
+ * This class is immutable.
  */
-public final class RawTransaction {
-    private final byte[] signedTransaction;
+public final class SignedTransaction {
+    private final byte[] transactionBytes;
     private byte[] hash;
 
-    private RawTransaction(PrivateKey sender, BigInteger nonce, Address destination, byte[] data,
+    private SignedTransaction(PrivateKey sender, BigInteger nonce, Address destination, byte[] data,
         long energyLimit, long energyPrice, BigInteger value, boolean isAvmCreate)
         throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
 
@@ -41,7 +36,7 @@ public final class RawTransaction {
             transactionBuilder.useAvmTransactionType();
         }
 
-        this.signedTransaction = transactionBuilder.buildSignedTransaction();
+        this.transactionBytes = transactionBuilder.buildSignedTransaction();
     }
 
     /**
@@ -57,8 +52,8 @@ public final class RawTransaction {
      * @param value The amount to be transferred.
      * @return a new signed transaction.
      */
-    public static RawTransaction newGeneralTransaction(PrivateKey senderPrivateKey, BigInteger nonce, Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        return new RawTransaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false);
+    public static SignedTransaction newGeneralTransaction(PrivateKey senderPrivateKey, BigInteger nonce, Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        return new SignedTransaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false);
     }
 
     /**
@@ -73,8 +68,8 @@ public final class RawTransaction {
      * @param value The amount to be transferred to the contract.
      * @return a new signed transaction.
      */
-    public static RawTransaction newAvmCreateTransaction(PrivateKey senderPrivateKey, BigInteger nonce, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        return new RawTransaction(senderPrivateKey, nonce, null, data, energyLimit, energyPrice, value, true);
+    public static SignedTransaction newAvmCreateTransaction(PrivateKey senderPrivateKey, BigInteger nonce, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        return new SignedTransaction(senderPrivateKey, nonce, null, data, energyLimit, energyPrice, value, true);
     }
 
     /**
@@ -83,7 +78,7 @@ public final class RawTransaction {
      * @return The transaction bytes.
      */
     public byte[] getSignedTransactionBytes() {
-        return Arrays.copyOf(this.signedTransaction, this.signedTransaction.length);
+        return Arrays.copyOf(this.transactionBytes, this.transactionBytes.length);
     }
 
     /**
@@ -93,14 +88,14 @@ public final class RawTransaction {
      */
     public byte[] getTransactionHash() {
         if (this.hash == null) {
-            this.hash = SignedTransactionBuilder.getTransactionHashOfSignedTransaction(this.signedTransaction);
+            this.hash = SignedTransactionBuilder.getTransactionHashOfSignedTransaction(this.transactionBytes);
         }
         return this.hash;
     }
 
     @Override
     public String toString() {
-        return "Transaction { hash = " + Hex.encodeHexString(getTransactionHash()) + " }";
+        return "SignedTransaction { hash = " + Hex.encodeHexString(getTransactionHash()) + " }";
     }
 
 }

@@ -15,7 +15,7 @@ import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
@@ -67,7 +67,7 @@ public class BalanceTransferTest {
         BigInteger amount = BigInteger.TEN.pow(13).add(BigInteger.valueOf(2_938_652));
 
         // Build and send the transaction off, grab its receipt.
-        RawTransaction transaction = buildTransactionToCreateAndTransferToFvmContract(amount);
+        SignedTransaction transaction = buildTransactionToCreateAndTransferToFvmContract(amount);
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
@@ -94,7 +94,7 @@ public class BalanceTransferTest {
 
         // Build and send the transaction off, grab its receipt.
         log.log("Creating the fvm contract...");
-        RawTransaction transaction = buildTransactionToCreateFvmContract();
+        SignedTransaction transaction = buildTransactionToCreateFvmContract();
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
@@ -142,7 +142,7 @@ public class BalanceTransferTest {
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(298_365_712));
 
         log.log("Creating the avm contract...");
-        RawTransaction transaction = buildTransactionToCreateAndTransferToAvmContract(amount);
+        SignedTransaction transaction = buildTransactionToCreateAndTransferToAvmContract(amount);
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
@@ -168,7 +168,7 @@ public class BalanceTransferTest {
 
         // Create the contract.
         log.log("Creating the avm contract...");
-        RawTransaction transaction = buildTransactionToCreateAvmContract();
+        SignedTransaction transaction = buildTransactionToCreateAvmContract();
         TransactionReceipt createReceipt = sendTransaction(transaction);
         assertTrue(createReceipt.getAddressOfDeployedContract().isPresent());
 
@@ -206,7 +206,7 @@ public class BalanceTransferTest {
 
         // Transfer the funds.
         log.log("Transferring funds to the account...");
-        RawTransaction transaction = buildTransactionToTransferFundsToAccount(regularAccount, amount);
+        SignedTransaction transaction = buildTransactionToTransferFundsToAccount(regularAccount, amount);
         TransactionReceipt transferReceipt = sendTransaction(transaction);
 
         // Verify that the pre-mined account traferred the balance.
@@ -236,7 +236,7 @@ public class BalanceTransferTest {
         return balanceResult.getResult();
     }
 
-    private TransactionReceipt sendCallToAvmContract(RawTransaction transaction)
+    private TransactionReceipt sendCallToAvmContract(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -246,7 +246,7 @@ public class BalanceTransferTest {
 
         // Send the transaction off.
         log.log("Sending the avm call transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -262,7 +262,7 @@ public class BalanceTransferTest {
         return receiptResult.getResult();
     }
 
-    private TransactionReceipt sendTransaction(RawTransaction transaction)
+    private TransactionReceipt sendTransaction(SignedTransaction transaction)
         throws InterruptedException, TimeoutException {
         // we want to ensure that the transaction gets sealed into a block.
         IEvent transactionIsSealed = prepackagedLogEventsFactory.build().getTransactionSealedEvent(transaction);
@@ -270,7 +270,7 @@ public class BalanceTransferTest {
 
         // Send the transaction off.
         log.log("Sending the transaction...");
-        RpcResult<ReceiptHash> sendResult = rpc.sendTransaction(transaction);
+        RpcResult<ReceiptHash> sendResult = rpc.sendSignedTransaction(transaction);
         assertRpcSuccess(sendResult);
 
         // Wait on the future to complete and ensure we saw the transaction get sealed.
@@ -286,8 +286,8 @@ public class BalanceTransferTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -297,8 +297,8 @@ public class BalanceTransferTest {
             amount);
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             account,
@@ -308,8 +308,8 @@ public class BalanceTransferTest {
             amount);
     }
 
-    private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -319,8 +319,8 @@ public class BalanceTransferTest {
             amount);
     }
 
-    private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -330,12 +330,12 @@ public class BalanceTransferTest {
             amount);
     }
 
-    private RawTransaction buildTransactionToCreateFvmContract() throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+    private SignedTransaction buildTransactionToCreateFvmContract() throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         return buildTransactionToCreateAndTransferToFvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newGeneralTransaction(
+    private SignedTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,
@@ -345,12 +345,12 @@ public class BalanceTransferTest {
             amount);
     }
 
-    private RawTransaction buildTransactionToCreateAvmContract() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+    private SignedTransaction buildTransactionToCreateAvmContract() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         return buildTransactionToCreateAndTransferToAvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return RawTransaction.newAvmCreateTransaction(
+    private SignedTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),

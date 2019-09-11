@@ -1,6 +1,6 @@
 package org.aion.harness.main.event;
 
-import org.aion.harness.kernel.RawTransaction;
+import org.aion.harness.kernel.SignedTransaction;
 
 /**
  * An interface that provides a number of prepackaged events for kernel events.
@@ -29,7 +29,7 @@ public interface PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    default IEvent getTransactionProcessedEvent(RawTransaction transaction) {
+    default IEvent getTransactionProcessedEvent(SignedTransaction transaction) {
         return Event.or(getTransactionSealedEvent(transaction), getTransactionRejectedEvent(transaction));
     }
 
@@ -39,7 +39,7 @@ public interface PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    IEvent getTransactionSealedEvent(RawTransaction transaction);
+    IEvent getTransactionSealedEvent(SignedTransaction transaction);
 
     /**
      * Returns an event that captures the node rejecting a transaction.
@@ -47,7 +47,7 @@ public interface PrepackagedLogEvents {
      * @param transaction The transaction.
      * @return the event.
      */
-    IEvent getTransactionRejectedEvent(RawTransaction transaction);
+    IEvent getTransactionRejectedEvent(SignedTransaction transaction);
 
     /**
      * Returns an event that captures a log line that is expected to occur consistently over the
