@@ -373,6 +373,40 @@ public final class RPC {
     }
 
     /**
+     * Attempts to unlock the specified account using the given password for the duration specified
+     * in the given units.
+     *
+     * Returns {@code true} if the unlock succeeded, {@code false} otherwise.
+     *
+     * The output of this method call will be verbose.
+     *
+     * @param account The account to unlock.
+     * @param password The account password.
+     * @param unlockDuration The duration to leave the account unlocked.
+     * @param units The units that the duration are in.
+     * @return the result of this attempt to unlock the account.
+     */
+    public RpcResult<Boolean> unlockKeystoreAccountVerbose(Address account, String password, long unlockDuration, TimeUnit units) throws InterruptedException {
+        return callUnlockKeystoreAccount(account, password, units.toSeconds(unlockDuration), true);
+    }
+
+    /**
+     * Attempts to unlock the specified account using the given password for the duration specified
+     * in the given units.
+     *
+     * Returns {@code true} if the unlock succeeded, {@code false} otherwise.
+     *
+     * @param account The account to unlock.
+     * @param password The account password.
+     * @param unlockDuration The duration to leave the account unlocked.
+     * @param units The units that the duration are in.
+     * @return the result of this attempt to unlock the account.
+     */
+    public RpcResult<Boolean> unlockKeystoreAccount(Address account, String password, long unlockDuration, TimeUnit units) throws InterruptedException {
+        return callUnlockKeystoreAccount(account, password, units.toSeconds(unlockDuration), false);
+    }
+
+    /**
      * Sends the specified signed transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
@@ -625,6 +659,35 @@ public final class RPC {
                 return RpcResult.unsuccessful(e.toString());
             }
 
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
+    }
+
+    private RpcResult<Boolean> callUnlockKeystoreAccount(Address account, String password, long unlockDurationInSeconds, boolean verbose) throws InterruptedException {
+        if (account == null) {
+            throw new NullPointerException("Cannot unlock null account!");
+        }
+        if (password == null) {
+            throw new NullPointerException("Cannot unlock account with null password!");
+        }
+
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(account.getAddressBytes()) + "\",\"" + password + "\",\"" + unlockDurationInSeconds + "\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.UNLOCK_ACCOUNT, params);
+
+        logMessage("-->" + payload);
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        logMessage("<--" + internalResult.output);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+            if (result == null) {
+                return RpcResult.unsuccessful("No result was returned!");
+            } else {
+                return RpcResult.successful(Boolean.valueOf(result), internalResult.getTimeOfCall(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
+            }
         } else {
             return RpcResult.unsuccessful(internalResult.error);
         }

@@ -7,10 +7,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
+import org.aion.harness.kernel.Kernel;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.event.JavaPrepackagedLogEvents;
+import org.aion.harness.main.impl.JavaNode;
 import org.aion.harness.main.types.Block;
 import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
@@ -66,6 +68,70 @@ public class RpcTest {
     @AfterClass
     public static void tearDownAfterAllTests() throws IOException {
         deleteLogs();
+    }
+
+    @Test
+    public void testUnlockAccount() throws Exception {
+        String password = "test";
+
+        // First we create the new keystore account.
+        JavaNode javaNode = (JavaNode) this.node;
+        Kernel kernel = javaNode.getKernel();
+        Address account = kernel.createNewAccountInKeystore(password);
+
+        // Now start the node up.
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        // Try to unlock the account.
+        RpcResult<Boolean> unlockResult = this.rpc.unlockKeystoreAccount(account, password, 10, TimeUnit.SECONDS);
+        System.out.println("Unlock result = " + unlockResult);
+        Assert.assertTrue(unlockResult.isSuccess());
+
+        // Actually confirm that the kernel said the account was unlocked.
+        Assert.assertTrue(unlockResult.getResult());
+
+        // Shut the node down.
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testUnlockAccountBadPassword() throws Exception {
+        String password = "test";
+
+        // First we create the new keystore account.
+        JavaNode javaNode = (JavaNode) this.node;
+        Kernel kernel = javaNode.getKernel();
+        Address account = kernel.createNewAccountInKeystore(password);
+
+        // Now start the node up.
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        // Try to unlock the account.
+        RpcResult<Boolean> unlockResult = this.rpc.unlockKeystoreAccount(account, "notthepassword", 10, TimeUnit.SECONDS);
+        System.out.println("Unlock result = " + unlockResult);
+        Assert.assertTrue(unlockResult.isSuccess());
+
+        // Actually confirm that the kernel said the account was not unlocked.
+        Assert.assertFalse(unlockResult.getResult());
+
+        // Shut the node down.
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertFalse(this.node.isAlive());
     }
 
     @Test

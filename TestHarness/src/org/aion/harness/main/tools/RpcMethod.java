@@ -20,7 +20,9 @@ public enum RpcMethod {
 
     BLOCK_NUMBER("eth_blockNumber"),
 
-    CALL("eth_call");
+    CALL("eth_call"),
+
+    UNLOCK_ACCOUNT("personal_unlockAccount");
 
     private String method;
 
