@@ -2,7 +2,6 @@ package org.aion.harness.tests.integ.runner.internal;
 
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
-import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
@@ -95,7 +94,7 @@ public final class PreminedAccount implements TestRule {
      * This is called by our custom Runners to load these accounts up with funds to fake up the 'pre-minedness'.
      */
     private void getFundsFromRealPreminedAccount(PreminedAccountFunder dispatcher)
-        throws InterruptedException, TimeoutException {
+        throws Exception {
         dispatcher.fundAccount(this.preminedForCaller.getAddress(), this.initialAmount);
     }
 }

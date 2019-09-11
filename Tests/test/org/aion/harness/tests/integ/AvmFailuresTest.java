@@ -1,49 +1,33 @@
 package org.aion.harness.tests.integ;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.harness.kernel.Address;
-import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
-import org.aion.harness.kernel.Transaction;
-import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
-import org.aion.harness.main.NodeConfigurations.DatabaseOption;
-import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
-import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.Assertions;
 import org.aion.harness.tests.contracts.avm.AvmFailureModes;
-import org.aion.harness.tests.contracts.avm.ByteArrayHolder;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
 import org.aion.harness.tests.integ.runner.internal.PreminedAccount;
 import org.aion.harness.tests.integ.runner.internal.PrepackagedLogEventsFactory;
 import org.aion.harness.util.SimpleLog;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -120,9 +104,9 @@ public class AvmFailuresTest {
     }
 
 
-    private Address deployContract() throws InterruptedException, TimeoutException {
+    private Address deployContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // build contract deployment Tx
-        TransactionResult deploy = RawTransaction.buildAndSignAvmCreateTransaction(
+        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(
@@ -131,18 +115,17 @@ public class AvmFailuresTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO /* amount */);
-        Assert.assertTrue(deploy.isSuccess());
         
         // send contract deployment Tx
-        TransactionReceipt deployReceipt = sendRawTransactionSynchronously(deploy.getTransaction());
+        TransactionReceipt deployReceipt = sendRawTransactionSynchronously(transaction);
         Assert.assertTrue(deployReceipt.getAddressOfDeployedContract().isPresent());
         return deployReceipt.getAddressOfDeployedContract().get();
     }
 
     private TransactionReceipt sendTransactionToContract(Address contract, byte argument)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // Create the transaction.
-        TransactionResult transaction = RawTransaction.buildAndSignGeneralTransaction(
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
                 this.preminedAccount.getPrivateKey(),
                 this.preminedAccount.getAndIncrementNonce(),
                 contract,
@@ -151,9 +134,8 @@ public class AvmFailuresTest {
                 ENERGY_PRICE,
                 BigInteger.ZERO
         );
-        Assert.assertTrue(transaction.isSuccess());
         
-        return sendRawTransactionSynchronously(transaction.getTransaction());
+        return sendRawTransactionSynchronously(transaction);
     }
 
     private TransactionReceipt sendRawTransactionSynchronously(RawTransaction rawTransaction)

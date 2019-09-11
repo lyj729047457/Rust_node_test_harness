@@ -3,6 +3,10 @@ package org.aion.harness.tests.integ;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +17,6 @@ import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.main.util.TestHarnessHelper;
@@ -21,7 +24,6 @@ import org.aion.harness.result.BulkResult;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
@@ -98,7 +100,7 @@ public class AlternatingVmTest {
         return events;
     }
 
-    private List<RawTransaction> makeAlternatingAvmFvmContractCreateTransactions(int totalNum) throws DecoderException {
+    private List<RawTransaction> makeAlternatingAvmFvmContractCreateTransactions(int totalNum) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         List<RawTransaction> transactions = new ArrayList<>();
         for (int i = 0; i < totalNum; i++) {
             if (i % 2 == 0) {
@@ -110,8 +112,8 @@ public class AlternatingVmTest {
         return transactions;
     }
 
-    private RawTransaction makeFvmTransaction() throws DecoderException {
-        TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction makeFvmTransaction() throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             null,
@@ -119,22 +121,16 @@ public class AlternatingVmTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
-    private RawTransaction makeAvmTransaction() {
-        TransactionResult buildResult = RawTransaction.buildAndSignAvmCreateTransaction(
+    private RawTransaction makeAvmTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(SimpleContract.class), new byte[0]).encodeToBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
     /**

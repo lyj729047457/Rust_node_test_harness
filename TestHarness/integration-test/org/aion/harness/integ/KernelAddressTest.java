@@ -1,5 +1,8 @@
 package org.aion.harness.integ;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.util.concurrent.TimeUnit;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
@@ -18,7 +21,6 @@ import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -75,7 +77,7 @@ public class KernelAddressTest {
 
 
     @Test
-    public void testCorrectness() throws IOException, InterruptedException, InvalidKeySpecException {
+    public void testCorrectness() throws Exception {
         NodeListener nodeListener = NodeListener.listenTo(this.node);
         PrivateKey senderPrivateKey = PrivateKey.random();
         System.out.println("private key = " + senderPrivateKey);
@@ -90,13 +92,11 @@ public class KernelAddressTest {
         transferFunds(nodeListener, senderPrivateKey);
 
         // send transaction with new address private key
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             senderPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
-        assertTrue(transactionResult.isSuccess());
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -124,15 +124,12 @@ public class KernelAddressTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void transferFunds(NodeListener nodeListener, PrivateKey senderPrivateKey) throws InterruptedException {
-        TransactionResult transactionResult = constructTransaction(
+    private void transferFunds(NodeListener nodeListener, PrivateKey senderPrivateKey) throws Exception {
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             senderPrivateKey.getAddress(),
             BigInteger.TEN.pow(20),
             BigInteger.ZERO);
-        assertTrue(transactionResult.isSuccess());
-
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = nodeListener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -147,9 +144,9 @@ public class KernelAddressTest {
         assertTrue(logEventResult.eventWasObserved());
     }
 
-    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
+    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         return RawTransaction
-            .buildAndSignGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private static void deleteLogs() throws IOException {

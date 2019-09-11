@@ -1,6 +1,9 @@
 package org.aion.harness.integ;
 
 import java.io.File;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import org.aion.harness.integ.resources.TestHelper;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
@@ -16,7 +19,6 @@ import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -67,7 +69,7 @@ public class NodePreserveDatabaseTest {
     }
 
     @Test
-    public void testPreserveDatabaseCheckTransaction() throws IOException, InterruptedException {
+    public void testPreserveDatabaseCheckTransaction() throws Exception {
         Network testingNetowrk = Network.CUSTOM;
         this.node =
                 TestHelper.configureDefaultLocalNodeToPreserveDatabaseForNetwork(testingNetowrk);
@@ -138,9 +140,9 @@ public class NodePreserveDatabaseTest {
         assertFalse(database.exists());
     }
 
-    private TransactionResult constructTransaction(
-            PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
-        return RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction constructTransaction(
+            PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
                 senderPrivateKey,
                 nonce,
                 destination,
@@ -160,17 +162,15 @@ public class NodePreserveDatabaseTest {
         }
     }
 
-    private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
+    private void doBalanceTransfer(BigInteger transferValue) throws Exception {
 
         RpcResult<BigInteger> nonce = this.rpc.getNonce(preminedPrivateKey.getAddress());
         System.out.println("Rpc getNonce = " + nonce);
         assertTrue(nonce.isSuccess());
 
-        TransactionResult transactionResult =
+        RawTransaction transaction =
                 constructTransaction(
                         preminedPrivateKey, destination, transferValue, nonce.getResult());
-
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult =
                 NodeListener.listenTo(this.node)

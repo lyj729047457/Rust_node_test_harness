@@ -6,6 +6,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
@@ -25,7 +29,6 @@ import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.InternalTxTarget;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.SequentialRunner;
@@ -83,25 +86,24 @@ public class InternalTxTest {
         assertFalse(receipt.transactionWasSuccessful());
     }
 
-    private TransactionReceipt deployAvmContract() throws InterruptedException, TimeoutException {
-        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
+    private TransactionReceipt deployAvmContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
-        return sendDeployment(result.getTransaction());
+        return sendDeployment(transaction);
     }
 
     private TransactionReceipt
     callAvmContract(Address contract, String methodName, int parameter, boolean shouldSucceed)
-    throws InterruptedException, TimeoutException {
+    throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         ABIStreamingEncoder encoder = new ABIStreamingEncoder();
         byte[] data = encoder.encodeOneString(methodName).encodeOneInteger(parameter).toBytes();
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -109,10 +111,9 @@ public class InternalTxTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
         return
-            shouldSucceed ? sendCallToSucceed(result.getTransaction()) : sendCallToFail(result.getTransaction());
+            shouldSucceed ? sendCallToSucceed(transaction) : sendCallToFail(transaction);
     }
 
     private TransactionReceipt sendDeployment(RawTransaction transaction)

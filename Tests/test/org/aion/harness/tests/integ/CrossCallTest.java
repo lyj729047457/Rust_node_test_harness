@@ -5,6 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -20,13 +24,11 @@ import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.AvmCrossCallDispatcher;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
@@ -98,8 +100,8 @@ public class CrossCallTest {
     }
 
     private void callFvmDispatcher(Address dispatcher, Address target)
-        throws InterruptedException, DecoderException, TimeoutException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+        throws InterruptedException, DecoderException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             dispatcher,
@@ -107,14 +109,13 @@ public class CrossCallTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
-        sendCrossCallToFvm(result.getTransaction());
+        sendCrossCallToFvm(transaction);
     }
 
     private void callAvmDispatcher(Address dispatcher, Address target)
-        throws InterruptedException, TimeoutException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+        throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             dispatcher,
@@ -122,28 +123,26 @@ public class CrossCallTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
-        sendCrossCallToAvm(result.getTransaction());
+        sendCrossCallToAvm(transaction);
     }
 
-    private Address deployAvmDispatcherContract() throws InterruptedException, TimeoutException {
-        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
+    private Address deployAvmDispatcherContract() throws InterruptedException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
-        TransactionReceipt receipt = sendTransaction(result.getTransaction());
+        TransactionReceipt receipt = sendTransaction(transaction);
         return receipt.getAddressOfDeployedContract().get();
     }
 
     private Address deployFvmContract()
-        throws InterruptedException, DecoderException, TimeoutException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+        throws InterruptedException, DecoderException, TimeoutException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,
@@ -151,9 +150,8 @@ public class CrossCallTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-        assertTrue(result.isSuccess());
 
-        TransactionReceipt receipt = sendTransaction(result.getTransaction());
+        TransactionReceipt receipt = sendTransaction(transaction);
         return receipt.getAddressOfDeployedContract().get();
     }
 

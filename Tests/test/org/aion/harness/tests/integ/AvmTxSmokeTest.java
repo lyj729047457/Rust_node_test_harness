@@ -19,13 +19,11 @@ import org.aion.harness.kernel.Transaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.ByteArrayHolder;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
@@ -63,7 +61,7 @@ public class AvmTxSmokeTest {
     @Test
     public void test() throws Exception {
         // build contract deployment Tx
-        TransactionResult deploy = RawTransaction.buildAndSignAvmCreateTransaction(
+        RawTransaction transaction = RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             new CodeAndArguments(
@@ -72,12 +70,9 @@ public class AvmTxSmokeTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO /* amount */);
-        if(! deploy.isSuccess()) {
-            throw new IllegalStateException("failed to construct the deployment tx");
-        }
 
         // send contract deployment Tx
-        TransactionReceipt deployReceipt = sendTransaction(deploy.getTransaction());
+        TransactionReceipt deployReceipt = sendTransaction(transaction);
         assertThat("expected address of deployed contract to be present in receipt of deployment tx",
             deployReceipt.getAddressOfDeployedContract().isPresent(), is(true));
         Address contract = deployReceipt.getAddressOfDeployedContract().get();
@@ -92,13 +87,10 @@ public class AvmTxSmokeTest {
 
         // set "data" field of the contract
         byte[] newData1 = new byte[] { 0x21, 0x00, 0x01, 0x61 };
-        TransactionResult tx1 =
-            RawTransaction.buildAndSignGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
+        RawTransaction tx1 =
+            RawTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
                 newData1, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
-        if(! tx1.isSuccess()) {
-            throw new IllegalStateException("failed to construct transaction 1 for setting data");
-        }
-        TransactionReceipt tx1Receipt = sendTransaction(tx1.getTransaction());
+        TransactionReceipt tx1Receipt = sendTransaction(tx1);
         assertThat(tx1Receipt, is(not(nullValue()))); // can get more rigourous with this
 
         // check state of deployed contract after tx1
@@ -111,13 +103,10 @@ public class AvmTxSmokeTest {
 
         // set "data" field of the contract
         byte[] newData2 = new byte[] { 0x21, 0x00, 0x04, 0x41, 0x53, 0x44, 0x46 };
-        TransactionResult tx2 =
-            RawTransaction.buildAndSignGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
+        RawTransaction tx2 =
+            RawTransaction.newGeneralTransaction(this.preminedAccount.getPrivateKey(), this.preminedAccount.getNonce(), contract,
                 newData2, ENERGY_LIMIT, ENERGY_PRICE, BigInteger.ZERO /* amount */);
-        if(! tx2.isSuccess()) {
-            throw new IllegalStateException("failed to construct transaction 2 for setting data");
-        }
-        TransactionReceipt tx2Receipt = sendTransaction(tx2.getTransaction());
+        TransactionReceipt tx2Receipt = sendTransaction(tx2);
         assertThat(tx2Receipt, is(not(nullValue()))); // can get more rigourous with this
 
         // check state of deployed contract after tx1

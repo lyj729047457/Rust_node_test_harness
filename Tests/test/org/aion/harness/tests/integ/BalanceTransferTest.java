@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -17,13 +20,11 @@ import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
 import org.aion.harness.tests.integ.runner.internal.LocalNodeListener;
@@ -61,7 +62,7 @@ public class BalanceTransferTest {
      */
     @Test
     public void testTransferBalanceToFvmContractUponCreation()
-        throws InterruptedException, DecoderException, TimeoutException {
+        throws Exception {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(13).add(BigInteger.valueOf(2_938_652));
 
@@ -88,7 +89,7 @@ public class BalanceTransferTest {
      */
     @Test
     public void testTransferBalanceToFvmContractAfterCreation()
-        throws InterruptedException, DecoderException, TimeoutException {
+        throws Exception {
         BigInteger amount = BigInteger.TEN.pow(11).add(BigInteger.valueOf(237_645));
 
         // Build and send the transaction off, grab its receipt.
@@ -136,7 +137,7 @@ public class BalanceTransferTest {
      */
     @Test
     public void testTransferBalanceToAvmContractUponCreation()
-        throws InterruptedException, TimeoutException {
+        throws Exception {
         BigInteger originalBalance = getPreminedBalance();
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(298_365_712));
 
@@ -162,7 +163,7 @@ public class BalanceTransferTest {
      */
     @Test
     public void testTransferBalanceToAvmContractAfterCreation()
-        throws InterruptedException, TimeoutException {
+        throws Exception {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(2_384_956));
 
         // Create the contract.
@@ -196,7 +197,7 @@ public class BalanceTransferTest {
      */
     @Test
     public void testTransferBalanceToRegularAccount()
-        throws InterruptedException, InvalidKeySpecException, TimeoutException {
+        throws Exception {
         BigInteger amount = BigInteger.TEN.pow(16).add(BigInteger.valueOf(12_476));
         BigInteger originalBalance = getPreminedBalance();
 
@@ -285,8 +286,8 @@ public class BalanceTransferTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToTransferFundsToAvmContract(Address contract, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -294,13 +295,10 @@ public class BalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToTransferFundsToAccount(Address account, BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             account,
@@ -308,13 +306,10 @@ public class BalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToTransferFundsToPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -322,13 +317,10 @@ public class BalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToTransferFundsToNonPayableFunction(Address contract, BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             contract,
@@ -336,17 +328,14 @@ public class BalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateFvmContract() throws DecoderException {
+    private RawTransaction buildTransactionToCreateFvmContract() throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         return buildTransactionToCreateAndTransferToFvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(BigInteger amount) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             null,
@@ -354,26 +343,20 @@ public class BalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateAvmContract() {
+    private RawTransaction buildTransactionToCreateAvmContract() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         return buildTransactionToCreateAndTransferToAvmContract(BigInteger.ZERO);
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) {
-        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
+    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(BigInteger amount) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getNonce(),
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
     /**

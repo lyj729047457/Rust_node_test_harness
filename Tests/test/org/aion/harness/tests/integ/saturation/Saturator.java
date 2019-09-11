@@ -8,7 +8,6 @@ import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.RPC;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 
 public final class Saturator implements Callable<SaturationReport> {
     private final RPC rpc = RPC.newRpc("127.0.0.1", "8545");
@@ -33,20 +32,16 @@ public final class Saturator implements Callable<SaturationReport> {
         // Send the transactions.
         System.out.println(this.name + " sending the " + SaturationTest.NUM_TRANSACTIONS + " transactions ...");
         Address destination = PrivateKey.random().getAddress();
-        for (int i = 0; i < SaturationTest.NUM_TRANSACTIONS; i++) {
 
-            // If report is null then we have not encountered an error yet and it's safe to proceed.
-            if (report == null) {
+        try {
+            for (int i = 0; i < SaturationTest.NUM_TRANSACTIONS; i++) {
                 BigInteger nonce = BigInteger.valueOf(i);
 
-                TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(this.senderKey, nonce, destination, new byte[0], SaturationTest.ENERGY_LIMIT, SaturationTest.ENERGY_PRICE, SaturationTest.TRANSFER_AMOUNT);
-                if (!buildResult.isSuccess()) {
-                    report = SaturationReport.unsuccessful(this.name, "Failed to construct transaction due to: " + buildResult.getError());
-                }
-
-                RawTransaction transaction = buildResult.getTransaction();
+                RawTransaction transaction = RawTransaction.newGeneralTransaction(this.senderKey, nonce, destination, new byte[0], SaturationTest.ENERGY_LIMIT, SaturationTest.ENERGY_PRICE, SaturationTest.TRANSFER_AMOUNT);
                 this.rpc.sendTransaction(transaction);
             }
+        } catch (Exception e) {
+            report = SaturationReport.unsuccessful(this.name, "Failed creating transactions due to: " + e.getMessage());
         }
 
         // We only want to do the next steps if nothing has gone wrong so far.

@@ -7,6 +7,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +28,6 @@ import org.aion.harness.kernel.RawTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.main.util.TestHarnessHelper;
@@ -33,7 +35,6 @@ import org.aion.harness.result.BulkResult;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.statistics.DurationStatistics;
 import org.aion.harness.tests.contracts.avm.SimpleContract;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
@@ -71,7 +72,7 @@ public class BulkBalanceTransferTest {
 
     @Test
     public void testMixOfBalanceTransferTransactionsFromSameSender()
-        throws InterruptedException, InvalidKeySpecException, DecoderException, TimeoutException {
+        throws Exception {
         List<Address> recipients = randomAddresses(NUMBER_OF_TRANSACTIONS);
         List<BigInteger> amounts = randomAmounts(NUMBER_OF_TRANSACTIONS);
         BigInteger initialNonce = this.preminedAccount.getNonce();
@@ -97,7 +98,7 @@ public class BulkBalanceTransferTest {
 
     @Test
     public void testMixOfBalanceTransferTransactionsFromDifferentSenders()
-        throws InterruptedException, InvalidKeySpecException, DecoderException, TimeoutException {
+        throws Exception {
         List<PrivateKey> senders = randomKeys(NUMBER_OF_TRANSACTIONS);
         List<Address> senderAddresses = TestHarnessHelper.extractAddresses(senders);
         List<Address> recipients = randomAddresses(NUMBER_OF_TRANSACTIONS);
@@ -295,7 +296,7 @@ public class BulkBalanceTransferTest {
         return cost;
     }
 
-    private List<RawTransaction> buildRandomTransactionsFromMultipleSenders(int numberOfTransactions, List<PrivateKey> senders, List<Address> recipients, List<BigInteger> amounts) throws DecoderException {
+    private List<RawTransaction> buildRandomTransactionsFromMultipleSenders(int numberOfTransactions, List<PrivateKey> senders, List<Address> recipients, List<BigInteger> amounts) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         assertEquals(numberOfTransactions, senders.size());
         assertEquals(numberOfTransactions, amounts.size());
 
@@ -308,7 +309,7 @@ public class BulkBalanceTransferTest {
         return transactions;
     }
 
-    private List<RawTransaction> buildRandomTransactionsFromSameSender(int numberOfTransactions, List<Address> recipients, List<BigInteger> amounts, BigInteger initialNonce) throws DecoderException {
+    private List<RawTransaction> buildRandomTransactionsFromSameSender(int numberOfTransactions, List<Address> recipients, List<BigInteger> amounts, BigInteger initialNonce) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         assertEquals(numberOfTransactions, amounts.size());
         assertEquals(numberOfTransactions, recipients.size());
 
@@ -338,7 +339,7 @@ public class BulkBalanceTransferTest {
         return buildResults.getResults();
     }
 
-    private RawTransaction buildTransaction(TransactionKind kind, PrivateKey sender, Address recipient, BigInteger amount, BigInteger nonce) throws DecoderException {
+    private RawTransaction buildTransaction(TransactionKind kind, PrivateKey sender, Address recipient, BigInteger amount, BigInteger nonce) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         switch (kind) {
             case REGULAR_TRANSFER: return buildTransactionToTransferToRegularAccount(sender, recipient, amount, nonce);
             case CREATE_AND_TRANSFER_FVM: return buildTransactionToCreateAndTransferToFvmContract(sender, amount, nonce);
@@ -348,8 +349,8 @@ public class BulkBalanceTransferTest {
         return null;
     }
 
-    private RawTransaction buildTransactionToTransferToRegularAccount(PrivateKey sender, Address account, BigInteger amount, BigInteger nonce) {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToTransferToRegularAccount(PrivateKey sender, Address account, BigInteger amount, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             sender,
             nonce,
             account,
@@ -357,13 +358,10 @@ public class BulkBalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) throws DecoderException {
-        TransactionResult result = RawTransaction.buildAndSignGeneralTransaction(
+    private RawTransaction buildTransactionToCreateAndTransferToFvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) throws DecoderException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newGeneralTransaction(
             sender,
             nonce,
             null,
@@ -371,22 +369,16 @@ public class BulkBalanceTransferTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
-    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) {
-        TransactionResult result = RawTransaction.buildAndSignAvmCreateTransaction(
+    private RawTransaction buildTransactionToCreateAndTransferToAvmContract(PrivateKey sender, BigInteger amount, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newAvmCreateTransaction(
             sender,
             nonce,
             getAvmContractBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             amount);
-
-        assertTrue(result.isSuccess());
-        return result.getTransaction();
     }
 
     /**

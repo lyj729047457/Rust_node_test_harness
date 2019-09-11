@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.harness.result.BulkResult;
-import org.aion.harness.result.TransactionResult;
 
 /**
  * A builder class that makes the process of constructing a bulk number of raw transactions easier.
@@ -409,7 +408,7 @@ public final class BulkRawTransactionBuilder {
         // Create the transactions.
         List<RawTransaction> transactions = new ArrayList<>();
 
-        TransactionResult result;
+        RawTransaction transaction;
         BigInteger nonce = this.initialNonce;
         for (int i = 0; i < this.numTransactions; i++) {
 
@@ -423,18 +422,17 @@ public final class BulkRawTransactionBuilder {
             BigInteger value = (this.value == null) ? this.values.get(i) : this.value;
 
             // Construct the appropriate transaction based on the type.
-            if ((type == TransactionType.AVM) && (destination == null)) {
-                result = RawTransaction.buildAndSignAvmCreateTransaction(key, senderNonce, data, energyLimit, energyPrice, value);
-            } else {
-                result = RawTransaction.buildAndSignGeneralTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
+            try {
+                if ((type == TransactionType.AVM) && (destination == null)) {
+                    transaction = RawTransaction.newAvmCreateTransaction(key, senderNonce, data, energyLimit, energyPrice, value);
+                } else {
+                    transaction = RawTransaction.newGeneralTransaction(key, senderNonce, destination, data, energyLimit, energyPrice, value);
+                }
+            } catch (Exception e) {
+                return BulkResult.unsuccessful("Failed to create transaction #" + i + " due to: " + e.getMessage());
             }
 
-            // If the transaction was made, add it to the list, otherwise fail immediately.
-            if (!result.isSuccess()) {
-                return BulkResult.unsuccessful("Failed to create transaction #" + i + " due to: " + result.getError());
-            } else {
-                transactions.add(result.getTransaction());
-            }
+            transactions.add(transaction);
 
             // Increment our initial nonce only if this option was specified.
             if (this.initialNonce != null) {

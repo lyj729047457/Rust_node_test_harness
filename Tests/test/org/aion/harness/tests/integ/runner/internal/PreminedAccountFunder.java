@@ -3,7 +3,6 @@ package org.aion.harness.tests.integ.runner.internal;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.RawTransaction;
@@ -11,13 +10,11 @@ import org.aion.harness.main.NodeListener;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.integ.runner.exception.UnexpectedTestRunnerException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -59,10 +56,10 @@ public final class PreminedAccountFunder {
      * accounts some funds from the real premined account.
      */
     public void fundAccount(Address address, BigInteger amount)
-        throws InterruptedException, TimeoutException {
+        throws Exception {
         // Build the transaction to transfer balance to the specified account.
         // We are assuming this transaction succeeds, so we increment nonce here too. This allows for much higher concurrent throughput.
-        TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
+        RawTransaction transaction = RawTransaction.newGeneralTransaction(
             preminedAccount,
             getCurrentNonceThenIncrement(),
             address,
@@ -70,12 +67,6 @@ public final class PreminedAccountFunder {
             2_000_000,
             10_000_000_000L,
             amount);
-
-        if (!buildResult.isSuccess()) {
-            throw new UnexpectedTestRunnerException("Failed transferring " + amount + " funds from the real pre-mined account: " + buildResult.getError());
-        }
-
-        RawTransaction transaction = buildResult.getTransaction();
 
         // Construct the 'transaction is processed' event we want to listen for.
         IEvent transactionSealed = prepackagedLogEvents.getTransactionSealedEvent(transaction);

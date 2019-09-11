@@ -5,6 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
@@ -21,13 +25,11 @@ import org.aion.harness.main.NodeFactory.NodeType;
 import org.aion.harness.main.RPC;
 import org.aion.harness.main.event.Event;
 import org.aion.harness.main.event.IEvent;
-import org.aion.harness.main.event.PrepackagedLogEvents;
 import org.aion.harness.main.types.ReceiptHash;
 import org.aion.harness.main.types.TransactionReceipt;
 import org.aion.harness.result.FutureResult;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.tests.contracts.avm.RemoveStorageTarget;
 import org.aion.harness.tests.contracts.avm.StorageTargetClinitTarget;
 import org.aion.harness.tests.integ.runner.ExcludeNodeType;
@@ -365,91 +367,91 @@ public class RemovedStorageTest {
     }
 
     private void putStorageLengthZero(Address contract)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthZero");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void resetStorage(Address contract) throws InterruptedException, TimeoutException {
+    private void resetStorage(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "resetStorage");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void verifyAllStorageRemoved(Address contract)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "verifyAllStorageRemoved");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putStorageLengthOne(Address contract) throws InterruptedException, TimeoutException {
+    private void putStorageLengthOne(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageLengthOne");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putResetPut(Address contract) throws InterruptedException, TimeoutException {
+    private void putResetPut(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putResetPut");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putStorageAddress(Address contract) throws InterruptedException, TimeoutException {
+    private void putStorageAddress(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putStorageAddress");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void validateStoragePreviousTxLength(Address contract, int i)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "validateStoragePreviousTxLength", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void getStorageOneKey(Address contract, int i)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "getStorageOneKey", i);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void setStorageSameKey(Address contract, byte[] b)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "setStorageSameKey", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void reentrantCallAfterPut(Address contract, byte[] b)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "reentrantCallAfterPut", b);
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putZeroResetVerify(Address contract) throws InterruptedException, TimeoutException {
+    private void putZeroResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putZeroResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void putOneResetVerify(Address contract) throws InterruptedException, TimeoutException {
+    private void putOneResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putOneResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
     private void putAddressResetVerify(Address contract)
-        throws InterruptedException, TimeoutException {
+        throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "putAddressResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
     }
 
-    private void ResetResetVerify(Address contract) throws InterruptedException, TimeoutException {
+    private void ResetResetVerify(Address contract) throws InterruptedException, TimeoutException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         RawTransaction transaction = makeCallTransaction(contract, "ResetResetVerify");
         TransactionReceipt receipt = sendTransaction(transaction);
         assertTrue(receipt.transactionWasSuccessful());
@@ -513,10 +515,10 @@ public class RemovedStorageTest {
         return receiptResult.getResult();
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method, byte[] b) {
+    private RawTransaction makeCallTransaction(Address contract, String method, byte[] b) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = new ABIStreamingEncoder().encodeOneString(method).encodeOneByteArray(b).toBytes();
 
-        TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -524,15 +526,12 @@ public class RemovedStorageTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method, int i) {
+    private RawTransaction makeCallTransaction(Address contract, String method, int i) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = ABIUtil.encodeMethodArguments(method, i);
 
-        TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -540,15 +539,12 @@ public class RemovedStorageTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
-    private RawTransaction makeCallTransaction(Address contract, String method) {
+    private RawTransaction makeCallTransaction(Address contract, String method) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] data = ABIEncoder.encodeOneString(method);
 
-        TransactionResult buildResult = RawTransaction.buildAndSignGeneralTransaction(
+        return RawTransaction.newGeneralTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             contract,
@@ -556,34 +552,25 @@ public class RemovedStorageTest {
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
-    private RawTransaction makeAvmCreateTransaction() {
-        TransactionResult buildResult = RawTransaction.buildAndSignAvmCreateTransaction(
+    private RawTransaction makeAvmCreateTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(RemoveStorageTarget.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 
-    private RawTransaction makeAvmCreateClinitTransaction() {
-        TransactionResult buildResult = RawTransaction.buildAndSignAvmCreateTransaction(
+    private RawTransaction makeAvmCreateClinitTransaction() throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return RawTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
             this.preminedAccount.getAndIncrementNonce(),
             new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(StorageTargetClinitTarget.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes(),
             ENERGY_LIMIT,
             ENERGY_PRICE,
             BigInteger.ZERO);
-
-        assertTrue(buildResult.isSuccess());
-        return buildResult.getTransaction();
     }
 }

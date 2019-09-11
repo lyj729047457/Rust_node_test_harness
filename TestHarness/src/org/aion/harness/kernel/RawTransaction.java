@@ -2,7 +2,6 @@ package org.aion.harness.kernel;
 
 import java.util.Arrays;
 import main.SignedTransactionBuilder;
-import org.aion.harness.result.TransactionResult;
 
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
@@ -26,12 +25,8 @@ public final class RawTransaction {
     private byte[] hash;
 
     private RawTransaction(PrivateKey sender, BigInteger nonce, Address destination, byte[] data,
-        long energyLimit, long energyPrice, BigInteger value, boolean isForAvm)
+        long energyLimit, long energyPrice, BigInteger value, boolean isAvmCreate)
         throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-
-        if (sender == null) {
-            throw new NullPointerException("sender cannot be null");
-        }
 
         SignedTransactionBuilder transactionBuilder = new SignedTransactionBuilder()
                 .privateKey(sender.getPrivateKeyBytes())
@@ -42,7 +37,7 @@ public final class RawTransaction {
                 .energyPrice(energyPrice)
                 .value(value);
 
-        if (isForAvm) {
+        if (isAvmCreate) {
             transactionBuilder.useAvmTransactionType();
         }
 
@@ -50,56 +45,36 @@ public final class RawTransaction {
     }
 
     /**
-     * Constructs a new transaction that is sent from the address corresponding to the provided
-     * private key.
+     * Returns a new general transaction. In particular, a general transaction is any transaction
+     * that is not an Avm create transaction.
      *
-     * This transaction must be used to send any kind of transaction except for an Avm contract
-     * creation transaction, in which case {@code buildAndSignAvmCreateTransaction()} should be
-     * used.
-     *
-     * @param senderPrivateKey Private key of the sender.
-     * @param nonce Nonce of the sender.
-     * @param destination Destination address.
-     * @param data Transaction data.
-     * @param energyLimit Maximum amount of energy to use.
-     * @param energyPrice Price per unit of energy used.
-     * @param value Amount of value to transfer to destination from sender.
-     * @return The signed transaction.
+     * @param senderPrivateKey The private key of the sender.
+     * @param nonce The nonce of the sender.
+     * @param destination The destination address.
+     * @param data The data.
+     * @param energyLimit The energy limit.
+     * @param energyPrice The price per unit energy.
+     * @param value The amount to be transferred.
+     * @return a new signed transaction.
      */
-    public static TransactionResult buildAndSignGeneralTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
-        Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) {
-
-        try {
-            return TransactionResult.successful(new RawTransaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false));
-        } catch (Exception e) {
-            return TransactionResult.unsuccessful((e.getMessage() == null) ? e.toString() : e.getMessage());
-        }
+    public static RawTransaction newGeneralTransaction(PrivateKey senderPrivateKey, BigInteger nonce, Address destination, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        return new RawTransaction(senderPrivateKey, nonce, destination, data, energyLimit, energyPrice, value, false);
     }
 
     /**
-     * Constructs a new transaction that is sent from the address corresponding to the provided
-     * private key.
+     * Returns a new avm create transaction. This transaction attempts to deploy a new Java smart
+     * contract.
      *
-     * This transaction must be used to deploy Avm contracts. However, it should not be used for any
-     * other kind of transaction, including calling Avm contracts. For all other transactions, use
-     * the {@code buildAndSignGeneralTransaction()} method.
-     *
-     * @param senderPrivateKey Private key of the sender.
-     * @param nonce Nonce of the sender.
-     * @param data Transaction data.
-     * @param energyLimit Maximum amount of energy to use.
-     * @param energyPrice Price per unit of energy used.
-     * @param value Amount of value to transfer to destination from sender.
-     * @return The signed transaction.
+     * @param senderPrivateKey The private key of the sender.
+     * @param nonce The nonce of the sender.
+     * @param data The bytes of the jar file to be deployed.
+     * @param energyLimit The energy limit.
+     * @param energyPrice The price per unit energy.
+     * @param value The amount to be transferred to the contract.
+     * @return a new signed transaction.
      */
-    public static TransactionResult buildAndSignAvmCreateTransaction(PrivateKey senderPrivateKey, BigInteger nonce,
-        byte[] data, long energyLimit, long energyPrice, BigInteger value) {
-
-        try {
-            return TransactionResult.successful(new RawTransaction(senderPrivateKey, nonce, null, data, energyLimit, energyPrice, value, true));
-        } catch (Exception e) {
-            return TransactionResult.unsuccessful((e.getMessage() == null) ? e.toString() : e.getMessage());
-        }
+    public static RawTransaction newAvmCreateTransaction(PrivateKey senderPrivateKey, BigInteger nonce, byte[] data, long energyLimit, long energyPrice, BigInteger value) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        return new RawTransaction(senderPrivateKey, nonce, null, data, energyLimit, energyPrice, value, true);
     }
 
     /**

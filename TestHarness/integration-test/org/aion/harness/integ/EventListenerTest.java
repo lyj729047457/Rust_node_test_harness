@@ -1,5 +1,8 @@
 package org.aion.harness.integ;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +21,6 @@ import org.aion.harness.result.FutureResult;
 import org.aion.harness.misc.Assumptions;
 import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.Result;
-import org.aion.harness.result.TransactionResult;
 import org.aion.harness.util.NodeFileManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -90,16 +92,11 @@ public class EventListenerTest {
 
     @Test
     public void testTransactionProcessed() throws Exception {
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
-
-        if (!transactionResult.isSuccess()) {
-            System.err.println("CONSTRUCT TRANSACTION FAILED");
-            return;
-        }
 
         this.node.initialize();
         Result result = this.node.start();
@@ -109,9 +106,6 @@ public class EventListenerTest {
         assertTrue(this.node.isAlive());
 
         NodeListener listener = NodeListener.listenTo(this.node);
-
-        RawTransaction transaction = transactionResult.getTransaction();
-
 
         FutureResult<LogEventResult> futureResult = listener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -139,23 +133,16 @@ public class EventListenerTest {
 
         // ------------------------------------------------------------------------------
 
-        transactionResult = constructTransaction(
+        transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ONE);
 
-        if (!transactionResult.isSuccess()) {
-            System.err.println("CONSTRUCT TRANSACTION FAILED");
-            return;
-        }
-
         System.out.println(this.node.start());
         Assert.assertTrue(this.node.isAlive());
 
         listener = NodeListener.listenTo(this.node);
-
-        transaction = transactionResult.getTransaction();
 
         futureResult = listener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -181,20 +168,15 @@ public class EventListenerTest {
     }
 
     @Test
-    public void testWaitForTransactionToBeRejected() throws DecoderException, IOException, InterruptedException, InvalidKeySpecException {
+    public void testWaitForTransactionToBeRejected() throws DecoderException, IOException, InterruptedException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // create a private key, has zero balance, sending balance from it would cause transaction to fail
         PrivateKey privateKeyWithNoBalance = PrivateKey.fromBytes(Hex.decodeHex("00e9f9800d581246a9665f64599f405e8927993c6bef4be2776d91a66b466d30"));
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             privateKeyWithNoBalance,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
-
-        if (!transactionResult.isSuccess()) {
-            System.err.println("CONSTRUCT TRANSACTION FAILED");
-            return;
-        }
 
         this.node.initialize();
         Result result = this.node.start();
@@ -204,8 +186,6 @@ public class EventListenerTest {
         assertTrue(this.node.isAlive());
 
         NodeListener listener = NodeListener.listenTo(this.node);
-
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -290,9 +270,9 @@ public class EventListenerTest {
         assertFalse(this.node.isAlive());
     }
 
-    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
+    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         return RawTransaction
-            .buildAndSignGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
+            .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], 2_000_000, 10_000_000_000L, value);
     }
 
     private static void deleteLogs() throws IOException {

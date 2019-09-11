@@ -1,5 +1,8 @@
 package org.aion.harness.integ;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
 import org.aion.harness.integ.resources.TestHelper;
@@ -20,7 +23,6 @@ import org.aion.harness.result.LogEventResult;
 import org.aion.harness.result.RpcResult;
 import org.aion.harness.result.Result;
 import org.aion.harness.util.NodeFileManager;
-import org.aion.harness.result.TransactionResult;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -67,22 +69,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueViaRPC() throws IOException, InterruptedException {
+    public void testSendValueViaRPC() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -113,22 +113,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendValueWithIncorrectNonceViaRPC() throws IOException, InterruptedException {
+    public void testSendValueWithIncorrectNonceViaRPC() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.valueOf(100));
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -140,22 +138,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendNegativeValueViaRPC() throws IOException, InterruptedException {
+    public void testSendNegativeValueViaRPC() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.valueOf(-1),
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -167,22 +163,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendZeroValueViaRPC() throws IOException, InterruptedException {
+    public void testSendZeroValueViaRPC() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -194,32 +188,29 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendMultipleValueTransfersViaRPC() throws IOException, InterruptedException {
+    public void testSendMultipleValueTransfersViaRPC() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         assertTrue(rpcResult.isSuccess());
 
-        transactionResult = constructTransaction(
+        transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ONE);
 
-        assertTrue(transactionResult.isSuccess());
-        rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -231,38 +222,34 @@ public class RpcTest {
     }
 
     @Test
-    public void testSendTransactionWhenNoNodeIsAlive() throws InterruptedException {
+    public void testSendTransactionWhenNoNodeIsAlive() throws Exception {
         assertFalse(this.node.isAlive());
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ZERO,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.isSuccess());
     }
 
     @Test
-    public void testSendValueToInvalidAddress() throws IOException, InterruptedException {
+    public void testSendValueToInvalidAddress() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertTrue(rpcResult.isSuccess());
 
@@ -284,15 +271,13 @@ public class RpcTest {
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             badPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
-        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transactionResult.getTransaction());
+        RpcResult<ReceiptHash> rpcResult = this.rpc.sendTransaction(transaction);
         System.out.println("Rpc result = " + rpcResult);
         assertFalse(rpcResult.isSuccess());
         assertTrue(rpcResult.getError().contains("Transaction dropped"));
@@ -416,23 +401,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetTransactionReceipt() throws IOException, InterruptedException {
+    public void testGetTransactionReceipt() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
         NodeListener listener = NodeListener.listenTo(this.node);
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -476,23 +458,20 @@ public class RpcTest {
     }
 
     @Test
-    public void testGetTransactionReceiptFromContractDeploy() throws IOException, InterruptedException {
+    public void testGetTransactionReceiptFromContractDeploy() throws Exception {
         Result result = this.node.start();
         System.out.println("Start result = " + result);
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
 
-        TransactionResult transactionResult = constructTransaction(
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             null,
             BigInteger.ONE,
             BigInteger.ZERO);
 
-        assertTrue(transactionResult.isSuccess());
-
         NodeListener listener = NodeListener.listenTo(this.node);
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = listener.listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -537,14 +516,6 @@ public class RpcTest {
 
         assertTrue(result.isSuccess());
         assertTrue(this.node.isAlive());
-
-        TransactionResult transactionResult = constructTransaction(
-            preminedPrivateKey,
-            destination,
-            BigInteger.ONE,
-            BigInteger.ZERO);
-
-        assertTrue(transactionResult.isSuccess());
 
         ReceiptHash receiptHash = new ReceiptHash(new byte[32]);
 
@@ -623,14 +594,12 @@ public class RpcTest {
         assertFalse(this.node.isAlive());
     }
 
-    private void doBalanceTransfer(BigInteger transferValue) throws InterruptedException {
-        TransactionResult transactionResult = constructTransaction(
+    private void doBalanceTransfer(BigInteger transferValue) throws Exception {
+        RawTransaction transaction = constructTransaction(
             preminedPrivateKey,
             destination,
             transferValue,
             BigInteger.ZERO);
-
-        RawTransaction transaction = transactionResult.getTransaction();
 
         FutureResult<LogEventResult> futureResult = NodeListener.listenTo(this.node).listenForEvent(
             new JavaPrepackagedLogEvents().getTransactionProcessedEvent(transaction),
@@ -645,9 +614,9 @@ public class RpcTest {
         assertTrue(eventResult.eventWasObserved());
     }
 
-    private TransactionResult constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) {
+    private RawTransaction constructTransaction(PrivateKey senderPrivateKey, Address destination, BigInteger value, BigInteger nonce) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         return RawTransaction
-            .buildAndSignGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
+            .newGeneralTransaction(senderPrivateKey, nonce, destination, new byte[0], energyLimit, energyPrice, value);
     }
 
     private static void deleteLogs() throws IOException {
