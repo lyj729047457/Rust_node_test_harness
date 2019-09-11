@@ -10,6 +10,7 @@ import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.Kernel;
 import org.aion.harness.kernel.PrivateKey;
 import org.aion.harness.kernel.SignedTransaction;
+import org.aion.harness.kernel.UnsignedTransaction;
 import org.aion.harness.main.LocalNode;
 import org.aion.harness.main.event.JavaPrepackagedLogEvents;
 import org.aion.harness.main.impl.JavaNode;
@@ -125,6 +126,79 @@ public class RpcTest {
 
         // Actually confirm that the kernel said the account was not unlocked.
         Assert.assertFalse(unlockResult.getResult());
+
+        // Shut the node down and clean up the keystore.
+        kernel.clearKeystore();
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testSendUnsignedTransaction() throws Exception {
+        String password = "test";
+
+        // First we create the new keystore account.
+        JavaNode javaNode = (JavaNode) this.node;
+        Kernel kernel = javaNode.getKernel();
+        Address account = kernel.createNewAccountInKeystore(password);
+
+        // Now start the node up.
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        // Try to unlock the account.
+        RpcResult<Boolean> unlockResult = this.rpc.unlockKeystoreAccount(account, password, 10, TimeUnit.MINUTES);
+        System.out.println("Unlock result = " + unlockResult);
+        Assert.assertTrue(unlockResult.isSuccess());
+
+        // Actually confirm that the kernel said the account was not unlocked.
+        Assert.assertTrue(unlockResult.getResult());
+
+        // Fund the account with money from the premined account and then send a transaction.
+        fundAccount(account);
+
+        UnsignedTransaction transaction = UnsignedTransaction.newNonCreateTransaction(account, preminedPrivateKey.getAddress(), BigInteger.ZERO, BigInteger.ONE, new byte[0], 50_000L, 10_000_000_000L);
+        RpcResult<ReceiptHash> sendResult = this.rpc.sendUnsignedTransaction(transaction);
+        System.out.println("Send result = " + sendResult);
+        Assert.assertTrue(sendResult.isSuccess());
+
+        // Shut the node down and clean up the keystore.
+        kernel.clearKeystore();
+
+        result = this.node.stop();
+        System.out.println("Stop result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertFalse(this.node.isAlive());
+    }
+
+    @Test
+    public void testSendUnsignedTransactionAccountNotUnlocked() throws Exception {
+        Address account = PrivateKey.random().getAddress();
+
+        // Now start the node up.
+        Result result = this.node.start();
+        System.out.println("Start result = " + result);
+
+        assertTrue(result.isSuccess());
+        assertTrue(this.node.isAlive());
+
+        // Fund the account with money from the premined account and then send a transaction.
+        fundAccount(account);
+
+        UnsignedTransaction transaction = UnsignedTransaction.newNonCreateTransaction(account, preminedPrivateKey.getAddress(), BigInteger.ZERO, BigInteger.ONE, new byte[0], 50_000L, 10_000_000_000L);
+        RpcResult<ReceiptHash> sendResult = this.rpc.sendUnsignedTransaction(transaction);
+
+        // We should fail to send.
+        System.out.println("Send result = " + sendResult);
+        Assert.assertFalse(sendResult.isSuccess());
 
         // Shut the node down.
         result = this.node.stop();
@@ -658,6 +732,12 @@ public class RpcTest {
 
         assertTrue(this.node.stop().isSuccess());
         assertFalse(this.node.isAlive());
+    }
+
+    private void fundAccount(Address address) throws InterruptedException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        SignedTransaction transaction = SignedTransaction.newGeneralTransaction(preminedPrivateKey, BigInteger.ZERO, address, new byte[0], 50_000L, 10_000_000_000L, BigInteger.valueOf(10_000_000_000_000_000L));
+        RpcResult<ReceiptHash> result = this.rpc.sendSignedTransaction(transaction);
+        Assert.assertTrue(result.isSuccess());
     }
 
     private void doBalanceTransfer(BigInteger transferValue) throws Exception {

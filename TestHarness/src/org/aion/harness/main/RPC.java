@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.kernel.Transaction;
+import org.aion.harness.kernel.UnsignedTransaction;
 import org.aion.harness.main.tools.InternalRpcResult;
 import org.aion.harness.main.tools.RpcCaller;
 import org.aion.harness.main.tools.RpcMethod;
@@ -407,6 +408,30 @@ public final class RPC {
     }
 
     /**
+     * Sends the specified unsigned transaction to the node. This will only work if the account has
+     * already been unlocked.
+     *
+     * The output of this method is verbose.
+     *
+     * @param transaction The transaction to sign.
+     * @return the result of the attempt to send the transaction.
+     */
+    public RpcResult<ReceiptHash> sendUnsignedTransactionVerbose(UnsignedTransaction transaction) throws InterruptedException {
+        return callSendUnsignedTransaction(transaction, true);
+    }
+
+    /**
+     * Sends the specified unsigned transaction to the node. This will only work if the account has
+     * already been unlocked.
+     *
+     * @param transaction The transaction to sign.
+     * @return the result of the attempt to send the transaction.
+     */
+    public RpcResult<ReceiptHash> sendUnsignedTransaction(UnsignedTransaction transaction) throws InterruptedException {
+        return callSendUnsignedTransaction(transaction, false);
+    }
+
+    /**
      * Sends the specified signed transaction to the node.
      *
      * This call is asynchronous, and as such, the returned receipt hash will not correspond to a
@@ -687,6 +712,52 @@ public final class RPC {
                 return RpcResult.unsuccessful("No result was returned!");
             } else {
                 return RpcResult.successful(Boolean.valueOf(result), internalResult.getTimeOfCall(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
+            }
+        } else {
+            return RpcResult.unsuccessful(internalResult.error);
+        }
+    }
+
+    private RpcResult<ReceiptHash> callSendUnsignedTransaction(UnsignedTransaction transaction, boolean verbose) throws InterruptedException {
+        if (transaction == null) {
+            throw new IllegalArgumentException("Cannot send a null transaction.");
+        }
+
+        // Construct the payload to the rpc call (ie. the content of --data).
+        // If the destination is not present then we display nothing. If the data is an empty array
+        // then we display '0x0' instead of the otherwise '0x'.
+        byte[] transactionData = transaction.copyOfData();
+        String destination = (transaction.destination == null) ? "" : ("\"to\":\"0x" + Hex.encodeHexString(transaction.destination.getAddressBytes()) + "\",");
+        String data = (transactionData.length == 0) ? "\"data\":\"0x0\"," : "\"data\":\"0x" + Hex.encodeHexString(transactionData) + "\",";
+        String params = "{\"from\":\"0x" + Hex.encodeHexString(transaction.sender.getAddressBytes()) + "\","
+            + destination
+            + "\"gas\":\"0x" + BigInteger.valueOf(transaction.energyLimit).toString(16) + "\","
+            + "\"gasPrice\":\"0x" + BigInteger.valueOf(transaction.energyPrice).toString(16) + "\","
+            + "\"value\":\"0x" + transaction.valueToTransfer.toString(16) + "\","
+            + data
+            + "\"nonce\":\"0x" + transaction.senderNonce.toString(16) + "\"}";
+        String payload = RpcPayload.generatePayload(RpcMethod.SEND_TRANSACTION, params);
+
+        logMessage("-->" + payload);
+        InternalRpcResult internalResult = this.rpc.call(payload, verbose);
+        logMessage("<--" + internalResult.output);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            String result = outputParser.attributeToString("result");
+
+            if (result == null) {
+                return RpcResult.unsuccessful("No receipt hash was returned, transaction was likely rejected.");
+            }
+
+            try {
+                return RpcResult.successful(
+                    new ReceiptHash(Hex.decodeHex(result)),
+                    internalResult.getTimeOfCall(TimeUnit.NANOSECONDS),
+                    TimeUnit.NANOSECONDS);
+
+            } catch (DecoderException e) {
+                return RpcResult.unsuccessful(e.toString());
             }
         } else {
             return RpcResult.unsuccessful(internalResult.error);

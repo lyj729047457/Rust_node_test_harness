@@ -8,6 +8,8 @@ public enum RpcMethod {
 
     SEND_RAW_TRANSACTION("eth_sendRawTransaction"),
 
+    SEND_TRANSACTION("eth_sendTransaction"),
+
     GET_TRANSACTION_RECEIPT("eth_getTransactionReceipt"),
 
     GET_BLOCK_BY_NUMBER("eth_getBlockByNumber"),
