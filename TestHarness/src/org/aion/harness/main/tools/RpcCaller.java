@@ -1,7 +1,6 @@
 package org.aion.harness.main.tools;
 
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.MalformedJsonException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

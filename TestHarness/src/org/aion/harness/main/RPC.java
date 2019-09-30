@@ -584,6 +584,32 @@ public final class RPC {
     }
 
     /**
+     * Requests the kernel for the transaction and block info of the transaction that ran the
+     * given hash, which could be the hash of an invokable.
+     *
+     * Note that rpc.call must be called with verbose = false or this function will not receive
+     * any output.
+     *
+     * @return the result of the call.
+     */
+    public String getTransactionByHash(byte[] hash) throws InterruptedException {
+        // Construct the payload to the rpc call (ie. the content of --data).
+        String params = "\"0x" + Hex.encodeHexString(hash) + "\"";
+        String payload = RpcPayload.generatePayload(RpcMethod.GET_TRANSACTION_BY_HASH, params);
+
+        logMessage("-->" + payload);
+        InternalRpcResult internalResult = rpc.call(payload, false);
+        logMessage("<--" + internalResult.output);
+
+        if (internalResult.success) {
+            JsonStringParser outputParser = new JsonStringParser(internalResult.output);
+            return outputParser.attributeToString("result");
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Blocks until the node has finished syncing with the rest of the network, or until the request
      * times out.
      *

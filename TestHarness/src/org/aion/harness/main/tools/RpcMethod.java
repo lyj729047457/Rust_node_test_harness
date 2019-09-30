@@ -22,6 +22,8 @@ public enum RpcMethod {
 
     BLOCK_NUMBER("eth_blockNumber"),
 
+    GET_TRANSACTION_BY_HASH("eth_getTransactionByHash"),
+
     CALL("eth_call"),
 
     UNLOCK_ACCOUNT("personal_unlockAccount");

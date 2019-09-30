@@ -11,6 +11,7 @@ import org.aion.harness.tests.integ.CrossCallTest;
 import org.aion.harness.tests.integ.FvmTxSmokeTest;
 import org.aion.harness.tests.integ.InternalTxTest;
 import org.aion.harness.tests.integ.JavaApiSmokeTest;
+import org.aion.harness.tests.integ.MetaTransactionTest;
 import org.aion.harness.tests.integ.RemovedStorageTest;
 import org.aion.harness.tests.integ.runner.ConcurrentRunner;
 import org.junit.runner.RunWith;
@@ -29,6 +30,7 @@ import org.junit.runners.Suite;
     , RemovedStorageTest.class
     , AvmReceiptLogTest.class
     , InternalTxTest.class
+    , MetaTransactionTest.class
     , BeaconHashTest.class
 })
 public class ConcurrentSuite {
