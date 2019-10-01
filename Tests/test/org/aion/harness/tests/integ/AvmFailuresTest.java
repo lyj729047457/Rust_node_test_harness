@@ -8,7 +8,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.harness.kernel.Address;
 import org.aion.harness.kernel.SignedTransaction;
 import org.aion.harness.main.NodeFactory.NodeType;
