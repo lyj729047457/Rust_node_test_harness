@@ -1,6 +1,8 @@
 # Tests
 This module is where we store all of the tests that _use_ the testing harness. This is not the place to test out the harness itself - that's what the `TestHarness` module is for!
 
+Read [RUST_USAGE](RUST_USAGE.md) if you want to test rust nodes.
+
 ## Aion kernel setup
 
 node_test_harness supports several _node types_, which represent the Aion implementation being tested.  The node type must be specified when running the tests by passing in Java system property `testNodes`.  For instance, if running with Gradle, to test against a Java kernel, the invocation is `./gradlew Tests:test -PtestNodes=java`
