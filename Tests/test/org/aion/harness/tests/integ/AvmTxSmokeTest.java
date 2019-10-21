@@ -35,12 +35,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.junit.Ignore;
+
+@Ignore
 /**
  * Simple smoke test using eth_sendSignedTransaction (deployment, method call) and eth_call
  * on an AVM contract.
  */
 @RunWith(SequentialRunner.class)
-@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
+//@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
 public class AvmTxSmokeTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;

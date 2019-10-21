@@ -16,7 +16,7 @@ public final class BlockBuilder {
     private byte[] bloomFilter = null;
     private byte[] receiptTrieRoot = null;
     private byte[] stateRoot = null;
-    private byte[] nonce = null;
+//    private byte[] nonce = null;
     private BigInteger number = null;
     private BigInteger totalDifficulty = null;
 
@@ -65,10 +65,10 @@ public final class BlockBuilder {
         return this;
     }
 
-    public BlockBuilder nonce(byte[] nonce) {
-        this.nonce = nonce;
-        return this;
-    }
+//    public BlockBuilder nonce(byte[] nonce) {
+//        this.nonce = nonce;
+//        return this;
+//    }
 
     public BlockBuilder number(BigInteger number) {
         this.number = number;
@@ -108,9 +108,9 @@ public final class BlockBuilder {
         if (this.stateRoot == null) {
             throw new IllegalStateException("Cannot build block with no state trie set.");
         }
-        if (this.nonce == null) {
-            throw new IllegalStateException("Cannot build block with no nonce set.");
-        }
+//        if (this.nonce == null) {
+//            throw new IllegalStateException("Cannot build block with no nonce set.");
+//        }
         if (this.number == null) {
             throw new IllegalStateException("Cannot build block with no block number set.");
         }
@@ -128,7 +128,7 @@ public final class BlockBuilder {
             this.bloomFilter,
             this.receiptTrieRoot,
             this.stateRoot,
-            this.nonce,
+//            this.nonce,
             this.number,
             this.totalDifficulty);
     }
@@ -145,7 +145,7 @@ public final class BlockBuilder {
         String bloom = jsonParser.attributeToString("logsBloom");
         String receiptRoot = jsonParser.attributeToString("transactionsRoot");
         String stateRoot = jsonParser.attributeToString("stateRoot");
-        String nonce = jsonParser.attributeToString("nonce");
+//        String nonce = jsonParser.attributeToString("nonce");
         String number = jsonParser.attributeToString("number");
         String totalDifficulty = jsonParser.attributeToString("totalDifficulty");
 
@@ -159,7 +159,7 @@ public final class BlockBuilder {
             .bloomFilter((bloom == null) ? null : Hex.decodeHex(bloom))
             .receiptTrieRoot((receiptRoot == null) ? null : Hex.decodeHex(receiptRoot))
             .stateRoot((stateRoot == null) ? null : Hex.decodeHex(stateRoot))
-            .nonce((nonce == null) ? null : Hex.decodeHex(nonce))
+//            .nonce((nonce == null) ? null : Hex.decodeHex(nonce))
             .number((number == null) ? null : new BigInteger(number, 16))
             .totalDifficulty((totalDifficulty == null) ? null : new BigInteger(totalDifficulty, 16))
             .build();
@@ -178,7 +178,7 @@ public final class BlockBuilder {
         this.bloomFilter = null;
         this.receiptTrieRoot = null;
         this.stateRoot = null;
-        this.nonce = null;
+//        this.nonce = null;
         this.number = null;
         this.totalDifficulty = null;
     }

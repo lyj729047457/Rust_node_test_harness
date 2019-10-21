@@ -22,7 +22,7 @@ public class RustNodeWithMiner extends RustNode {
         File minerWd = setupMinerProgram();
         ProcessBuilder pb = new ProcessBuilder()
             .directory(minerWd)
-            .command("./aionrminer", "-l", "localhost:8008", "-t", "1");
+            .command("./aionrminer", "-l", "localhost:3333", "-t", "1", "-u", "0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5");
         proc = pb.start();
         return super.start();
     }

@@ -33,11 +33,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 
+import org.junit.Ignore;
+
+@Ignore
 /**
  * Tests the behaviour of various AVM success/failure modes, checking that the consumed energy is consistent with expectations.
  */
 @RunWith(SequentialRunner.class)
-@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
+//@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
 public class AvmFailuresTest {
     private static final long ENERGY_LIMIT = 2_000_000L;
     private static final long ENERGY_PRICE = 10_010_020_345L;

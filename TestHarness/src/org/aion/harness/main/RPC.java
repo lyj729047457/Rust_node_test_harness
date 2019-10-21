@@ -40,7 +40,7 @@ public final class RPC {
     private final SimpleLog logger;
     private final RpcCaller rpc;
 
-    private RPC(String ip, String port, SimpleLog logger) {
+    public RPC(String ip, String port, SimpleLog logger) {
         this.logger = logger;
         this.rpc = new RpcCaller(ip, port);
     }

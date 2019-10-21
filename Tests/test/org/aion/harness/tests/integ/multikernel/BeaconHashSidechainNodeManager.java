@@ -8,14 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
-import org.aion.harness.main.LocalNode;
-import org.aion.harness.main.Network;
-import org.aion.harness.main.NodeConfigurations;
+
+import org.aion.harness.main.*;
 import org.aion.harness.main.NodeConfigurations.DatabaseOption;
-import org.aion.harness.main.NodeFactory;
 import org.aion.harness.main.NodeFactory.NodeType;
-import org.aion.harness.main.NodeListener;
-import org.aion.harness.main.ProhibitConcurrentHarness;
 import org.aion.harness.result.Result;
 import org.aion.harness.tests.integ.multikernel.BeaconHashSidechainTest;
 import org.aion.harness.tests.integ.runner.exception.TestRunnerInitializationException;
@@ -64,21 +60,27 @@ public final class BeaconHashSidechainNodeManager {
             // Verify the kernel is in the expected location and overwrite its config & genesis files.
             checkKernelExistsAndOverwriteConfigs();
 
-            Path path = Paths.get(expectedKernelLocation + "/custom/config/config.xml");
-            Charset charset = StandardCharsets.UTF_8;
+            if (this.nodeType != NodeType.RUST_NODE) {
+                if (clearDb) {
+                    clearDb();
+                }
 
-            if(clearDb) {
-                clearDb();
-            }
+                Path path = Paths.get(expectedKernelLocation + "/custom/config/config.xml");
+                Charset charset = StandardCharsets.UTF_8;
 
-            // hackily set the mining
-            String content = new String(Files.readAllBytes(path), charset);
-            if(mining) {
-                content = content.replaceAll("<mining>false</mining>", "<mining>true</mining>");
+                // hackily set the mining
+                String content = new String(Files.readAllBytes(path), charset);
+                if (mining) {
+                    content = content.replaceAll("<mining>false</mining>", "<mining>true</mining>");
+                } else {
+                    content = content.replaceAll("<mining>true</mining>", "<mining>false</mining>");
+                }
+                Files.write(path, content.getBytes(charset));
             } else {
-                content = content.replaceAll("<mining>true</mining>", "<mining>false</mining>");
+                if(clearDb){
+                    clearRustDb();
+                }
             }
-            Files.write(path, content.getBytes(charset));
 
             // Acquire the system-wide lock.
             ProhibitConcurrentHarness.acquireTestLock();
@@ -86,7 +88,12 @@ public final class BeaconHashSidechainNodeManager {
             // Initialize the node.
             NodeConfigurations configurations = NodeConfigurations.alwaysUseBuiltKernel(
                 Network.CUSTOM, expectedKernelLocation, DatabaseOption.PRESERVE_DATABASE);
-            LocalNode node = NodeFactory.getNewLocalNodeInstance(nodeType);
+            LocalNode node;
+            if (this.nodeType != NodeType.RUST_NODE || mining) {
+                node = NodeFactory.getNewLocalNodeInstance(nodeType);
+            } else{
+                node = NodeFactory.getNewLocalNodeInstanceWithoutMiner(nodeType);
+            }
             node.configure(configurations);
 
             Result result = node.initialize();
@@ -168,6 +175,11 @@ public final class BeaconHashSidechainNodeManager {
 
     public void clearDb() throws IOException {
         File db = new File(expectedKernelLocation + "/custom/database");
+        FileUtils.deleteDirectory(db);
+    }
+
+    public void clearRustDb() throws IOException {
+        File db = new File(expectedKernelLocation + "/data");
         FileUtils.deleteDirectory(db);
     }
 

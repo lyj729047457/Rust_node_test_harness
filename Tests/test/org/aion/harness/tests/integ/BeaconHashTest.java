@@ -35,19 +35,28 @@ import org.aion.harness.util.SimpleLog;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 
+import org.junit.Ignore;
+
+@Ignore
 /** Test the beacon hash feature (AIP010) */
 @RunWith(SequentialRunner.class)
-@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
+//@ExcludeNodeType(NodeType.RUST_NODE) // exclude Rust for now due to bugs that prevent tests from passing
 public class BeaconHashTest {
     private static final long ENERGY_LIMIT = 1_234_567L;
     private static final long ENERGY_PRICE = 10_010_020_345L;
-    private static final long BLOCK_WAIT_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(2);
+    private static final long BLOCK_WAIT_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
 
     private final SimpleLog log = new SimpleLog(BeaconHashTest.class.getName());
 
-    private static RPC rpc = RPC.newRpc("127.0.0.1", "8545");
+    private static RPC rpc ;
+
+    @Before
+    public void setup() throws Exception {
+        rpc = new RPC("127.0.0.1", "8545", log);
+    }
 
     @Rule
     private PreminedAccount preminedAccount = new PreminedAccount(BigInteger.valueOf(1_000_000_000_000_000_000L));
@@ -65,14 +74,14 @@ public class BeaconHashTest {
         long bn = -1;
         long t0 = System.nanoTime();
 
-        while(bn < 3 && System.nanoTime() - t0 < BLOCK_WAIT_TIMEOUT_NANOS) {
+        while(bn < 11 && System.nanoTime() - t0 < BLOCK_WAIT_TIMEOUT_NANOS) {
             RpcResult<Long> maybeBn = rpc.blockNumber();
             if (!maybeBn.isSuccess()) {
                 throw new RuntimeException(
                     "Failed to get block number.  Error was: " + maybeBn.getError());
             }
             bn = maybeBn.getResult();
-            if(bn < 3) {
+            if(bn < 11) {
                 log.log(String.format(
                     "Waiting 15 sec to wait for best block of chain to exceed 3.  (current bn = %d",
                     bn));
@@ -122,8 +131,7 @@ public class BeaconHashTest {
         RpcResult<ReceiptHash> badDeployResult = rpc.sendSignedTransaction(badDeploy);
         assertThat("Transaction with beacon hash that is not present in blockchain should fail",
             badDeployResult.isSuccess(), is(false));
-        assertThat(badDeployResult.getError().contains("Invalid transaction object"), is(true));
-
+        assertThat(badDeployResult.getError().contains("Invalid transaction beacon hash") || badDeployResult.getError().contains("Invalid transaction object"), is(true));
         // build contract deployment Tx with the good beacon hash and check that it succeeds
         SignedTransaction goodDeploy = SignedTransaction.newAvmCreateTransaction(
             this.preminedAccount.getPrivateKey(),
@@ -159,7 +167,7 @@ public class BeaconHashTest {
         RpcResult<ReceiptHash> badTx1Result = rpc.sendSignedTransaction(badTx1);
         assertThat("tx with invalid beacon hash should not succeed",
             badTx1Result.isSuccess(), is(false));
-        assertThat(badTx1Result.getError().contains("Invalid transaction object"), is(true));
+        assertThat(badTx1Result.getError().contains("Invalid transaction beacon hash") || badTx1Result.getError().contains("Invalid transaction object"), is(true));
 
         // do that transaction agian, this time with the good beacon hash
         SignedTransaction goodTx1 =

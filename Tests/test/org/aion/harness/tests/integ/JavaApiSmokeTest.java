@@ -43,6 +43,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.junit.Ignore;
+
+@Ignore
 @RunWith(SequentialRunner.class)
 @ExcludeNodeType(NodeType.RUST_NODE)
 public class JavaApiSmokeTest {

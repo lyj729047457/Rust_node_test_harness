@@ -37,7 +37,7 @@ public final class LogManager {
         }
 
         // archive any old log files.
-        archiveLogs();
+//        archiveLogs();
 
         long currentTimeInMillis = System.currentTimeMillis();
 

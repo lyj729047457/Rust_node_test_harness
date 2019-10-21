@@ -144,6 +144,8 @@ public class RustNode implements LocalNode {
                 throw new IllegalArgumentException("Unsupported network");
         }
 
+        log.log("start network: " + cfgFile);
+
         String ldLib = System.getProperty("java.home") + File.separator + "lib" + File.separator + "server"
             + ":"
             + configurations.getDirectoryOfBuiltKernel() + File.separator + "libs";
@@ -182,12 +184,12 @@ public class RustNode implements LocalNode {
 
         boolean terminated = runningKernel.waitFor(1, TimeUnit.MINUTES);
         if(terminated) {
-            try {
-                resetState();
-            } catch (IOException ioe) {
-                log.log("Failed to reset state.  Next execution of this test may be affected; "
-                    + "this can be fixed by deleting the data directory of aionr");
-            }
+//            try {
+//                resetState();
+//            } catch (IOException ioe) {
+//                log.log("Failed to reset state.  Next execution of this test may be affected; "
+//                    + "this can be fixed by deleting the data directory of aionr");
+//            }
             return Result.successful();
         } else {
             // resetState won't succeed if not terminated, so don't bother -- at this
@@ -265,7 +267,8 @@ public class RustNode implements LocalNode {
             // This isn't technically the 'RPC enabled' message because Rust kernel doesn't emit
             // such a log message.  However it seems like it doesn't print this message until
             // the RPC is started (has worked reliably so far).
-            IEvent rpcEvent = new Event("= Sync Statics =");
+//            IEvent rpcEvent = new Event("= Sync Statics =");
+            IEvent rpcEvent = new Event("External blocks added");
 
             Result result = this.logReader.startReading(outputLog);
             if (!result.isSuccess()) {
